@@ -2,6 +2,6 @@
   "$schema": "https://railway.app",
   "build": {
     "builder": "DOCKER",
-    "dockerfilePath": "server/Dockerfile"
+    "dockerfilePath": "Dockerfile"
   }
 }
