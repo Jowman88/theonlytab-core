@@ -9,8 +9,12 @@ export async function POST(request: Request) {
   try {
     const { targetUrl, displayName, incomingBidAmount, xHandle } = await request.json();
     const userProposedBid = parseFloat(incomingBidAmount);
+let finalProposedBid = userProposedBid;
+if (isNaN(finalProposedBid) || finalProposedBid <= 0) {
+  finalProposedBid = 1.00;
+}
 
-    if (isNaN(userProposedBid) || userProposedBid <= 0 || userProposedBid > 1000.00) {
+    if (isNaN(finalProposedBid) || finalProposedBid <= 0 || finalProposedBid > 1000.00) {
       return NextResponse.json({ error: "Bid safety boundary bounds exceeded. Cap is \$1,000.00." }, { status: 400 });
     }
 
@@ -35,7 +39,7 @@ if (!safetyStatus) return NextResponse.json({ error: "Security Exception: Blocke
       mode: 'payment',
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/?status=success`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/?status=cancelled`,
-      metadata: { targetUrl, displayName, incomingBidAmount: userProposedBid.toString(), xHandle: xHandle || 'anonymous' }
+      metadata: { targetUrl, displayName, incomingBidAmount: finalProposedBid.toString(), xHandle: xHandle || 'anonymous' }
     });
 
     return NextResponse.json({ id: session.id, url: session.url });
