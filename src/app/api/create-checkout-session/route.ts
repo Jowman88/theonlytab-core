@@ -15,8 +15,7 @@ export async function POST(request: Request) {
     }
 
     const safetyStatus = await checkUrlWithWebRisk(targetUrl);
-    if (!safetyStatus.isSafe) return NextResponse.json({ error: "Security Exception: Blocked Domain." }, { status: 400 });
-
+if (!safetyStatus) return NextResponse.json({ error: "Security Exception: Blocked Domain." }, { status: 400 });
     const pgClient = new Client({ connectionString: process.env.DATABASE_URL });
     await pgClient.connect();
     const activeRes = await pgClient.query(`SELECT current_bid FROM slots WHERE is_frozen = FALSE AND expires_at > NOW() LIMIT 1`);
