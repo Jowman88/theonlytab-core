@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { checkUrlSafety } from '@/lib/webRisk';
+import { checkUrlWithWebRisk } from '@/lib/webRisk';
 import { Client } from 'pg';
 import Stripe from 'stripe';
 
@@ -14,7 +14,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Bid safety boundary bounds exceeded. Cap is \$1,000.00." }, { status: 400 });
     }
 
-    const safetyStatus = await checkUrlSafety(targetUrl);
+    const safetyStatus = await checkUrlWithWebRisk(targetUrl);
     if (!safetyStatus.isSafe) return NextResponse.json({ error: "Security Exception: Blocked Domain." }, { status: 400 });
 
     const pgClient = new Client({ connectionString: process.env.DATABASE_URL });
