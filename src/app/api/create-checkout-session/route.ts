@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { checkUrlWithWebRisk } from '@/lib/webRisk';
+import { checkUrlWithWebRisk } from '../../../../lib/webRisk';
 import { Client } from 'pg';
 import Stripe from 'stripe';
 
