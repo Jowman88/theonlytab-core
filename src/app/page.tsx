@@ -1,5 +1,5 @@
 import React from 'react';
-import EngineDashboard from '@/components/EngineDashboard';
+import EngineDashboard from '../components/EngineDashboard';
 
 export const dynamic = 'force-dynamic';
 
