@@ -88,19 +88,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       console.error(err);
       alert("Something went wrong opening Stripe.");
     }
-  };
 
-  const handleAcquireTab = async () => {
-    try {
-      const nextBid = (parseFloat(slot?.currentBid || '0') + 1.00).toFixed(2);
-      const res = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          amount: nextBid,
-          displayName: 'Anonymous Tab',
-          targetUrl: 'https://google.com'
-        })
       });
       if (!res.ok) {
         const errData = await res.json();
