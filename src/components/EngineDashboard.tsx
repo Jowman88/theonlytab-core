@@ -65,7 +65,8 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
     }
  
   };
-  const handleAcquireTab = async () => {
+
+    const handleAcquireTab = async () => {
     try {
       const nextBid = (parseFloat(slot?.current_bid || '0') + 1.00).toFixed(2);
       const res = await fetch('/api/create-checkout-session', {
@@ -77,24 +78,13 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
           targetUrl: 'https://google.com'
         })
       });
-      if (!res.ok) {
-        const errData = await res.json();
-        alert(errData.error || "Failed to initiate payment.");
-        return;
-      }
-      const { url } = await res.json();
-      if (url) window.location.href = url;
-    } catch (err) {
-      console.error(err);
-      alert("Something went wrong opening Stripe.");
-    }
 
-      });
       if (!res.ok) {
         const errData = await res.json();
         alert(errData.error || "Failed to initiate payment.");
         return;
       }
+
       const { url } = await res.json();
       if (url) window.location.href = url;
     } catch (err) {
@@ -102,6 +92,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       alert("Something went wrong opening Stripe.");
     }
   };
+
   
   const formatClock = (s: number) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
 
