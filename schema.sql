@@ -1,0 +1,48 @@
+-- ENABLE EXTENSIONS FOR UUID GENERATION
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+DROP TABLE IF EXISTS system_reports CASCADE;
+DROP TABLE IF EXISTS slots CASCADE;
+DROP TABLE IF EXISTS bid_history CASCADE;
+
+-- TRACKS THE ACTIVE BILLBOARD SLOT STATE
+CREATE TABLE slots (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    current_url TEXT NOT NULL,
+    display_name VARCHAR(255) NOT NULL,
+    current_bid NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+    seconds_purchased INTEGER NOT NULL DEFAULT 0,
+    started_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    buyer_x_handle VARCHAR(255) NOT NULL DEFAULT 'anonymous',
+    is_frozen BOOLEAN NOT NULL DEFAULT FALSE,
+    payment_intent_id VARCHAR(255) UNIQUE
+);
+
+-- HISTORICAL AUDIT TRAIL FOR DETHRONED AND SLASHED CARDS
+CREATE TABLE bid_history (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    url TEXT NOT NULL,
+    display_name VARCHAR(255) NOT NULL,
+    final_bid NUMERIC(10, 2) NOT NULL,
+    duration_seconds INTEGER NOT NULL,
+    dethroned_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    buyer_x_handle VARCHAR(255) NOT NULL DEFAULT 'anonymous',
+    was_slashed BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+-- UNIQUE TRUST-POOL ANTI-SPAM REPORT REGISTRY
+CREATE TABLE system_reports (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    slot_id UUID REFERENCES slots(id) ON DELETE CASCADE,
+    reporter_ip_hash VARCHAR(64) NOT NULL,
+    reported_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    UNIQUE(slot_id, reporter_ip_hash)
+);
+
+-- INDICES FOR OPTIMAL QUERY PERFORMANCE UNDER CONCURRENCY
+CREATE INDEX IF NOT EXISTS idx_slots_time_decay ON slots (is_frozen, expires_at DESC);
+
+-- SEED INITIAL BASELINE DEPLOYMENT RECORD
+INSERT INTO slots (current_url, display_name, current_bid, seconds_purchased, started_at, expires_at, buyer_x_handle)
+VALUES ('https://example.com', 'The Baseline Center Stage Available', 0.00, 315360000, NOW(), NOW() + INTERVAL '10 years', 'theonlytab');
