@@ -63,8 +63,58 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
         setReportCount(data.current_count);
       }
     }
+ 
+  };
+  const handleAcquireTab = async () => {
+    try {
+      const nextBid = (parseFloat(slot?.current_bid || '0') + 1.00).toFixed(2);
+      const res = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: nextBid,
+          displayName: 'Anonymous Tab',
+          targetUrl: 'https://google.com'
+        })
+      });
+      if (!res.ok) {
+        const errData = await res.json();
+        alert(errData.error || "Failed to initiate payment.");
+        return;
+      }
+      const { url } = await res.json();
+      if (url) window.location.href = url;
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong opening Stripe.");
+    }
   };
 
+  const handleAcquireTab = async () => {
+    try {
+      const nextBid = (parseFloat(slot?.currentBid || '0') + 1.00).toFixed(2);
+      const res = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: nextBid,
+          displayName: 'Anonymous Tab',
+          targetUrl: 'https://google.com'
+        })
+      });
+      if (!res.ok) {
+        const errData = await res.json();
+        alert(errData.error || "Failed to initiate payment.");
+        return;
+      }
+      const { url } = await res.json();
+      if (url) window.location.href = url;
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong opening Stripe.");
+    }
+  };
+  
   const formatClock = (s: number) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
 
   return (
@@ -89,7 +139,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
           <div className="w-[1px] h-8 bg-neutral-200" />
           <div><span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block mb-0.5">Burn Ticker</span><span className="font-mono text-base font-black text-neutral-700 block">{formatClock(secondsLeft)}</span></div>
         </div>
-        <button onClick={() => window.open(`/checkout?min=${(parseFloat(slot?.current_bid || 0) + 1.00).toFixed(2)}`, '_blank')} className="flex items-center gap-1.5 bg-neutral-900 text-white hover:bg-black font-semibold text-xs h-11 px-5 rounded-lg border border-neutral-800">
+        <button onClick={handleAcquireTab} className="flex items-center gap-1.5 bg-neutral-900 text-white hover:bg-black font-semibold text-xs h-11 px-5 rounded-lg border border-neutral-800">
           <Zap size={12} className="fill-white" /><span>Acquire Tab for \${(parseFloat(slot?.current_bid || 0) + 1.00).toFixed(2)}</span><ArrowUpRight size={12} className="text-neutral-400" />
         </button>
       </footer>
