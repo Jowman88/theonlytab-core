@@ -63,8 +63,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
     return () => clearInterval(timer);
   }, []);
 
-  const triggerReportSlasher = async () => {
-    if (!slot?.id) return;
+  const triggerReportSlasher = async () => 
     const confirmFlag = window.confirm("Weet je zeker dat je deze inhoud wilt rapporteren wegens misbruik?");
     if (!confirmFlag) return;
 
