@@ -76,9 +76,10 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const handleAcquireTab = async () => {
     try {
       const currentBidVal = slot?.current_bid ? parseFloat(slot.current_bid) : 0;
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://theonlytab.io';
       const nextBid = (currentBidVal <= 0 ? 1.00 : currentBidVal + 1.00).toFixed(2);
 
-      const res = await fetch('/api/create-checkout-session', {
+      const res = await fetch(`${baseUrl}/api/create-checkout-session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
