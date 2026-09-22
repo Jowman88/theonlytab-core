@@ -26,14 +26,13 @@ export async function POST(request: Request) {
     const pgClient = new Client({ connectionString: process.env.DATABASE_URL });
     await pgClient.connect();
     const activeRes = await pgClient.query(`SELECT current_bid FROM slots WHERE is_frozen = FALSE AND expires_at > NOW() LIMIT 1`);
-const liveBid = activeRes.rows.length > 0 ? parseFloat(activeRes.rows[0].current_bid || 0) : 0;
+const liveBid = activeRes.rows.length > 0 && activeRes.rows[0].current_bid ? parseFloat(activeRes.rows[0].current_bid) : 0;
     await pgClient.end();
 
     if (finalProposedBid < (liveBid + 1.00)) {
       return NextResponse.json({ error: "Outbid Error: Price tier has advanced." }, { status: 400 });
     }
 
-    // Bouw de Stripe Checkout sessie op met geverifieerde absolute URL's
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://theonlytab.io';
     
     const session = await stripe.checkout.sessions.create({
