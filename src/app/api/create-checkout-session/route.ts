@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
-const stripe = new Stripe('sk_test_51U5mSkEKVRr0yl1YGpRXE6Ql3aosswTULn7BLa0h85xooxpIiAU0gC4s2ECFF7vSdagCn0DsIuegBZzoKmtqqmee006jJvgLbo', { apiVersion: '2025-03-31.basil' }); // Zorg dat hier je SK_TEST sleutel staat!
-
+const stripe = new Stripe('sk_test_51U5mSkEKVRr0yl1YGpRXE6Ql3aosswTULn7BLa0h85xooxpIiAU0gC4s2ECFF7vSdagCn0DsIuegBZzoKmtqqmee006jJvgLbo', { apiVersion: '2025-03-31.basil' });
 export async function POST(request: Request) {
   try {
     const session = await stripe.checkout.sessions.create({
