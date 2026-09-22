@@ -47,8 +47,8 @@ export async function POST(request: Request) {
         quantity: 1
       }],
       mode: 'payment',
-      success_url: `${baseUrl}/?status=success`,
-      cancel_url: `${baseUrl}/?status=cancelled`,
+      success_url: 'https://theonlytab.io',
+cancel_url: 'https://theonlytab.io',
       metadata: { 
         targetUrl: cleanTargetUrl, 
         displayName: displayName || 'Anonymous', 
