@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     const pgClient = new Client({ connectionString: process.env.DATABASE_URL });
     await pgClient.connect();
     const activeRes = await pgClient.query(`SELECT current_bid FROM slots WHERE is_frozen = FALSE AND expires_at > NOW() LIMIT 1`);
-    const liveBid = activeRes.rows.length > 0 ? parseFloat(activeRes.rows[0].current_bid) : 0;
+const liveBid = activeRes.rows.length > 0 ? parseFloat(activeRes.rows[0].current_bid || 0) : 0;
     await pgClient.end();
 
     if (finalProposedBid < (liveBid + 1.00)) {
