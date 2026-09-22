@@ -76,10 +76,12 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const handleAcquireTab = async () => {
     try {
       const currentBidVal = slot?.current_bid ? parseFloat(slot.current_bid) : 0;
-const res = await fetch('https://theonlytab.io', {
+  const handleAcquireTab = async () => {
+    try {
+      const currentBidVal = slot?.current_bid ? parseFloat(slot.current_bid) : 0;
       const nextBid = (currentBidVal <= 0 ? 1.00 : currentBidVal + 1.00).toFixed(2);
 
-      const res = await fetch(`${baseUrl}/api/create-checkout-session`, {
+      const res = await fetch('https://theonlytab.io', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -103,6 +105,7 @@ const res = await fetch('https://theonlytab.io', {
       alert("Something went wrong opening Stripe.");
     }
   };
+
 
   const formatClock = (s: number) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
 
