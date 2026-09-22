@@ -57,8 +57,8 @@ cancel_url: 'https://theonlytab.io',
     });
 
     return NextResponse.json({ id: session.id, url: session.url });
-  } catch (err: any) {
-    console.error("Stripe Session Error:", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+} catch (err: any) {
+  return NextResponse.json({ error: `SERVER_CRASH: ${err.message || 'Unknown server error'}` }, { status: 500 });
+}
   }
 }
