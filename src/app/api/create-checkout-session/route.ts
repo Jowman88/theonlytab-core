@@ -41,20 +41,16 @@ export async function POST(request: Request) {
       line_items: [{
         price_data: { 
           currency: 'usd', 
-          product_data: { name: `The Only Tab: ${displayName || 'Premium Space'}` }, 
-          unit_amount: Math.round(finalProposedBid * 100) 
+          product_data: { name: "The Only Tab - Premium Space" }, 
+          unit_amount: 100 
         },
         quantity: 1
       }],
       mode: 'payment',
       success_url: 'https://theonlytab.io',
-      cancel_url: 'https://theonlytab.io',      metadata: { 
-        targetUrl: cleanTargetUrl, 
-        displayName: displayName || 'Anonymous', 
-        incomingBidAmount: finalProposedBid.toString(), 
-        xHandle: xHandle || 'anonymous' 
-      }
+      cancel_url: 'https://theonlytab.io'
     });
+
 
     return NextResponse.json({ id: session.id, url: session.url });
   } catch (err: any) {
