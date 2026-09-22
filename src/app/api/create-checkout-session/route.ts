@@ -26,14 +26,15 @@ export async function POST(request: Request) {
     const pgClient = new Client({ connectionString: process.env.DATABASE_URL });
     await pgClient.connect();
     const activeRes = await pgClient.query(`SELECT current_bid FROM slots WHERE is_frozen = FALSE AND expires_at > NOW() LIMIT 1`);
-const liveBid = activeRes.rows.length > 0 && activeRes.rows[0].current_bid ? parseFloat(activeRes.rows[0].current_bid) : 0;
+    const liveBid = activeRes.rows.length > 0 && activeRes.rows[0].current_bid ? parseFloat(activeRes.rows[0].current_bid) : 0;
     await pgClient.end();
 
     if (finalProposedBid < (liveBid + 1.00)) {
       return NextResponse.json({ error: "Outbid Error: Price tier has advanced." }, { status: 400 });
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://theonlytab.io';
+    // Bouw de Stripe Checkout sessie op met geverifieerde absolute URL's
+    const baseUrl = 'https://theonlytab.io';
     
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -46,8 +47,8 @@ const liveBid = activeRes.rows.length > 0 && activeRes.rows[0].current_bid ? par
         quantity: 1
       }],
       mode: 'payment',
-  success_url: 'https://theonlytab.io',
-cancel_url: 'https://theonlytab.io',
+      success_url: `${baseUrl}/?status=success`,
+      cancel_url: `${baseUrl}/?status=cancelled`,
       metadata: { 
         targetUrl: cleanTargetUrl, 
         displayName: displayName || 'Anonymous', 
@@ -57,7 +58,7 @@ cancel_url: 'https://theonlytab.io',
     });
 
     return NextResponse.json({ id: session.id, url: session.url });
-} catch (err: any) {
-  return NextResponse.json({ error: `SERVER_CRASH: ${err.message || 'Unknown server error'}` }, { status: 500 });
+  } catch (err: any) {
+    return NextResponse.json({ error: `SERVER_CRASH: ${err.message || 'Unknown server error'}` }, { status: 500 });
   }
 }
