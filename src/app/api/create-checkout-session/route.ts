@@ -9,8 +9,10 @@ export async function POST(request: Request) {
       line_items: [{
         price_data: { 
           currency: 'usd', 
-          product_data: { name: "The Only Tab - Premium Space" },
-          tax_code: 'txcd_10000000',
+          product_data: { 
+            name: "The Only Tab - Premium Space",
+            tax_code: 'txcd_10000000',
+          },
           unit_amount: 100 
         },
         quantity: 1
