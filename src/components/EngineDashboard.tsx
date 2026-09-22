@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
-import { ShieldCheck, Zap, ArrowUpRight, ShieldAlert } from 'lucide-react';
+import { ShieldCheck, Zap, ArrowUpRight, ShieldAlert, Globe } from 'lucide-react';
 
 interface SlotData {
   id: string;
@@ -58,6 +58,9 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
 
   const triggerReportSlasher = async () => {
     if (!slot?.id) return;
+    const confirmFlag = window.confirm("Weet je zeker dat je deze inhoud wilt rapporteren wegens misbruik?");
+    if (!confirmFlag) return;
+
     const res = await fetch('/api/report-tab', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -66,7 +69,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
     if (res.ok) {
       const data = await res.json();
       if (data.status === 'slot_slashed_and_blacklisted') {
-        alert("Removed due to community flags.");
+        alert("Inhoud verwijderd wegens community flags.");
       } else {
         setReportCount(data.current_count);
       }
@@ -78,7 +81,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       const currentBidVal = slot?.current_bid ? parseFloat(slot.current_bid) : 0;
       const nextBid = (currentBidVal <= 0 ? 1.00 : currentBidVal + 1.00).toFixed(2);
 
-const res = await fetch('/api/create-checkout-session', {
+      const res = await fetch('https://theonlytab.io', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -91,45 +94,95 @@ const res = await fetch('/api/create-checkout-session', {
 
       if (!res.ok) {
         const errData = await res.json();
-        alert(errData.error || "Failed to initiate payment.");
+        alert(errData.error || "Inleiding betaling mislukt.");
         return;
       }
 
       const { url } = await res.json();
       if (url) window.location.href = url;
-   } catch (err: any) {
-  console.error(err);
-  alert(`FRONTEND_ERROR: ${err.message || 'Network/CORS block'}`);
-}
+    } catch (err) {
+      console.error(err);
+      alert("Er ging iets mis bij het openen van Stripe.");
+    }
   };
 
   const formatClock = (s: number) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
 
   return (
-    <div className="fixed inset-0 w-screen h-screen bg-neutral-50 flex flex-col font-sans antialiased text-neutral-900 select-none overflow-hidden">
-      <header className="h-14 bg-white border-b border-neutral-200 flex items-center justify-between px-6 z-20 shadow-sm">
-        <div className="flex items-center gap-2"><div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" /><span className="font-bold text-sm">The Only Tab</span></div>
-        <button onClick={triggerReportSlasher} className="flex items-center gap-1.5 text-xs text-red-600 hover:bg-red-50 px-3 py-1.5 rounded-lg border border-red-200 font-medium transition-colors">
-          <ShieldAlert size={12} /><span>Flag Content {reportCount > 0 ? `(${reportCount}/5)` : ''}</span>
-        </button>
+    <div className="fixed inset-0 w-screen h-screen bg-[#0A0A0C] flex flex-col font-sans antialiased text-neutral-200 select-none overflow-hidden">
+      {/* Premium Header */}
+      <header className="h-16 bg-[#121215]/80 backdrop-blur-md border-b border-neutral-800/60 flex items-center justify-between px-8 z-20 shadow-lg">
+        <div className="flex items-center gap-3">
+          <div className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </div>
+          <span className="font-extrabold text-sm tracking-wider uppercase text-neutral-100">The Only Tab</span>
+        </div>
+        
+        {/* Subtiele live URL status in de header */}
+        <div className="flex items-center gap-2 bg-[#1C1C21] border border-neutral-800 px-4 py-1.5 rounded-full text-xs text-neutral-400 shadow-inner max-w-md">
+          <Globe size={12} className="text-neutral-500 shrink-0" />
+          <span className="truncate font-mono tracking-tight">{slot?.currentUrl || 'synchronizing_node_feed...'}</span>
+        </div>
+        <div className="w-24" /> {/* Flex balancer */}
       </header>
-      <main className="flex-1 w-full bg-neutral-100 flex items-center justify-center p-6 relative">
+
+      {/* Main Canvas Area */}
+      <main className="flex-1 w-full flex items-center justify-center p-8 relative bg-radial-gradient">
         <div className="w-full max-w-5xl h-full flex flex-col justify-center">
-          <div className="bg-white border-t border-x border-neutral-200 rounded-t-xl px-4 py-2 flex items-center text-xs text-neutral-500"><ShieldCheck size={14} className="text-emerald-500 mr-2" /><span className="truncate font-medium">{slot?.currentUrl || 'Synchronizing node feed...'}</span></div>
-          <div className="flex-1 bg-white border border-neutral-200 rounded-b-xl shadow-xl overflow-hidden p-1 flex items-center justify-center min-h-0"><canvas ref={canvasRef} className="w-full h-full aspect-video rounded-lg bg-neutral-50 object-contain max-h-full" /></div>
+          {/* Het Canvas - Gestyled als een high-end high-definition display */}
+          <div className="flex-1 bg-[#121215] border border-neutral-800/80 rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] overflow-hidden p-1.5 flex items-center justify-center min-h-0 ring-1 ring-white/5">
+            <canvas ref={canvasRef} className="w-full h-full aspect-video rounded-xl bg-[#030303] object-contain max-h-full transition-all duration-500" />
+          </div>
         </div>
       </main>
-      <footer className="h-20 bg-white border-t border-neutral-200 flex items-center justify-between px-8 z-20 shadow-inner">
-        <div className="flex gap-12 items-center">
-          <div><span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block mb-0.5">Active Space</span><span className="text-neutral-800 font-semibold text-sm max-w-[200px] truncate block">{slot?.displayName || 'Idle'}</span></div>
-          <div className="w-[1px] h-8 bg-neutral-200" />
-          <div><span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block mb-0.5">Value</span><span className="text-neutral-900 font-black text-base block">\${slot?.current_bid ? parseFloat(slot.current_bid).toFixed(2) : '0.00'}</span></div>
-          <div className="w-[1px] h-8 bg-neutral-200" />
-          <div><span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block mb-0.5">Burn Ticker</span><span className="font-mono text-base font-black text-neutral-700 block">{formatClock(secondsLeft)}</span></div>
+
+      {/* Premium Footer */}
+      <footer className="h-24 bg-[#121215]/90 backdrop-blur-md border-t border-neutral-800/60 flex items-center justify-between px-10 z-20 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
+        <div className="flex gap-16 items-center">
+          <div>
+            <span className="text-[9px] text-neutral-500 font-bold uppercase tracking-widest block mb-1">Active Space</span>
+            <span className="text-neutral-200 font-bold text-sm tracking-wide max-w-[180px] truncate block">{slot?.displayName || 'System Idle'}</span>
+          </div>
+          <div className="w-[1px] h-10 bg-neutral-800/80" />
+          <div>
+            <span className="text-[9px] text-neutral-500 font-bold uppercase tracking-widest block mb-1">Current Value</span>
+            <span className="text-white font-black text-xl tracking-tight block">
+              \${slot?.current_bid ? parseFloat(slot.current_bid).toFixed(2) : '0.00'}
+            </span>
+          </div>
+          <div className="w-[1px] h-10 bg-neutral-800/80" />
+          <div>
+            <span className="text-[9px] text-neutral-500 font-bold uppercase tracking-widest block mb-1">Time Remaining</span>
+            <span className="font-mono text-xl font-bold text-neutral-300 tracking-wide block bg-[#1C1C21] px-3 py-0.5 rounded-md border border-neutral-800/60">
+              {formatClock(secondsLeft)}
+            </span>
+          </div>
         </div>
-        <button onClick={handleAcquireTab} className="flex items-center gap-1.5 bg-neutral-900 text-white hover:bg-black font-semibold text-xs h-11 px-5 rounded-lg border border-neutral-800">
-          <Zap size={12} className="fill-white" /><span>Acquire Tab for \${slot?.current_bid ? (parseFloat(slot.current_bid) + 1.00).toFixed(2) : '1.00'}</span><ArrowUpRight size={12} className="text-neutral-400" />
-        </button>
+
+        {/* Cta & Subtiele Flag-beveiliging groep */}
+        <div className="flex items-center gap-4">
+          {/* Subtiel verborgen Flag Icoontje om misbruik te remmen */}
+          <button 
+            onClick={triggerReportSlasher} 
+            title="Rapporteer ongepaste inhoud"
+            className="p-3 text-neutral-600 hover:text-red-400 hover:bg-red-500/10 rounded-xl border border-transparent hover:border-red-500/20 transition-all duration-200"
+          >
+            <ShieldAlert size={16} />
+            {reportCount > 0 && <span className="text-[10px] ml-1 font-bold">({reportCount})</span>}
+          </button>
+
+          {/* Premium Buy Button */}
+          <button 
+            onClick={handleAcquireTab} 
+            className="flex items-center gap-2 bg-white text-black hover:bg-neutral-200 active:scale-[0.98] font-bold text-xs h-12 px-6 rounded-xl transition-all duration-200 shadow-[0_4px_20px_rgba(255,255,255,0.15)]"
+          >
+            <Zap size={13} className="fill-black" />
+            <span>Acquire Tab for \${slot?.current_bid ? (parseFloat(slot.current_bid) + 1.00).toFixed(2) : '1.00'}</span>
+            <ArrowUpRight size={13} className="opacity-60" />
+          </button>
+        </div>
       </footer>
     </div>
   );
