@@ -48,8 +48,7 @@ export async function POST(request: Request) {
       }],
       mode: 'payment',
       success_url: 'https://theonlytab.io',
-cancel_url: 'https://theonlytab.io',
-      metadata: { 
+      cancel_url: 'https://theonlytab.io',      metadata: { 
         targetUrl: cleanTargetUrl, 
         displayName: displayName || 'Anonymous', 
         incomingBidAmount: finalProposedBid.toString(), 
