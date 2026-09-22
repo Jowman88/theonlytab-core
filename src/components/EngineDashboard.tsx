@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
-import { ShieldCheck, Zap, ArrowUpRight, ShieldAlert, Globe } from 'lucide-react';
+import { ShieldCheck, Zap, ArrowUpRight, ShieldAlert, Globe, X, Link2, User, ChevronRight } from 'lucide-react';
 
 interface SlotData {
   id: string;
@@ -17,6 +17,13 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const [slot, setSlot] = useState<SlotData | null>(null);
   const [secondsLeft, setSecondsLeft] = useState<number>(0);
   const [reportCount, setReportCount] = useState<number>(0);
+
+  // Formulier statussen
+  const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
+  const [targetUrl, setTargetUrl] = useState<string>('');
+  const [displayName, setDisplayName] = useState<string>('');
+  const [xHandle, setXHandle] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   useEffect(() => {
     const socket = io(streamServerUrl);
@@ -75,8 +82,11 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       }
     }
   };
-
-  const handleAcquireTab = async () => {
+  const handleAcquireTabSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!targetUrl) return alert('Voer aanzienlijk een geldige Doel-URL in.');
+    
+    setIsSubmitting(true);
     try {
       const currentBidVal = slot?.current_bid ? parseFloat(slot.current_bid) : 0;
       const nextBid = (currentBidVal <= 0 ? 1.00 : currentBidVal + 1.00).toFixed(2);
@@ -86,15 +96,16 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           incomingBidAmount: nextBid,
-          displayName: 'Premium Tester',
-          targetUrl: 'https://theonlytab.io',
-          xHandle: 'tester'
+          displayName: displayName || 'Anonymous Tester',
+          targetUrl: targetUrl.startsWith('http') ? targetUrl : `https://${targetUrl}`,
+          xHandle: xHandle || 'anonymous'
         })
       });
 
       if (!res.ok) {
         const errData = await res.json();
         alert(errData.error || "Inleiding betaling mislukt.");
+        setIsSubmitting(false);
         return;
       }
 
@@ -103,6 +114,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
     } catch (err) {
       console.error(err);
       alert("Er ging iets mis bij het openen van Stripe.");
+      setIsSubmitting(false);
     }
   };
 
@@ -120,23 +132,91 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
           <span className="font-extrabold text-sm tracking-wider uppercase text-neutral-100">The Only Tab</span>
         </div>
         
-        {/* Subtiele live URL status in de header */}
         <div className="flex items-center gap-2 bg-[#1C1C21] border border-neutral-800 px-4 py-1.5 rounded-full text-xs text-neutral-400 shadow-inner max-w-md">
           <Globe size={12} className="text-neutral-500 shrink-0" />
           <span className="truncate font-mono tracking-tight">{slot?.currentUrl || 'synchronizing_node_feed...'}</span>
         </div>
-        <div className="w-24" /> {/* Flex balancer */}
+        <div className="w-24" />
       </header>
 
-      {/* Main Canvas Area */}
-      <main className="flex-1 w-full flex items-center justify-center p-8 relative bg-radial-gradient">
-        <div className="w-full max-w-5xl h-full flex flex-col justify-center">
-          {/* Het Canvas - Gestyled als een high-end high-definition display */}
-          <div className="flex-1 bg-[#121215] border border-neutral-800/80 rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] overflow-hidden p-1.5 flex items-center justify-center min-h-0 ring-1 ring-white/5">
-            <canvas ref={canvasRef} className="w-full h-full aspect-video rounded-xl bg-[#030303] object-contain max-h-full transition-all duration-500" />
+      {/* Main Container Area */}
+      <div className="flex-1 w-full flex relative overflow-hidden">
+        
+        {/* Dynamic Drawer / Formulier Paneel */}
+        <div className={`absolute lg:relative top-0 left-0 h-full w-80 bg-[#121215] border-r border-neutral-800/60 z-30 transform transition-transform duration-300 flex flex-col ${isFormOpen ? 'translate-x-0' : '-translate-x-full lg:absolute'}`}>
+          <div className="p-6 border-b border-neutral-800/60 flex items-center justify-between">
+            <h3 className="font-bold text-sm uppercase tracking-wider text-neutral-100">Configure Your Tab</h3>
+            <button onClick={() => setIsFormOpen(false)} className="lg:hidden text-neutral-500 hover:text-white p-1 rounded-lg">
+              <X size={16} />
+            </button>
           </div>
+
+          <form onSubmit={handleAcquireTabSubmit} className="p-6 flex-1 flex flex-col gap-5 overflow-y-auto">
+            <div>
+              <label className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest block mb-2">Target Website URL *</label>
+              <div className="relative flex items-center">
+                <Link2 size={14} className="absolute left-3.5 text-neutral-500" />
+                <input 
+                  type="text" 
+                  required
+                  placeholder="example.com"
+                  value={targetUrl}
+                  onChange={(e) => setTargetUrl(e.target.value)}
+                  className="w-full bg-[#1C1C21] border border-neutral-800 focus:border-neutral-700 rounded-xl h-11 pl-10 pr-4 text-xs font-mono text-neutral-200 outline-none transition-colors"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest block mb-2">Display Name</label>
+              <div className="relative flex items-center">
+                <User size={14} className="absolute left-3.5 text-neutral-500" />
+                <input 
+                  type="text" 
+                  placeholder="Your Brand / Name"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  className="w-full bg-[#1C1C21] border border-neutral-800 focus:border-neutral-700 rounded-xl h-11 pl-10 pr-4 text-xs text-neutral-200 outline-none transition-colors"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest block mb-2">X (Twitter) Handle</label>
+              <div className="relative flex items-center">
+                <span className="absolute left-4 text-xs text-neutral-500 font-mono">@</span>
+                <input 
+                  type="text" 
+                  placeholder="username"
+                  value={xHandle}
+                  onChange={(e) => setXHandle(e.target.value)}
+                  className="w-full bg-[#1C1C21] border border-neutral-800 focus:border-neutral-700 rounded-xl h-11 pl-10 pr-4 text-xs font-mono text-neutral-200 outline-none transition-colors"
+                />
+              </div>
+            </div>
+
+            <div className="mt-auto pt-4">
+              <button 
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full flex items-center justify-center gap-2 bg-white text-black hover:bg-neutral-200 disabled:opacity-50 font-bold text-xs h-12 rounded-xl transition-all shadow-[0_4px_20px_rgba(255,255,255,0.15)]"
+              >
+                <span>{isSubmitting ? 'Connecting...' : 'Proceed to Payment'}</span>
+                <ChevronRight size={14} />
+              </button>
+            </div>
+          </form>
         </div>
-      </main>
+
+        {/* Video Canvas Container */}
+        <main className="flex-1 w-full flex items-center justify-center p-8 relative bg-radial-gradient">
+          <div className="w-full max-w-5xl h-full flex flex-col justify-center">
+            <div className="flex-1 bg-[#121215] border border-neutral-800/80 rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] overflow-hidden p-1.5 flex items-center justify-center min-h-0 ring-1 ring-white/5">
+              <canvas ref={canvasRef} className="w-full h-full aspect-video rounded-xl bg-[#030303] object-contain max-h-full" />
+            </div>
+          </div>
+        </main>
+      </div>
 
       {/* Premium Footer */}
       <footer className="h-24 bg-[#121215]/90 backdrop-blur-md border-t border-neutral-800/60 flex items-center justify-between px-10 z-20 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
@@ -161,27 +241,30 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
           </div>
         </div>
 
-        {/* Cta & Subtiele Flag-beveiliging groep */}
         <div className="flex items-center gap-4">
-          {/* Subtiel verborgen Flag Icoontje om misbruik te remmen */}
           <button 
             onClick={triggerReportSlasher} 
-            title="Rapporteer ongepaste inhoud"
+            title="Rapproteer ongepaste inhoud"
             className="p-3 text-neutral-600 hover:text-red-400 hover:bg-red-500/10 rounded-xl border border-transparent hover:border-red-500/20 transition-all duration-200"
           >
             <ShieldAlert size={16} />
             {reportCount > 0 && <span className="text-[10px] ml-1 font-bold">({reportCount})</span>}
           </button>
 
-          {/* Premium Buy Button */}
-          <button 
-            onClick={handleAcquireTab} 
-            className="flex items-center gap-2 bg-white text-black hover:bg-neutral-200 active:scale-[0.98] font-bold text-xs h-12 px-6 rounded-xl transition-all duration-200 shadow-[0_4px_20px_rgba(255,255,255,0.15)]"
-          >
-            <Zap size={13} className="fill-black" />
-            <span>Acquire Tab for \${slot?.current_bid ? (parseFloat(slot.current_bid) + 1.00).toFixed(2) : '1.00'}</span>
-            <ArrowUpRight size={13} className="opacity-60" />
-          </button>
+          {!isFormOpen ? (
+            <button 
+              onClick={() => setIsFormOpen(true)} 
+              className="flex items-center gap-2 bg-white text-black hover:bg-neutral-200 active:scale-[0.98] font-bold text-xs h-12 px-6 rounded-xl transition-all duration-200 shadow-[0_4px_20px_rgba(255,255,255,0.15)]"
+            >
+              <Zap size={13} className="fill-black" />
+              <span>Acquire Tab for \${slot?.current_bid ? (parseFloat(slot.current_bid) + 1.00).toFixed(2) : '1.00'}</span>
+              <ArrowUpRight size={13} className="opacity-60" />
+            </button>
+          ) : (
+            <div className="text-xs text-neutral-500 font-medium italic animate-pulse pr-4">
+              Fill out the form on the left...
+            </div>
+          )}
         </div>
       </footer>
     </div>
