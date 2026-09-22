@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { Client } from 'pg';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(pk_test_51U5mSkEKVRr0yl1YJLO3lWpZPbK0kLscyIgL0PbSSJOtBuDZtKH4q3c1nPz2hLLox75EjCT5OIai0XKMGeqwL1MG00I1wUnQpY, { apiVersion: '2023-10-16' });
+const stripe = new Stripe('sk_test_51U5mSkEKVRr0yl1YGpRXE6Ql3aosswTULn7BLa0h85xooxpIiAU0gC4s2ECFF7vSdagCn0DsIuegBZzoKmtqqmee006jJvgLbo', { apiVersion: '2023-10-16' });
 const SECONDS_PER_DOLLAR = 15;
 const MAX_CAP_SECONDS = 7200;
 
