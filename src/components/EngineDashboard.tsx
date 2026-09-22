@@ -97,10 +97,10 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
 
       const { url } = await res.json();
       if (url) window.location.href = url;
-    } catch (err) {
-      console.error(err);
-      alert("Something went wrong opening Stripe.");
-    }
+   } catch (err: any) {
+  console.error(err);
+  alert(`FRONTEND_ERROR: ${err.message || 'Network/CORS block'}`);
+}
   };
 
   const formatClock = (s: number) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
