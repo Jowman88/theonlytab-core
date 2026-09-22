@@ -78,7 +78,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       const currentBidVal = slot?.current_bid ? parseFloat(slot.current_bid) : 0;
       const nextBid = (currentBidVal <= 0 ? 1.00 : currentBidVal + 1.00).toFixed(2);
 
-      const res = await fetch('https://theonlytab.io', {
+const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
