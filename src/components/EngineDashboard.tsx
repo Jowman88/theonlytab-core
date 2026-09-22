@@ -1,14 +1,22 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { io } from 'socket.io-client';
 import { ShieldCheck, Zap, ArrowUpRight, ShieldAlert } from 'lucide-react';
-import io from 'socket.io-client';
+
+interface SlotData {
+  id: string;
+  currentUrl?: string;
+  displayName?: string;
+  current_bid?: string;
+  expiresAt?: string;
+}
 
 export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: string }) {
-  const [slot, setSlot] = useState<any>(null);
-  const [secondsLeft, setSecondsLeft] = useState(0);
-  const [reportCount, setReportCount] = useState(0);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [slot, setSlot] = useState<SlotData | null>(null);
+  const [secondsLeft, setSecondsLeft] = useState<number>(0);
+  const [reportCount, setReportCount] = useState<number>(0);
 
   useEffect(() => {
     const socket = io(streamServerUrl);
@@ -63,19 +71,21 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
         setReportCount(data.current_count);
       }
     }
- 
   };
 
-    const handleAcquireTab = async () => {
+  const handleAcquireTab = async () => {
     try {
-      const nextBid = (parseFloat(slot?.current_bid || '0') + 1.00).toFixed(2);
+      const currentBidVal = slot?.current_bid ? parseFloat(slot.current_bid) : 0;
+      const nextBid = (currentBidVal <= 0 ? 1.00 : currentBidVal + 1.00).toFixed(2);
+
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          amount: nextBid,
-          displayName: 'Anonymous Tab',
-          targetUrl: 'https://google.com'
+          incomingBidAmount: nextBid,
+          displayName: 'Premium Tester',
+          targetUrl: 'https://theonlytab.io',
+          xHandle: 'tester'
         })
       });
 
@@ -93,7 +103,6 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
     }
   };
 
-  
   const formatClock = (s: number) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
 
   return (
@@ -114,12 +123,12 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
         <div className="flex gap-12 items-center">
           <div><span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block mb-0.5">Active Space</span><span className="text-neutral-800 font-semibold text-sm max-w-[200px] truncate block">{slot?.displayName || 'Idle'}</span></div>
           <div className="w-[1px] h-8 bg-neutral-200" />
-          <div><span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block mb-0.5">Value</span><span className="text-neutral-900 font-black text-base block">\${slot?.currentBid ? parseFloat(slot.current_bid).toFixed(2) : '0.00'}</span></div>
+          <div><span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block mb-0.5">Value</span><span className="text-neutral-900 font-black text-base block">\${slot?.current_bid ? parseFloat(slot.current_bid).toFixed(2) : '0.00'}</span></div>
           <div className="w-[1px] h-8 bg-neutral-200" />
           <div><span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block mb-0.5">Burn Ticker</span><span className="font-mono text-base font-black text-neutral-700 block">{formatClock(secondsLeft)}</span></div>
         </div>
         <button onClick={handleAcquireTab} className="flex items-center gap-1.5 bg-neutral-900 text-white hover:bg-black font-semibold text-xs h-11 px-5 rounded-lg border border-neutral-800">
-          <Zap size={12} className="fill-white" /><span>Acquire Tab for \${(parseFloat(slot?.current_bid || 0) + 1.00).toFixed(2)}</span><ArrowUpRight size={12} className="text-neutral-400" />
+          <Zap size={12} className="fill-white" /><span>Acquire Tab for \${slot?.current_bid ? (parseFloat(slot.current_bid) + 1.00).toFixed(2) : '1.00'}</span><ArrowUpRight size={12} className="text-neutral-400" />
         </button>
       </footer>
     </div>
