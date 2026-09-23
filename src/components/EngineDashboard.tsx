@@ -44,7 +44,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
 
   useEffect(() => {
     const fetchState = async () => {
-      const res = await fetch('/api/get-active-slot');
+      const res = await fetch('/api/get-active-tab');
       if (res.ok) {
         const payload = await res.json();
         setSlot(payload.data);
@@ -64,7 +64,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   }, []);
 
   const triggerReportSlasher = async () => {
-    const confirmFlag = window.confirm("Are you sure you want to report this content for abuse??");
+    const confirmFlag = window.confirm("Are you sure you want to report/flag this content??");
     if (!confirmFlag) return;
 
     const res = await fetch('/api/report-tab', {
