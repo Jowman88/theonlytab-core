@@ -26,7 +26,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   useEffect(() => {
-    const socket = io(streamServerUrl);
+    const socket = io(streamServerUrl, { transports: ['websocket'] });
     socket.on('v-frame', (base64Data: string) => {
       if (!canvasRef.current) return;
       const ctx = canvasRef.current.getContext('2d');
