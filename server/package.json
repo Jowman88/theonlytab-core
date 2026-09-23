@@ -1,0 +1,16 @@
+{
+  "name": "theonlytab-server",
+  "version": "1.0.0",
+  "description": "The Only Tab Streaming Engine",
+  "main": "streamer-webrtc.js",
+  "scripts": {
+    "start": "node streamer-webrtc.js"
+  },
+  "dependencies": {
+    "stripe": "^14.0.0",
+    "pg": "^8.11.0",
+    "socket.io": "^4.7.0",
+    "socket.io-client": "^4.7.0",
+    "puppeteer": "^22.0.0"
+  }
+}
