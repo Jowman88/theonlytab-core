@@ -35,14 +35,11 @@ io.on('connection', (socket) => {
 
 // 3. Start de database-lus op de achtergrond zonder Express te blokkeren
 async function startDatabaseSync() {
-  if (!process.env.DATABASE_URL) {
-    console.error("CRITICAL ERROR: DATABASE_URL environment variable is missing!");
-    return;
-  }
-  
   try {
-    // FIX: De client wordt nu PAS aangemaakt als de functie draait en de URL geladen is!
-    const pgClient = new Client({ connectionString: process.env.DATABASE_URL });
+    // HARDCODED BYPASS: We omzeilen process.env en voeren de juiste link direct in als pure tekst!
+    const pgClient = new Client({ 
+      connectionString: "postgresql://postgres.fvqeeriisoediuwbftvh:MidVmXksB2TFPSwB@://supabase.com" 
+    });
     await pgClient.connect();
     console.log("Database connection handshake successful via IPv4 Pooler!");
 
