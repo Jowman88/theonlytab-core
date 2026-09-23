@@ -64,7 +64,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   }, []);
 
   const triggerReportSlasher = async () => {
-    const confirmFlag = window.confirm("Weet je zeker dat je deze inhoud wilt rapporteren wegens misbruik?");
+    const confirmFlag = window.confirm("Are you sure you want to report this content for abuse??");
     if (!confirmFlag) return;
 
     const res = await fetch('/api/report-tab', {
@@ -75,7 +75,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
     if (res.ok) {
       const data = await res.json();
       if (data.status === 'slot_slashed_and_blacklisted') {
-        alert("Inhoud verwijderd wegens community flags.");
+        alert("Content removed due to community flags.");
       } else {
         setReportCount(data.current_count);
       }
@@ -83,7 +83,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   };
   const handleAcquireTabSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!targetUrl) return alert('Voer aanzienlijk een geldige Doel-URL in.');
+    if (!targetUrl) return alert('Please enter a valid target URL.');
     
     setIsSubmitting(true);
     try {
@@ -103,7 +103,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
 
       if (!res.ok) {
         const errData = await res.json();
-        alert(errData.error || "Inleiding betaling mislukt.");
+        alert(errData.error || "Failed to initiate payment.");
         setIsSubmitting(false);
         return;
       }
@@ -112,7 +112,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       if (url) window.location.href = url;
     } catch (err) {
       console.error(err);
-      alert("Er ging iets mis bij het openen van Stripe.");
+      alert("Something went wrong opening Stripe.");
       setIsSubmitting(false);
     }
   };
