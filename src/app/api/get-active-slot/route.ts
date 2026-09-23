@@ -3,6 +3,7 @@ import { Client } from 'pg';
 
 export async function GET() {
   try {
+    // FIX: De client wordt nu PAS geïnitialiseerd binnen de lopende GET-functie!
     const pgClient = new Client({ connectionString: process.env.DATABASE_URL });
     await pgClient.connect();
 
@@ -17,11 +18,10 @@ export async function GET() {
 
     // ALS ER EEN ACTIEVE BIEDER IS: Stuur deze direct door
     if (activeRes.rows.length > 0) {
-      return NextResponse.json({ data: activeRes.rows[0] });
+      return NextResponse.json({ data: activeRes.rows });
     }
 
     // FALLBACK / HOUSE DEFAULT LOGICA: Als de site idle is, veins activiteit!
-    // Je kunt hieronder de array uitbreiden met toffe (vrienden) projecten of sponsors!
     const houseDefaults = [
       {
         id: "house-default-1",
@@ -31,7 +31,7 @@ export async function GET() {
       },
       {
         id: "house-default-2",
-        currentUrl: "https://producthunt.com", // Bijvoorbeeld: toon live tech-lanceringen
+        currentUrl: "https://producthunt.com",
         displayName: "Product Hunt Daily",
         current_bid: "19.00"
       }
