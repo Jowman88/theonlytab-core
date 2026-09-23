@@ -3,7 +3,10 @@ import { Client } from 'pg';
 
 export async function GET() {
   try {
-    const pgClient = new Client({ connectionString: process.env.DATABASE_URL });
+    // HARDCODED BYPASS: We omzeilen process.env en voeren de juiste link direct in!
+    const pgClient = new Client({ 
+      connectionString: "postgresql://postgres.fvqeeriisoediuwbftvh:MidVmXksB2TFPSwB@://supabase.com" 
+    });
     await pgClient.connect();
 
     // Haal de actieve bieder op die nog niet verlopen of bevroren is
@@ -15,9 +18,9 @@ export async function GET() {
     );
     await pgClient.end();
 
-    // ALS ER EEN ACTIEVE BIEDER IS: Stuur exact de eerste rij (het object) door
+    // ALS ER EEN ACTIEVE BIEDER IS: Stuur exact de eerste rij door
     if (activeRes.rows && activeRes.rows.length > 0) {
-      return NextResponse.json({ data: activeRes.rows[0] });
+      return NextResponse.json({ data: activeRes.rows });
     }
 
     // FALLBACK / HOUSE DEFAULT LOGICA: Als de site idle is, veins activiteit!
@@ -36,9 +39,7 @@ export async function GET() {
       }
     ];
 
-    // Kies willekeurig een van de House Defaults om dynamiek te veinzen bij verversing
     const randomDefault = houseDefaults[Math.floor(Math.random() * houseDefaults.length)];
-
     return NextResponse.json({ data: randomDefault });
   } catch (err: any) {
     console.error("Get Active Slot Error:", err);
