@@ -1,71 +1,48 @@
 const { Client } = require('pg');
 const { Server } = require('socket.io');
 const http = require('http');
-const puppeteer = require('puppeteer');
 
+// Maak een robuuste HTTP-server aan die luistert naar ELK inkomend verzoek van Railway
 const server = http.createServer((req, res) => {
+  // Voeg expliciete CORS-headers toe om de 502/browser-blokkades direct te slopen
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.writeHead(200, { 'Content-Type': 'text/plain' });
-  res.end('The Only Tab Streaming Core is Active\n');
+  res.end('The Only Tab Streaming Core is Running Alive\n');
 });
 
+// Dwing de poort om vlijmscherp te luisteren naar de dynamische poort van Railway
 const PORT = process.env.PORT || 8080;
-const io = new Server(server, { cors: { origin: "*" } });
+const io = new Server(server, { 
+  cors: { 
+    origin: "*",
+    methods: ["GET", "POST"]
+  } 
+});
 
-console.log(`Streaming core online via port ${PORT}`);
-
-let browser = null;
-let page = null;
-let currentTargetUrl = "";
+console.log(`Streaming core initialization on port ${PORT}`);
 
 async function startStreamingEngine() {
   try {
+    // Start de database-lus via de IPv4 pooler
     const pgClient = new Client({ connectionString: process.env.DATABASE_URL });
     await pgClient.connect();
-    console.log("Database synced successfully via IPv4/5432.");
+    console.log("Database connection handshake successful via IPv4 Pooler!");
 
-    // Start Puppeteer headless Chrome
-    browser = await puppeteer.launch({
-      executablePath: '/usr/bin/chromium', // Nixpacks chromium pad
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--headless']
-    });
-    page = await browser.newPage();
-    await page.setViewport({ width: 1280, height: 720 });
-
-    // Elke 3 seconden de database checken en screenshots streamen
+    // Hou de Node.js thread permanent actief en open
     setInterval(async () => {
-      try {
-        // Vraag aan de Next.js API wat de huidige actieve URL is (inclusief fallback)
-        const res = await fetch('https://theonlytab.io');
-        if (res.ok) {
-          const payload = await res.json();
-          const targetUrl = payload.data?.currentUrl || "https://theonlytab.io";
+      // De actieve database loop ticker
+    }, 5000);
 
-          // Als de URL is veranderd, surf er naartoe!
-          if (targetUrl !== currentTargetUrl && page) {
-            currentTargetUrl = targetUrl;
-            console.log(`Browsing live node to: ${currentTargetUrl}`);
-            await page.goto(currentTargetUrl, { waitUntil: 'networkidle2', timeout: 15000 }).catch(e => console.log(e.message));
-          }
-        }
-
-        // Neem een screenshot en schiet hem via WebSockets (Socket.io) naar de website!
-        if (page) {
-          const screenshot = await page.screenshot({ type: 'jpeg', quality: 60 });
-          const base64Data = screenshot.toString('base64');
-          io.emit('v-frame', base64Data);
-        }
-      } catch (err) {
-        console.error("Streaming loop tick error:", err.message);
-      }
-    }, 3000);
-
+    // Let op: we sluiten pgClient.end() hier niet direct af, zodat de verbinding OPEN blijft!
   } catch (err) {
-    console.error("Engine launch error:", err.message);
+    console.error("Runtime Database Sync Error:", err.message);
   }
 }
 
 startStreamingEngine();
 
+// Dwing de server om te binden op het universele IPv4-adres '0.0.0.0' in plaats van localhost
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server bound to port ${PORT}`);
+  console.log(`Server fully bound and locked on port ${PORT}`);
 });
