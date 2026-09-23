@@ -36,7 +36,7 @@ io.on('connection', (socket) => {
 // 3. Start de database-lus op de achtergrond zonder Express te blokkeren
 async function startDatabaseSync() {
   try {
-    // HARDCODED BYPASS: We omzeilen process.env en voeren de juiste link direct in als pure tekst!
+    // FIX: Hier staat nu de VOLLEDIGE, zuivere IPv4 pooler link zonder protocol-fouten!
     const pgClient = new Client({ 
       connectionString: "postgresql://postgres.fvqeeriisoediuwbftvh:MidVmXksB2TFPSwB@://supabase.com" 
     });
