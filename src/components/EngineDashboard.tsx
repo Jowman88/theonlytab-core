@@ -144,12 +144,16 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
         {/* Dynamic Drawer / Formulier Paneel */}
         <div className={`absolute lg:relative top-0 left-0 h-full w-80 bg-[#121215] border-r border-neutral-800/60 z-30 transform transition-transform duration-300 flex flex-col ${isFormOpen ? 'translate-x-0' : '-translate-x-full lg:absolute'}`}>
           <div className="p-6 border-b border-neutral-800/60 flex items-center justify-between">
-            <h3 className="font-bold text-sm uppercase tracking-wider text-neutral-100">Configure Your Tab</h3>
-            <button onClick={() => setIsFormOpen(false)} className="lg:hidden text-neutral-500 hover:text-white p-1 rounded-lg">
-              <X size={16} />
+            <h3 className="font-bold text-xs uppercase tracking-wider text-neutral-100">Configure Your Tab</h3>
+            <button 
+              type="button"
+              onClick={() => setIsFormOpen(false)} 
+              className="text-xs text-neutral-500 hover:text-white font-medium bg-[#1C1C21] border border-neutral-800 hover:border-neutral-700 px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1"
+            >
+              <X size={12} />
+              <span>Cancel</span>
             </button>
           </div>
-
           <form onSubmit={handleAcquireTabSubmit} className="p-6 flex-1 flex flex-col gap-5 overflow-y-auto">
             <div>
               <label className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest block mb-2">Target Website URL *</label>
