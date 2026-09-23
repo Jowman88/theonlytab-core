@@ -41,6 +41,7 @@ async function startDatabaseSync() {
   }
   
   try {
+    // FIX: De client wordt nu PAS aangemaakt als de functie draait en de URL geladen is!
     const pgClient = new Client({ connectionString: process.env.DATABASE_URL });
     await pgClient.connect();
     console.log("Database connection handshake successful via IPv4 Pooler!");
