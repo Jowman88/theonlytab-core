@@ -3,7 +3,6 @@ import { Client } from 'pg';
 
 export async function GET() {
   try {
-    // FIX: De client wordt nu PAS geïnitialiseerd binnen de lopende GET-functie!
     const pgClient = new Client({ connectionString: process.env.DATABASE_URL });
     await pgClient.connect();
 
@@ -16,9 +15,9 @@ export async function GET() {
     );
     await pgClient.end();
 
-    // ALS ER EEN ACTIEVE BIEDER IS: Stuur deze direct door
-    if (activeRes.rows.length > 0) {
-      return NextResponse.json({ data: activeRes.rows });
+    // ALS ER EEN ACTIEVE BIEDER IS: Stuur exact de eerste rij (het object) door
+    if (activeRes.rows && activeRes.rows.length > 0) {
+      return NextResponse.json({ data: activeRes.rows[0] });
     }
 
     // FALLBACK / HOUSE DEFAULT LOGICA: Als de site idle is, veins activiteit!
