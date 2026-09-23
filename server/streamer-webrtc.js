@@ -1,4 +1,3 @@
-// Force clean snapshot build for live server
 const puppeteer = require('puppeteer');
 const { Client } = require('pg');
 const http = require('http');
