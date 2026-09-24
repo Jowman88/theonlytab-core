@@ -26,9 +26,9 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   useEffect(() => {
-    const socket = io('wss://onrender.com', {
+    const socket = io('wss://theonlytab-server.onrender.com', {
   path: '/socket.io/',
-  transports: ['websocket', 'polling'],
+  transports: ['websocket'],
   secure: true,
   rejectUnauthorized: false
 });
