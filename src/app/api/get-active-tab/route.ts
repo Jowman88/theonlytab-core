@@ -3,17 +3,16 @@ import { Client } from 'pg';
 
 export async function GET() {
   const dbConfig = {
-    user: 'fvqeeriisoediuwbftvh.postgres', 
-    host: 'aws-1-eu-west-1.pooler.supabase.com',
-    database: 'postgres',
-    password: 'MidVmXksB2TFPSwB', 
-    port: 6543,
-    ssl: {
-      rejectUnauthorized: false
-    },
-    options: '--options=project=fvqeeriisoediuwbftvh'
-  };
-
+  user: 'postgres.fvqeeriisoediuwbftvh',
+  host: 'aws-1-eu-west-1.pooler.supabase.com',
+  database: 'postgres',
+  password: 'MidVmXksB2TFPSwB', 
+  port: 6543,
+  // Change this from true to an configuration object
+  ssl: {
+    rejectUnauthorized: false 
+  }
+};
   try {
     const pgClient = new Client(dbConfig);
     await pgClient.connect();
