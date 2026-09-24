@@ -102,7 +102,6 @@ if (!isNaN(parsedDate)) {
       } else {
         setReportCount(data.current_count);
       }
-    }
   };
 
   const handleAcquireTabSubmit = async (e: React.FormEvent) => {
