@@ -9,9 +9,7 @@ export async function GET() {
   database: 'postgres',
   password: 'postgres.fvqeeriisoediuwbftvh:MidVmXksB2TFPSwB',
   port: 6543,
-  ssl: {
-    rejectUnauthorized: false // FIX: Dit staat Supabase toe om het interne certificaat veilig te passeren!
-  }
+  
 };
   
   try {
