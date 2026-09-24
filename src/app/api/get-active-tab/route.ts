@@ -11,7 +11,8 @@ export async function GET() {
     ssl: {
       rejectUnauthorized: false
     },
-  
+    // FIX: Deze regel is ABSOLUUT VERPLICHT om de tenant-identifier fout (500 crash) te voorkomen!
+    options: '--options=project=fvqeeriisoediuwbftvh'
   };
 
   try {
@@ -26,12 +27,12 @@ export async function GET() {
     );
     await pgClient.end();
 
-    // FIX 1: Als er een rij in de database staat (inclusief onze House Default), sturen we DIRECT de eerste rij als los object mee!
+    // SUCCES FIX: We sturen exact de eerste rij mee als los, schoon object (geen array haken!)
     if (activeRes.rows && activeRes.rows.length > 0) {
       return NextResponse.json({ data: activeRes.rows[0] });
     }
 
-    // FIX 2: De harde code fallback is nu ook een zuiver enkelvoudig object
+    // FALLBACK FIX: De hardcoded back-up is nu ook een zuiver enkelvoudig object
     const houseDefault = {
       id: "house-default-1",
       currentUrl: "https://theonlytab.io",
