@@ -49,27 +49,29 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   }, [streamServerUrl]);
 
   useEffect(() => {
-    const fetchState = async () => {
-      const res = await fetch('/api/get-active-tab');
-      if (res.ok) {
-        const payload = await res.json();
-        setSlot(payload.data);
-        // Pak de eerste rij als het een array is, anders direct het object
-const rawData = Array.isArray(payload.data) ? payload.data[0] : payload.data;
+   const fetchState = async () => {
+  try {
+    const res = await fetch('/api/get-active-tab');
+    if (res.ok) {
+      const payload = await res.json();
+      // Veiligheidscheck: pak de eerste rij bij een array, anders direct het object
+      const rawData = Array.isArray(payload.data) ? payload.data[0] : payload.data;
+      setSlot(rawData);
 
-if (rawData && rawData.expiresAt) {
-  const targetTime = new Date(rawData.expiresAt).getTime();
-  if (!isNaN(targetTime)) {
-    setSecondsLeft(Math.max(0, Math.floor((targetTime - Date.now()) / 1000)));
-    setSlot(rawData);
-    return;
-  }
-}
-setSlot(rawData || null);
-setSecondsLeft(0);
-
+      if (rawData && rawData.expiresAt) {
+        const parsedDate = new Date(rawData.expiresAt).getTime();
+        if (!isNaN(parsedDate)) {
+          setSecondsLeft(Math.max(0, Math.floor((parsedDate - Date.now()) / 1000)));
+          return;
+        }
       }
-    };
+      setSecondsLeft(0);
+    }
+  } catch (e) {
+    console.error("Bypass invalid date popup", e);
+  }
+};
+
     fetchState();
     const interval = setInterval(fetchState, 3000);
     return () => clearInterval(interval);
