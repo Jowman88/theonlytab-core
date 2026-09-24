@@ -19,8 +19,7 @@ export async function GET() {
     ssl: {
       rejectUnauthorized: false
     },
-    // FIX 2: Explicitly pass the tenant ID via connection parameters to eliminate the ENOIDENTIFIER error
-    options: '--options=project=fvqeeriisoediuwbftvh'
+
   };
 
   try {
