@@ -3,15 +3,15 @@ import { Client } from 'pg';
 
 export async function GET() {
   const dbConfig = {
-    user: 'fvqeeriisoediuwbftvh.postgres', // Gecorrigeerd voor tenant routing
-    host: 'aws-1-eu-west-1.pooler.supabase.com',
+    user: 'fvqeeriisoediuwbftvh.postgres', 
+    host: '://supabase.com',
     database: 'postgres',
     password: 'MidVmXksB2TFPSwB', 
     port: 6543,
     ssl: {
       rejectUnauthorized: false
     },
-    options: '--options=project=fvqeeriisoediuwbftvh' // Voorkomt de ENOIDENTIFIER crash
+    options: '--options=project=fvqeeriisoediuwbftvh'
   };
 
   try {
@@ -26,12 +26,12 @@ export async function GET() {
     );
     await pgClient.end();
 
-    // FIX 1: Als er een actieve bieder is, sturen we direct de EERSTE RIJ (geen array wrapper)
+    // FIX 1: Als er een rij in de database staat (inclusief onze House Default), sturen we DIRECT de eerste rij als los object mee!
     if (activeRes.rows && activeRes.rows.length > 0) {
       return NextResponse.json({ data: activeRes.rows[0] });
     }
 
-    // FIX 2: De fallback is nu ook een zuiver enkelvoudig object zonder array haken!
+    // FIX 2: De harde code fallback is nu ook een zuiver enkelvoudig object
     const houseDefault = {
       id: "house-default-1",
       currentUrl: "https://theonlytab.io",
