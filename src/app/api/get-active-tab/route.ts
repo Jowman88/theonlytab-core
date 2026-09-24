@@ -4,7 +4,7 @@ import { Client } from 'pg';
 export async function GET() {
   const dbConfig = {
     user: 'fvqeeriisoediuwbftvh.postgres', 
-    host: '://supabase.com',
+    host: 'aws-1-eu-west-1.pooler.supabase.com',
     database: 'postgres',
     password: 'MidVmXksB2TFPSwB', 
     port: 6543,
