@@ -41,15 +41,16 @@ io.on('connection', (socket) => {
 // 3. Start de database-lus op de achtergrond
 async function startDatabaseSync() {
   const dbConfig = {
-    user: 'postgres.fvqeeriisoediuwbftvh',
-    host: '://supabase.com',
-    database: 'postgres',
-    password: 'MidVmXksB2TFPSwB',
-    port: 6543,
-    ssl: {
-      rejectUnauthorized: false
-    }
-  };
+  user: 'postgres',
+  host: '://supabase.com',
+  database: 'postgres',
+  password: 'postgres.fvqeeriisoediuwbftvh:MidVmXksB2TFPSwB',
+  port: 6543,
+  ssl: {
+    rejectUnauthorized: false
+  }
+};
+
 
   try {
     const pgClient = new Client(dbConfig);
