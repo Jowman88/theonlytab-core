@@ -164,7 +164,8 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       </header>
 
       {/* Main Container Area */}
-      <div className="flex-1 w-full flex relative overflow-hidden">
+<div className="flex-1 w-full flex flex-col lg:flex-row relative overflow-hidden">
+
         
         {/* Dynamic Drawer / Formulier Paneel */}
         <div className={`absolute lg:relative top-0 left-0 h-full w-80 bg-[#121215] border-r border-neutral-800/60 z-30 transform transition-transform duration-300 flex flex-col ${isFormOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
