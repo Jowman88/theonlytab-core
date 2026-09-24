@@ -14,7 +14,9 @@ export async function GET() {
   password: 'MidVmXksB2TFPSwB',
   
   port: 6543,
-  ssl: true
+  ssl: {
+    rejectUnauthorized: false 
+  }
 };
 
 
