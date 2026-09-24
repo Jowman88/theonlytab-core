@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     // 2. Direct database connection parameters without any protocol strings
     const dbConfig = {
       user: 'postgres',
-      host: 'aws-0-eu-central-1.pooler.supabase.com',
+      host: 'aws-0-eu-central-1.pooler.supabase.co',
       database: 'postgres',
       password: 'postgres.fvqeeriisoediuwbftvh:MidVmXksB2TFPSwB',
       port: 6543,
