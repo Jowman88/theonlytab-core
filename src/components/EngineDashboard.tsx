@@ -253,12 +253,6 @@ setSecondsLeft(0);
             </span>
           </div>
           <div className="w-[1px] h-10 bg-neutral-800/80" />
-          <div>
-            <span className="text-[9px] text-neutral-500 font-bold uppercase tracking-widest block mb-1">Time Remaining</span>
-            <span className="font-mono text-xl font-bold text-neutral-300 tracking-wide block bg-[#1C1C21] px-3 py-0.5 rounded-md border border-neutral-800/60">
-              {formatClock(secondsLeft)}
-            </span>
-          </div>
         </div>
 
         <div className="flex items-center gap-4">
