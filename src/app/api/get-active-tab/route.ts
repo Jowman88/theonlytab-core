@@ -3,7 +3,7 @@ import { Client } from 'pg';
 
 export async function GET() {
   try {
-    // HARDCODED BYPASS: We omzeilen process.env en voeren de juiste link direct in!
+    // HARDCODED BYPASS: We negeren process.env volledig en injecteren de IPv4 pooler link als pure tekst!
     const pgClient = new Client({ 
       connectionString: "postgresql://postgres.fvqeeriisoediuwbftvh:MidVmXksB2TFPSwB@://supabase.com" 
     });
@@ -18,7 +18,7 @@ export async function GET() {
     );
     await pgClient.end();
 
-    // ALS ER EEN ACTIEVE BIEDER IS: Stuur exact de eerste rij door
+    // ALS ER EEN ACTIEVE BIEDER IS: Stuur deze direct door
     if (activeRes.rows && activeRes.rows.length > 0) {
       return NextResponse.json({ data: activeRes.rows });
     }
@@ -39,7 +39,9 @@ export async function GET() {
       }
     ];
 
+    // Kies willekeurig een van de House Defaults
     const randomDefault = houseDefaults[Math.floor(Math.random() * houseDefaults.length)];
+
     return NextResponse.json({ data: randomDefault });
   } catch (err: any) {
     console.error("Get Active Slot Error:", err);
