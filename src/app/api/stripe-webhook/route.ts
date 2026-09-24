@@ -24,7 +24,7 @@ export async function POST(req: Request) {
   // Dit is de ENIGE, 100% juiste object-configuratie zonder protocol-fouten
   const dbConfig = {
   user: 'postgres',
-  host: '://supabase.co',
+  host: 'aws-1-eu-west-1.pooler.supabase.com',
   database: 'postgres',
   password: 'postgres.fvqeeriisoediuwbftvh:MidVmXksB2TFPSwB',
   port: 6543,
