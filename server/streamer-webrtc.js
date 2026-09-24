@@ -42,16 +42,13 @@ io.on('connection', (socket) => {
 async function startDatabaseSync() {
   const dbConfig = {
   user: 'postgres',
-  host: '://supabase.com',
+  host: 'aws-0-eu-central-1.pooler.supabase.co', // FIX: Change to .co!
   database: 'postgres',
-  password: 'postgres.fvqeeriisoediuwbftvh:MidVmXksB2TFPSwB',
+  password: 'postgres.fvqeeriisoediuwbftvh:MidVmXksB2TFPSwB', 
   port: 6543,
-  ssl: {
-    rejectUnauthorized: false
-  }
+  ssl: true
 };
-
-
+  
   try {
     const pgClient = new Client(dbConfig);
     await pgClient.connect();
