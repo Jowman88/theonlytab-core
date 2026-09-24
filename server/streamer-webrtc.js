@@ -44,7 +44,7 @@ async function startDatabaseSync() {
   user: 'postgres',
   host: 'aws-1-eu-west-1.pooler.supabase.com', // Your REAL Supabase cluster!
   database: 'postgres',
-  password: 'postgres.'fvqeeriisoediuwbftvh:MidVmXksB2TFPSwB', 
+  password: 'postgres.fvqeeriisoediuwbftvh:MidVmXksB2TFPSwB', 
   port: 6543, // Keep port 6543 since it's the transaction pooler port Node requires
   ssl: true
 };
