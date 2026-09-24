@@ -23,13 +23,13 @@ export async function POST(req: Request) {
 
   // Dit is de ENIGE, 100% juiste object-configuratie zonder protocol-fouten
   const dbConfig = {
-    user: 'postgres',
-    host: 'aws-0-eu-central-1.pooler.supabase.co',
-    database: 'postgres',
-    password: 'postgres.fvqeeriisoediuwbftvh:MidVmXksB2TFPSwB',
-    port: 6543,
-    ssl: true
-  };
+  user: 'postgres',
+  host: '://supabase.com',
+  database: 'postgres',
+  password: 'postgres.fvqeeriisoediuwbftvh:MidVmXksB2TFPSwB',
+  port: 6543,
+  ssl: true
+};
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
