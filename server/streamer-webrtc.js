@@ -1,92 +1,123 @@
-const { Client } = require('pg');
-const { Server } = require('socket.io');
-const express = require('express');
-const http = require('http');
+import pkg from 'pg';
+const { Client } = pkg;
+import { Server } from 'socket.io';
+import express from 'express';
+import http from 'http';
+import puppeteer from 'puppeteer';
 
-// 1. Initialiseer Express en de HTTP-server direct
+// 1. Initialiseer Express en de HTTP-server
 const app = express();
 const server = http.createServer(app);
 
-// 2. Configureer Socket.io vlijmscherp met het verplichte cloud-pad en CORS-beveiliging
+// 2. Configureer Socket.io vlijmscherp voor Render
 const io = new Server(server, { 
-  path: "/socket.io/", // FIX: Dit dwingt de proxy van Render om WebSocket-verkeer direct door te laten!
+  path: "/socket.io/", 
   cors: { 
     origin: "*",
-    methods: ["GET", "POST"],
-    credentials: true
+    methods: ["GET", "POST"]
   },
-  allowEIO3: true,
-  transports: ['websocket', 'polling']
+  transports: ['websocket']
 });
 
-await page.evaluate((timeLeft) => {
-  const div = document.createElement('div');
-  div.style.position = 'fixed';
-  div.style.top = '20px';
-  div.style.right = '20px';
-  div.style.backgroundColor = 'rgba(18, 18, 21, 0.85)';
-  div.style.color = '#34d399'; // Emerald groen
-  div.style.padding = '8px 16px';
-  div.style.borderRadius = '20px';
-  div.style.fontFamily = 'monospace';
-  div.style.fontSize = '14px';
-  div.style.zIndex = '9999999';
-  div.innerText = `Time Left: ${timeLeft}`;
-  document.body.appendChild(div);
-}, currentFormattedTime);
-
-
-const PORT = process.env.PORT || 10000; // Matcht automatisch met de poort van Render
+const PORT = process.env.PORT || 10000;
 
 // Gezonde hoofdroute (Health Check)
 app.get('/', (req, res) => {
-  res.status(200).send('The Only Tab Streaming Core is Active and Running!');
+  res.status(200).send('The Only Tab Streaming Core Engine is Active!');
 });
 
-// Luisteraar voor inkomende WebSocket-verbindingen
-io.on('connection', (socket) => {
-  console.log(`New client successfully connected via secure WebSocket: ${socket.id}`);
-  
-  // Stuur direct bij verbinding een testframe of statusprikkel naar de client
-  socket.emit('status', { engine: 'online' });
+// Wereldwijde variabelen om de browserstaat bij te houden
+let browser = null;
+let page = null;
+let currentUrlInStream = "";
 
-  socket.on('disconnect', () => {
-    console.log(`Client disconnected: ${socket.id}`);
-  });
-});
-
-// 3. Start de database-lus op de achtergrond
-async function startDatabaseSync() {
-  const dbConfig = {
-  user: 'postgres.fvqeeriisoediuwbftvh',
-  host: 'aws-1-eu-west-1.pooler.supabase.com',
-  database: 'postgres',
-  password: process.env.DATABASE_PASSWORD, // 100% VEILIG & DYNAMISCH!
-  port: 6543,
-  ssl: { rejectUnauthorized: false }
-};
-  
+// 3. Start de actieve Puppeteer Browser-instantie
+async function initPuppeteer() {
   try {
-    const pgClient = new Client(dbConfig);
-    await pgClient.connect();
-    console.log("Database connection handshake successful via IPv4 Pooler!");
-
-    // Hou de Node.js thread permanent actief en stream dummy data als er geen actieve tab is
-    setInterval(async () => {
-      try {
-        // Zodra Puppeteer actief is, schieten we hier io.emit('v-frame', ...) door!
-      } catch (tickErr) {
-        console.error("Tick error:", tickErr.message);
-      }
-    }, 4000);
-
+    console.log("Launching headless cloud browser via Puppeteer...");
+    browser = await puppeteer.launch({
+      headless: "new",
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
+        '--no-zygote',
+        '--single-process',
+        '--disable-gpu',
+        '--window-size=1280,720'
+      ],
+      defaultViewport: { width: 1280, height: 720 }
+    });
+    page = await browser.newPage();
+    await page.setDefaultNavigationTimeout(30000);
+    console.log("Cloud browser successfully initialized and drawing canvas!");
   } catch (err) {
-    console.error("Runtime Database Sync Error:", err.message);
+    console.error("Fatal Error initializing Puppeteer:", err.message);
   }
 }
 
-// 4. Start de applicatie op de juiste volgorde
+// 4. De Database Sync & Live Streaming Lus (24 frames per seconde)
+async function startStreamingCore() {
+  const dbConfig = {
+    user: 'postgres.fvqeeriisoediuwbftvh',
+    host: 'aws-1-eu-west-1.pooler.supabase.com',
+    database: 'postgres',
+    password: process.env.DATABASE_PASSWORD, // 100% VEILIG & DYNAMISCH!
+    port: 6543,
+    ssl: { rejectUnauthorized: false }
+  };
+
+  // Start eerst de browser op de achtergrond
+  await initPuppeteer();
+
+  // Elke 3 seconden controleren we de database op een nieuwe URL
+  setInterval(async () => {
+    try {
+      const pgClient = new Client(dbConfig);
+      await pgClient.connect();
+      
+      const res = await pgClient.query(
+        `SELECT current_url FROM slots WHERE is_frozen = FALSE AND expires_at > NOW() LIMIT 1`
+      );
+      await pgClient.end();
+
+      let targetUrl = "https://theonlytab.io"; 
+      if (res.rows && res.rows.length > 0) {
+        targetUrl = res.rows.current_url;
+      }
+
+      if (targetUrl !== currentUrlInStream && page) {
+        console.log(`Stream target shifted! Steering browser to: ${targetUrl}`);
+        currentUrlInStream = targetUrl;
+        await page.goto(targetUrl, { waitUntil: 'networkidle2' }).catch(() => {});
+      }
+
+    } catch (dbErr) {
+      console.error("Database sync loop error:", dbErr.message);
+    }
+  }, 3000);
+
+  // DE LIVE FRAME LUS: Schiet vloeibare JPEG-screenshots naar de frontend via WebSockets
+  setInterval(async () => {
+    if (!page || !browser) return;
+    try {
+      const screenshotBase64 = await page.screenshot({
+        type: 'jpeg',
+        quality: 40, 
+        encoding: 'base64'
+      });
+
+      io.emit('v-frame', screenshotBase64);
+    } catch (streamErr) {
+      // Voorkom spam in de logs bij herladen
+    }
+  }, 41);
+}
+
+// 5. Start de applicatie op de juiste volgorde
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server fully bound and locked on port ${PORT}`);
-  startDatabaseSync();
+  startStreamingCore();
 });
