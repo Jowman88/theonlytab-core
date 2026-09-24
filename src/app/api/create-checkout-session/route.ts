@@ -10,10 +10,10 @@ export async function POST(req: Request) {
   try {
     const { targetUrl, displayName, bidAmount, durationMinutes } = await req.json();
 
-    // 1. Bereken de exacte verlooptijd voor de metadata
+    // 1. Calculate expiration timestamp
     const expiresAt = new Date(Date.now() + durationMinutes * 60 * 1000).toISOString();
 
-    // 2. Dit is de ENIGE, 100% juiste object-configuratie zonder protocol-fouten
+    // 2. Direct database connection parameters without any protocol strings
     const dbConfig = {
       user: 'postgres',
       host: 'aws-0-eu-central-1.pooler.supabase.com',
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
       ssl: true
     };
 
-    // 3. Controleer heel even in de database of het bod nog steeds het hoogste is
+    // 3. Connect to the database using the clean parameters object
     const pgClient = new Client(dbConfig);
     await pgClient.connect();
     
@@ -35,10 +35,10 @@ export async function POST(req: Request) {
     const currentHighestBid = activeRes.rows.length > 0 ? parseFloat(activeRes.rows[0].current_bid) : 0.00;
 
     if (parseFloat(bidAmount) <= currentHighestBid) {
-      return NextResponse.json({ error: 'Outbid! Er is inmiddels al een hoger bod geplaatst.' }, { status: 400 });
+      return NextResponse.json({ error: 'Outbid! A higher bid was placed in the meantime.' }, { status: 400 });
     }
 
-    // 4. Maak de officiële Stripe Checkout Sessie aan
+    // 4. Create the secure Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card', 'ideal'],
       line_items: [
