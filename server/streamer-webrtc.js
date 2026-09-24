@@ -19,6 +19,23 @@ const io = new Server(server, {
   transports: ['websocket', 'polling']
 });
 
+await page.evaluate((timeLeft) => {
+  const div = document.createElement('div');
+  div.style.position = 'fixed';
+  div.style.top = '20px';
+  div.style.right = '20px';
+  div.style.backgroundColor = 'rgba(18, 18, 21, 0.85)';
+  div.style.color = '#34d399'; // Emerald groen
+  div.style.padding = '8px 16px';
+  div.style.borderRadius = '20px';
+  div.style.fontFamily = 'monospace';
+  div.style.fontSize = '14px';
+  div.style.zIndex = '9999999';
+  div.innerText = `Time Left: ${timeLeft}`;
+  document.body.appendChild(div);
+}, currentFormattedTime);
+
+
 const PORT = process.env.PORT || 10000; // Matcht automatisch met de poort van Render
 
 // Gezonde hoofdroute (Health Check)
