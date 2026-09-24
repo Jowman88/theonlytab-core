@@ -25,7 +25,9 @@ export async function POST(req: Request) {
   password: 'MidVmXksB2TFPSwB',
   
   port: 6543,
-  ssl: true
+  ssl: {
+    rejectUnauthorized: false 
+  }
 };
 
 
