@@ -3,13 +3,15 @@ import { Client } from 'pg';
 
 export async function GET() {
   const dbConfig = {
-  user: 'postgres.fvqeeriisoediuwbftvh',
-  host: 'aws-1-eu-west-1.pooler.supabase.com',
-  database: 'postgres',
-  password: process.env.DATABASE_PASSWORD, // 100% VEILIG & DYNAMISCH!
-  port: 6543,
-  ssl: { rejectUnauthorized: false }
-};
+    user: 'postgres.fvqeeriisoediuwbftvh', 
+    host: 'aws-1-eu-west-1.pooler.supabase.com',
+    database: 'postgres',
+    password: process.env.DATABASE_PASSWORD, 
+    port: 6543,
+    ssl: {
+      rejectUnauthorized: false
+    }
+  };
 
   try {
     const pgClient = new Client(dbConfig);
@@ -23,12 +25,11 @@ export async function GET() {
     );
     await pgClient.end();
 
-    // SUCCES FIX: We sturen direct de eerste rij mee als los object (geen array haken!)
+    // FIX: We sturen ALTIJD de eerste rij mee als een puur, los object (haalt de array-haken weg!)
     if (activeRes.rows && activeRes.rows.length > 0) {
       return NextResponse.json({ data: activeRes.rows[0] });
     }
 
-    // FALLBACK FIX: De back-up is nu ook een zuiver enkelvoudig object
     const houseDefault = {
       id: "house-default-1",
       currentUrl: "https://theonlytab.io",
