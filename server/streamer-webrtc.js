@@ -42,10 +42,10 @@ io.on('connection', (socket) => {
 async function startDatabaseSync() {
   const dbConfig = {
   user: 'postgres',
-  host: 'aws-0-eu-central-1.pooler.supabase.co', // FIX: Change to .co!
+  host: '://supabase.com', // Your REAL Supabase cluster!
   database: 'postgres',
   password: 'postgres.fvqeeriisoediuwbftvh:MidVmXksB2TFPSwB', 
-  port: 6543,
+  port: 6543, // Keep port 6543 since it's the transaction pooler port Node requires
   ssl: true
 };
   
