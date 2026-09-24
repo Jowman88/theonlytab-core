@@ -7,7 +7,7 @@ export async function GET() {
     user: 'postgres',
     host: 'aws-1-eu-west-1.pooler.supabase.com', // Gecorrigeerd naar .com conform jouw dashboard!
     database: 'postgres',
-    password: 'postgres.fvqeeriisoediuwbftvh:MidVmXksB2TFPSwB', // Project-ID gekoppeld in wachtwoord voor Supavisor
+    password: 'postgres.fvqeeriisoediuwbftvhMidVmXksB2TFPSwB', // Project-ID gekoppeld in wachtwoord voor Supavisor
     port: 6543, // De officiële transactie-pooler poort
     ssl: {
       rejectUnauthorized: false // Accepteert het interne certificaat van de Supabase pooler
