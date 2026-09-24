@@ -26,7 +26,13 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   useEffect(() => {
-    const socket = io(streamServerUrl, { transports: ['websocket'] });
+    const socket = io('https://onrender.com', {
+  path: '/socket.io/',
+  transports: ['websocket', 'polling'],
+  secure: true,
+  rejectUnauthorized: false
+});
+
     socket.on('v-frame', (base64Data: string) => {
       if (!canvasRef.current) return;
       const ctx = canvasRef.current.getContext('2d');
