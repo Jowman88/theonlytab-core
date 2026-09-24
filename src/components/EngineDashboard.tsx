@@ -54,9 +54,20 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       if (res.ok) {
         const payload = await res.json();
         setSlot(payload.data);
-        if (payload.data?.expiresAt) {
-          setSecondsLeft(Math.max(0, Math.floor((new Date(payload.data.expiresAt).getTime() - Date.now()) / 1000)));
-        }
+        // Pak de eerste rij als het een array is, anders direct het object
+const rawData = Array.isArray(payload.data) ? payload.data[0] : payload.data;
+
+if (rawData && rawData.expiresAt) {
+  const targetTime = new Date(rawData.expiresAt).getTime();
+  if (!isNaN(targetTime)) {
+    setSecondsLeft(Math.max(0, Math.floor((targetTime - Date.now()) / 1000)));
+    setSlot(rawData);
+    return;
+  }
+}
+setSlot(rawData || null);
+setSecondsLeft(0);
+
       }
     };
     fetchState();
