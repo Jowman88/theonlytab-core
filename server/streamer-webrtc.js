@@ -7,7 +7,7 @@ const http = require('http');
 const app = express();
 const server = http.createServer(app);
 
-// 2. Configureer Socket.io vlijmscherp voor Railway en Vercel
+// 2. Configureer Socket.io vlijmscherp voor Render en Vercel
 const io = new Server(server, { 
   cors: { 
     origin: "*",
@@ -20,7 +20,7 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 8080;
 
-// Gezonde hoofdroute (Health Check) zodat Railway DIRECT ziet dat de app leeft
+// Gezonde hoofdroute (Health Check) zodat Render DIRECT ziet dat de app leeft
 app.get('/', (req, res) => {
   res.status(200).send('The Only Tab Streaming Core is Active and Running!');
 });
@@ -36,10 +36,10 @@ io.on('connection', (socket) => {
 // 3. Start de database-lus op de achtergrond zonder Express te blokkeren
 async function startDatabaseSync() {
   try {
-    // FIX: Hier staat nu de VOLLEDIGE, zuivere IPv4 pooler link zonder protocol-fouten!
+    // HARDCODED BYPASS: We negeren omgevingsvariabelen en voeren de IPv4 shared pooler link direct in als tekst!
     const pgClient = new Client({ 
-  connectionString: "postgresql://postgres.fvqeeriisoediuwbftvh:MidVmXksB2TFPSwB@://supabase.com" 
-});
+      connectionString: "postgresql://postgres.fvqeeriisoediuwbftvh:MidVmXksB2TFPSwB@://supabase.com" 
+    });
     await pgClient.connect();
     console.log("Database connection handshake successful via IPv4 Pooler!");
 
