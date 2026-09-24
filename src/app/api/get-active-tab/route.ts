@@ -2,22 +2,23 @@ import { NextResponse } from 'next/server';
 import { Client } from 'pg';
 
 export async function GET() {
-  try {
-    // We isoleren de verbinding volledig van process.env door een zuiver, vers object te voeren
-    const pgClient = new Client({
-      user: 'postgres.fvqeeriisoediuwbftvh',
-      host: '://supabase.com',
-      database: 'postgres',
-      password: 'MidVmXksB2TFPSwB',
-      port: 6543,
-      ssl: {
-        rejectUnauthorized: false
-      }
-    });
+  // We dwingen de configuratie handmatig af in een los object, zonder dat er ergens een URL-string ontleed hoeft te worden
+  const dbConfig = {
+    user: 'postgres.fvqeeriisoediuwbftvh',
+    host: '://supabase.com',
+    database: 'postgres',
+    password: 'MidVmXksB2TFPSwB',
+    port: 6543,
+    ssl: {
+      rejectUnauthorized: false
+    }
+  };
 
+  try {
+    // We geven de configuratie DIRECT mee aan de Client constructor
+    const pgClient = new Client(dbConfig);
     await pgClient.connect();
 
-    // Haal de actieve bieder op die nog niet verlopen of bevroren is
     const activeRes = await pgClient.query(
       `SELECT id, current_url as "currentUrl", display_name as "displayName", current_bid, expires_at as "expiresAt" 
        FROM slots 
@@ -26,12 +27,10 @@ export async function GET() {
     );
     await pgClient.end();
 
-    // ALS ER EEN ACTIEVE BIEDER IS: Stuur deze direct door
     if (activeRes.rows && activeRes.rows.length > 0) {
       return NextResponse.json({ data: activeRes.rows });
     }
 
-    // FALLBACK / HOUSE DEFAULT LOGICA: Als de site idle is, stuur de default door
     const houseDefaults = [
       {
         id: "house-default-1",
@@ -41,7 +40,7 @@ export async function GET() {
       }
     ];
 
-    return NextResponse.json({ data: houseDefaults[0] });
+    return NextResponse.json({ data: houseDefaults });
   } catch (err: any) {
     console.error("Get Active Slot Error:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
