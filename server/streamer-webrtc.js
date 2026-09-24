@@ -51,7 +51,9 @@ async function startDatabaseSync() {
   password: 'MidVmXksB2TFPSwB',
   
   port: 6543,
-  ssl: true
+  ssl: {
+    rejectUnauthorized: false 
+  }
 };
 
   
