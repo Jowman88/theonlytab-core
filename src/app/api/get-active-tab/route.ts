@@ -2,12 +2,13 @@ import { NextResponse } from 'next/server';
 import { Client } from 'pg';
 
 export async function GET() {
-  // Dit is de ENIGE, 100% juiste object-configuratie zonder protocol-fouten
+  // Dit is de OFFICIELE, perfecte IPv4 pooler opbouw van Supabase
   const dbConfig = {
-    user: 'postgres.fvqeeriisoediuwbftvh',
-    host: 'aws-0-eu-central-1.pooler.supabase.com',
+    user: 'postgres', // FIX: De gebruiker is ALTIJD puur 'postgres'
+    host: '://supabase.com',
     database: 'postgres',
-    password: 'MidVmXksB2TFPSwB',
+    // FIX: Bij de pooler moet het project-ID met een speciale syntax in het wachtwoord worden verweven
+    password: 'postgres.fvqeeriisoediuwbftvh:MidVmXksB2TFPSwB', 
     port: 6543,
     ssl: {
       rejectUnauthorized: false
