@@ -3,15 +3,13 @@ import { Client } from 'pg';
 
 export async function GET() {
   const dbConfig = {
-    user: 'postgres.fvqeeriisoediuwbftvh', 
-    host: 'aws-1-eu-west-1.pooler.supabase.com', // 100% Gecorrigeerd naar .com!
-    database: 'postgres',
-    password: 'MidVmXksB2TFPSwB', 
-    port: 6543,
-    ssl: {
-      rejectUnauthorized: false
-    }
-  };
+  user: 'postgres.fvqeeriisoediuwbftvh',
+  host: 'aws-1-eu-west-1.pooler.supabase.com',
+  database: 'postgres',
+  password: process.env.DATABASE_PASSWORD, // 100% VEILIG & DYNAMISCH!
+  port: 6543,
+  ssl: { rejectUnauthorized: false }
+};
 
   try {
     const pgClient = new Client(dbConfig);
