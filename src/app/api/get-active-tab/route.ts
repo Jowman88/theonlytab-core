@@ -3,10 +3,18 @@ import { Client } from 'pg';
 
 export async function GET() {
   try {
-    // HARDCODED BYPASS: We negeren process.env volledig en injecteren de IPv4 pooler link als pure tekst!
-    const pgClient = new Client({ 
-      connectionString: "postgresql://postgres.fvqeeriisoediuwbftvh:MidVmXksB2TFPSwB@://supabase.com" 
+    // We isoleren de verbinding volledig van process.env door een zuiver, vers object te voeren
+    const pgClient = new Client({
+      user: 'postgres.fvqeeriisoediuwbftvh',
+      host: '://supabase.com',
+      database: 'postgres',
+      password: 'MidVmXksB2TFPSwB',
+      port: 6543,
+      ssl: {
+        rejectUnauthorized: false
+      }
     });
+
     await pgClient.connect();
 
     // Haal de actieve bieder op die nog niet verlopen of bevroren is
@@ -23,26 +31,17 @@ export async function GET() {
       return NextResponse.json({ data: activeRes.rows });
     }
 
-    // FALLBACK / HOUSE DEFAULT LOGICA: Als de site idle is, veins activiteit!
+    // FALLBACK / HOUSE DEFAULT LOGICA: Als de site idle is, stuur de default door
     const houseDefaults = [
       {
         id: "house-default-1",
         currentUrl: "https://theonlytab.io",
         displayName: "The Only Tab HQ",
         current_bid: "0.00"
-      },
-      {
-        id: "house-default-2",
-        currentUrl: "https://producthunt.com",
-        displayName: "Product Hunt Daily",
-        current_bid: "19.00"
       }
     ];
 
-    // Kies willekeurig een van de House Defaults
-    const randomDefault = houseDefaults[Math.floor(Math.random() * houseDefaults.length)];
-
-    return NextResponse.json({ data: randomDefault });
+    return NextResponse.json({ data: houseDefaults[0] });
   } catch (err: any) {
     console.error("Get Active Slot Error:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
