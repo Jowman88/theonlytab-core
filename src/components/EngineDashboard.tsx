@@ -27,11 +27,11 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
 
   useEffect(() => {
     const socket = io('wss://theonlytab-server.onrender.com', {
-  path: '/socket.io/',
-  transports: ['websocket'],
-  secure: true,
-  rejectUnauthorized: false
-});
+      path: '/socket.io/',
+      transports: ['websocket'],
+      secure: true,
+      rejectUnauthorized: false
+    });
 
     socket.on('v-frame', (base64Data: string) => {
       if (!canvasRef.current) return;
@@ -49,28 +49,27 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   }, [streamServerUrl]);
 
   useEffect(() => {
-   const fetchState = async () => {
-  try {
-    const res = await fetch('/api/get-active-tab');
-    if (res.ok) {
-      const payload = await res.json();
-      // Veiligheidscheck: pak de eerste rij bij een array, anders direct het object
-      const rawData = Array.isArray(payload.data) ? payload.data[0] : payload.data;
-      setSlot(rawData);
+    const fetchState = async () => {
+      try {
+        const res = await fetch('/api/get-active-tab');
+        if (res.ok) {
+          const payload = await res.json();
+          const rawData = Array.isArray(payload.data) ? payload.data[0] : payload.data;
+          setSlot(rawData);
 
-      if (rawData && rawData.expiresAt) {
-        const parsedDate = new Date(rawData.expiresAt).getTime();
-        if (!isNaN(parsedDate)) {
-          setSecondsLeft(Math.max(0, Math.floor((parsedDate - Date.now()) / 1000)));
-          return;
+          if (rawData && rawData.expiresAt) {
+            const parsedDate = new Date(rawData.expiresAt).getTime();
+            if (!isNaN(parsedDate)) {
+              setSecondsLeft(Math.max(0, Math.floor((parsedDate - Date.now()) / 1000)));
+              return;
+            }
+          }
+          setSecondsLeft(0);
         }
+      } catch (e) {
+        console.error("Bypass invalid date popup", e);
       }
-      setSecondsLeft(0);
-    }
-  } catch (e) {
-    console.error("Bypass invalid date popup", e);
-  }
-};
+    };
 
     fetchState();
     const interval = setInterval(fetchState, 3000);
@@ -83,6 +82,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   }, []);
 
   const triggerReportSlasher = async () => {
+    if (!slot) return;
     const confirmFlag = window.confirm("Are you sure you want to report/flag this content??");
     if (!confirmFlag) return;
 
@@ -100,6 +100,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       }
     }
   };
+
   const handleAcquireTabSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!targetUrl) return alert('Please enter a valid target URL.');
@@ -136,8 +137,13 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
     }
   };
 
-  const formatClock = (s: number) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
-
+  const formatClock = (s: number) => {
+    if (!s || isNaN(s) || s <= 0) return "00:00";
+    if (s > 86400) return "∞"; 
+    const mins = Math.floor(s / 60).toString().padStart(2, '0');
+    const secs = (s % 60).toString().padStart(2, '0');
+    return `${mins}:${secs}`;
+  };
   return (
     <div className="fixed inset-0 w-screen h-screen bg-[#0A0A0C] flex flex-col font-sans antialiased text-neutral-200 select-none overflow-hidden">
       {/* Premium Header */}
@@ -152,7 +158,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
         
         <div className="flex items-center gap-2 bg-[#1C1C21] border border-neutral-800 px-4 py-1.5 rounded-full text-xs text-neutral-400 shadow-inner max-w-md">
           <Globe size={12} className="text-neutral-500 shrink-0" />
-          <span className="truncate font-mono tracking-tight">{slot?.currentUrl || 'synchronizing_node_feed...'}</span>
+          <span className="truncate font-mono tracking-tight">{slot?.currentUrl || 'The Only Tab HQ'}</span>
         </div>
         <div className="w-24" />
       </header>
@@ -161,13 +167,13 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       <div className="flex-1 w-full flex relative overflow-hidden">
         
         {/* Dynamic Drawer / Formulier Paneel */}
-        <div className={`absolute lg:relative top-0 left-0 h-full w-80 bg-[#121215] border-r border-neutral-800/60 z-30 transform transition-transform duration-300 flex flex-col ${isFormOpen ? 'translate-x-0' : '-translate-x-full lg:absolute'}`}>
+        <div className={`absolute lg:relative top-0 left-0 h-full w-80 bg-[#121215] border-r border-neutral-800/60 z-30 transform transition-transform duration-300 flex flex-col ${isFormOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
           <div className="p-6 border-b border-neutral-800/60 flex items-center justify-between">
             <h3 className="font-bold text-xs uppercase tracking-wider text-neutral-100">Configure Your Tab</h3>
             <button 
               type="button"
               onClick={() => setIsFormOpen(false)} 
-              className="text-xs text-neutral-500 hover:text-white font-medium bg-[#1C1C21] border border-neutral-800 hover:border-neutral-700 px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1"
+              className="text-xs text-neutral-500 hover:text-white font-medium bg-[#1C1C21] border border-neutral-800 hover:border-neutral-700 px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1 lg:hidden"
             >
               <X size={12} />
               <span>Cancel</span>
@@ -203,86 +209,82 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
               </div>
             </div>
 
-            <div>
-              <label className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest block mb-2">X (Twitter) Handle</label>
-              <div className="relative flex items-center">
-                <span className="absolute left-4 text-xs text-neutral-500 font-mono">@</span>
-                <input 
-                  type="text" 
-                  placeholder="username"
-                  value={xHandle}
-                  onChange={(e) => setXHandle(e.target.value)}
-                  className="w-full bg-[#1C1C21] border border-neutral-800 focus:border-neutral-700 rounded-xl h-11 pl-10 pr-4 text-xs font-mono text-neutral-200 outline-none transition-colors"
-                />
-              </div>
-            </div>
-
-            <div className="mt-auto pt-4">
-              <button 
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full flex items-center justify-center gap-2 bg-white text-black hover:bg-neutral-200 disabled:opacity-50 font-bold text-xs h-12 rounded-xl transition-all shadow-[0_4px_20px_rgba(255,255,255,0.15)]"
-              >
-                <span>{isSubmitting ? 'Connecting...' : 'Proceed to Payment'}</span>
-                <ChevronRight size={14} />
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-neutral-100 hover:bg-white text-neutral-900 font-bold h-11 rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 shadow-md shadow-white/5 active:scale-[0.98] disabled:opacity-50"
+            >
+              <span>{isSubmitting ? 'Opening Stripe...' : 'Acquire Live Feed'}</span>
+              <ArrowUpRight size={14} />
+            </button>
           </form>
         </div>
 
-        {/* Video Canvas Container */}
-        <main className="flex-1 w-full flex items-center justify-center p-8 relative bg-radial-gradient">
-          <div className="w-full max-w-5xl h-full flex flex-col justify-center">
-            <div className="flex-1 bg-[#121215] border border-neutral-800/80 rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] overflow-hidden p-1.5 flex items-center justify-center min-h-0 ring-1 ring-white/5">
-              <canvas ref={canvasRef} className="w-full h-full aspect-video rounded-xl bg-[#030303] object-contain max-h-full" />
+        {/* Video Canvas Presentation Layer */}
+        <div className="flex-1 h-full bg-[#0A0A0C] p-6 flex flex-col items-center justify-center relative">
+          <div className="w-full max-w-4xl aspect-video bg-[#121215] border border-neutral-800/60 rounded-2xl overflow-hidden shadow-2xl relative flex items-center justify-center">
+            <canvas ref={canvasRef} className="w-full h-full object-contain" />
+            
+            {/* 100% PREMIUM GEANIMEERDE LOGO PLACEHOLDER */}
+            <div className="absolute inset-0 bg-[#0A0A0C] flex flex-col items-center justify-center font-sans overflow-hidden pointer-events-none group-has-[canvas[width]]:opacity-0 transition-opacity duration-500">
+              <div className="absolute w-[300px] h-[300px] bg-emerald-500/5 rounded-full blur-[80px] animate-pulse" />
+              <div className="flex flex-col items-center gap-4 z-10">
+                <div className="relative flex items-center justify-center w-16 h-16 bg-[#121215] border border-neutral-800/80 rounded-2xl shadow-xl overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-t from-emerald-500/20 to-transparent opacity-50 animate-pulse" />
+                  <Zap size={24} className="text-emerald-400 animate-bounce" style={{ animationDuration: '3s' }} />
+                </div>
+                <div className="text-center space-y-1">
+                  <h1 className="text-white text-xs font-black tracking-[0.25em] uppercase pl-[0.25em]">
+                    The Only Tab
+                  </h1>
+                  <p className="text-[9px] text-neutral-500 font-bold uppercase tracking-[0.3em] pl-[0.3em] animate-pulse">
+                    Awaiting Active Feed
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-        </main>
+
+          {/* Floating Control Bar under video */}
+          <div className="w-full max-w-4xl mt-6 flex items-center justify-between bg-[#121215]/90 border border-neutral-800/60 p-4 rounded-xl backdrop-blur-md shadow-xl">
+            <div className="flex items-center gap-8">
+              <div>
+                <span className="text-[9px] text-neutral-500 font-bold uppercase tracking-widest block mb-1">Active Space</span>
+                <span className="text-xs font-bold text-neutral-200">{slot?.displayName || 'System Idle'}</span>
+              </div>
+              <div>
+                <span className="text-[9px] text-neutral-500 font-bold uppercase tracking-widest block mb-1">Current Value</span>
+                <span className="text-xs font-mono font-bold text-neutral-100">{slot?.current_bid ? `$${slot.current_bid}` : '\$0.00'}</span>
+              </div>
+              <div>
+                <span className="text-[9px] text-neutral-500 font-bold uppercase tracking-widest block mb-1">Time Remaining</span>
+                <span className="text-xs font-mono font-bold text-emerald-400">{formatClock(secondsLeft)}</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={triggerReportSlasher}
+                className="h-9 px-4 rounded-lg border border-neutral-800 hover:border-red-900/60 bg-[#1C1C21] text-xs text-neutral-400 hover:text-red-400 transition-colors flex items-center gap-1.5"
+              >
+                <ShieldAlert size={13} />
+                <span>Flag ({reportCount})</span>
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => setIsFormOpen(true)}
+                className="h-9 px-5 rounded-lg bg-neutral-100 hover:bg-white text-neutral-900 text-xs font-bold transition-all flex items-center gap-1 active:scale-[0.97]"
+              >
+                <span>Bid Now</span>
+                <ChevronRight size={13} />
+              </button>
+            </div>
+          </div>
+        </div>
+
       </div>
-
-      {/* Premium Footer */}
-      <footer className="h-24 bg-[#121215]/90 backdrop-blur-md border-t border-neutral-800/60 flex items-center justify-between px-10 z-20 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
-        <div className="flex gap-16 items-center">
-          <div>
-            <span className="text-[9px] text-neutral-500 font-bold uppercase tracking-widest block mb-1">Active Space</span>
-            <span className="text-neutral-200 font-bold text-sm tracking-wide max-w-[180px] truncate block">{slot?.displayName || 'System Idle'}</span>
-          </div>
-          <div className="w-[1px] h-10 bg-neutral-800/80" />
-          <div>
-            <span className="text-[9px] text-neutral-500 font-bold uppercase tracking-widest block mb-1">Current Value</span>
-            <span className="text-white font-black text-xl tracking-tight block">
-              \${slot?.current_bid ? parseFloat(slot.current_bid).toFixed(2) : '0.00'}
-            </span>
-          </div>
-          <div className="w-[1px] h-10 bg-neutral-800/80" />
-        </div>
-
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={triggerReportSlasher} 
-            title="Rapproteer ongepaste inhoud"
-            className="p-3 text-neutral-600 hover:text-red-400 hover:bg-red-500/10 rounded-xl border border-transparent hover:border-red-500/20 transition-all duration-200"
-          >
-            <ShieldAlert size={16} />
-            {reportCount > 0 && <span className="text-[10px] ml-1 font-bold">({reportCount})</span>}
-          </button>
-
-          {!isFormOpen ? (
-            <button 
-              onClick={() => setIsFormOpen(true)} 
-              className="flex items-center gap-2 bg-white text-black hover:bg-neutral-200 active:scale-[0.98] font-bold text-xs h-12 px-6 rounded-xl transition-all duration-200 shadow-[0_4px_20px_rgba(255,255,255,0.15)]"
-            >
-              <Zap size={13} className="fill-black" />
-              <span>Acquire Tab for \${slot?.current_bid ? (parseFloat(slot.current_bid) + 1.00).toFixed(2) : '1.00'}</span>
-              <ArrowUpRight size={13} className="opacity-60" />
-            </button>
-          ) : (
-            <div className="text-xs text-neutral-500 font-medium italic animate-pulse pr-4">
-              Fill out the form on the left...
-            </div>
-          )}
-        </div>
-      </footer>
     </div>
   );
 }
