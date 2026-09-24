@@ -18,7 +18,7 @@ export async function POST(req: Request) {
   user: 'postgres',
   host: 'aws-1-eu-west-1.pooler.supabase.com',
   database: 'postgres',
-  password: 'postgres.'fvqeeriisoediuwbftvh:MidVmXksB2TFPSwB',
+  password: 'postgres.fvqeeriisoediuwbftvh:MidVmXksB2TFPSwB',
   port: 6543,
   ssl: true
 };
