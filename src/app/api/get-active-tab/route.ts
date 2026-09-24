@@ -5,11 +5,11 @@ export async function GET() {
   // Dit is de OFFICIELE, perfecte IPv4 pooler opbouw van Supabase
   const dbConfig = {
   user: 'postgres',
-  host: 'aws-0-eu-central-1.pooler.supabase.co',
+  host: '://supabase.com',
   database: 'postgres',
-  password: 'postgres.fvqeeriisoediuwbftvh:MidVmXksB2TFPSwB', 
+  password: 'postgres.fvqeeriisoediuwbftvh:MidVmXksB2TFPSwB',
   port: 6543,
-  ssl: true // FIX: Dit dwingt de officiële, native SSL-handshake af die de pooler eist!
+  ssl: true
 };
   try {
     const pgClient = new Client(dbConfig);
