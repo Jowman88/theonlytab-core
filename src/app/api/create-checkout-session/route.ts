@@ -15,13 +15,13 @@ export async function POST(req: Request) {
 
     // 2. Direct database connection parameters without any protocol strings
     const dbConfig = {
-      user: 'postgres',
-      host: 'aws-0-eu-central-1.pooler.supabase.co',
-      database: 'postgres',
-      password: 'postgres.fvqeeriisoediuwbftvh:MidVmXksB2TFPSwB',
-      port: 6543,
-      ssl: true
-    };
+  user: 'postgres',
+  host: '://supabase.com',
+  database: 'postgres',
+  password: 'postgres.fvqeeriisoediuwbftvh:MidVmXksB2TFPSwB',
+  port: 6543,
+  ssl: true
+};
 
     // 3. Connect to the database using the clean parameters object
     const pgClient = new Client(dbConfig);
