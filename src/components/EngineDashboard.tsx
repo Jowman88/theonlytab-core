@@ -57,15 +57,19 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
           const rawData = Array.isArray(payload.data) ? payload.data[0] : payload.data;
           setSlot(rawData);
 
-          if (rawData && rawData.expiresAt) {
-            const parsedDate = new Date(rawData.expiresAt).getTime();
-            if (!isNaN(parsedDate)) {
-              setSecondsLeft(Math.max(0, Math.floor((parsedDate - Date.now()) / 1000)));
-              return;
-            }
-          }
-          setSecondsLeft(0);
-        }
+// FIX: Als expiresAt leeg, null, of 'null' als tekst is, crash niet maar zet timer direct stil
+if (!rawData || !rawData.expiresAt || rawData.expiresAt === 'null') {
+  setSecondsLeft(0);
+  setSlot(rawData);
+  return;
+}
+
+const parsedDate = Date.parse(rawData.expiresAt);
+if (!isNaN(parsedDate)) {
+  setSecondsLeft(Math.max(0, Math.floor((parsedDate - Date.now()) / 1000)));
+} else {
+  setSecondsLeft(0);
+}
       } catch (e) {
         console.error("Bypass invalid date popup", e);
       }
