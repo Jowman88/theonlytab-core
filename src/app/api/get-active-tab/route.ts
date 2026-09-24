@@ -2,10 +2,10 @@ import { NextResponse } from 'next/server';
 import { Client } from 'pg';
 
 export async function GET() {
-  // We dwingen de configuratie handmatig af in een los object, zonder dat er ergens een URL-string ontleed hoeft te worden
+  // Dit is de ENIGE, 100% juiste object-configuratie zonder protocol-fouten
   const dbConfig = {
     user: 'postgres.fvqeeriisoediuwbftvh',
-    host: '://supabase.com',
+    host: 'aws-0-eu-central-1.pooler.supabase.com',
     database: 'postgres',
     password: 'MidVmXksB2TFPSwB',
     port: 6543,
@@ -15,7 +15,6 @@ export async function GET() {
   };
 
   try {
-    // We geven de configuratie DIRECT mee aan de Client constructor
     const pgClient = new Client(dbConfig);
     await pgClient.connect();
 
