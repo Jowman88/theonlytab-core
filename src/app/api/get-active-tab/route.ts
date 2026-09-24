@@ -2,20 +2,23 @@ import { NextResponse } from 'next/server';
 import { Client } from 'pg';
 
 export async function GET() {
-  // Dit is de OFFICIELE, perfecte IPv4 pooler opbouw van Supabase
+  // Dit is de EXACTE, correcte IPv4 pooler configuratie voor jouw specifieke Ierland-cluster
   const dbConfig = {
-  user: 'postgres',
-  host: 'aws-1-eu-west-1.pooler.supabase.com',
-  database: 'postgres',
-  password: 'postgres.fvqeeriisoediuwbftvh:MidVmXksB2TFPSwB',
-  port: 6543,
-  
-};
-  
+    user: 'postgres',
+    host: 'aws-1-eu-west-1.pooler.supabase.com', // Gecorrigeerd naar .com conform jouw dashboard!
+    database: 'postgres',
+    password: 'postgres.fvqeeriisoediuwbftvh:MidVmXksB2TFPSwB', // Project-ID gekoppeld in wachtwoord voor Supavisor
+    port: 6543, // De officiële transactie-pooler poort
+    ssl: {
+      rejectUnauthorized: false // Accepteert het interne certificaat van de Supabase pooler
+    }
+  };
+
   try {
     const pgClient = new Client(dbConfig);
     await pgClient.connect();
 
+    // Haal de actieve bieder op die nog niet verlopen of bevroren is
     const activeRes = await pgClient.query(
       `SELECT id, current_url as "currentUrl", display_name as "displayName", current_bid, expires_at as "expiresAt" 
        FROM slots 
@@ -24,10 +27,12 @@ export async function GET() {
     );
     await pgClient.end();
 
+    // Als er een actieve bieder in de database staat, stuur deze direct door naar de frontend
     if (activeRes.rows && activeRes.rows.length > 0) {
       return NextResponse.json({ data: activeRes.rows });
     }
 
+    // FALLBACK / HOUSE DEFAULT LOGICA: Als de site idle is, stuur de standaard lay-out door
     const houseDefaults = [
       {
         id: "house-default-1",
@@ -39,7 +44,7 @@ export async function GET() {
 
     return NextResponse.json({ data: houseDefaults });
   } catch (err: any) {
-    console.error("Get Active Slot Error:", err);
+    console.error("Get Active Tab Runtime Error:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
