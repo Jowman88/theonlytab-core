@@ -4,15 +4,19 @@ import { Client } from 'pg';
 export async function GET() {
   // Dit is de EXACTE, correcte IPv4 pooler configuratie voor jouw specifieke Ierland-cluster
   const dbConfig = {
-    user: 'postgres',
-    host: 'aws-1-eu-west-1.pooler.supabase.com', // Gecorrigeerd naar .com conform jouw dashboard!
-    database: 'postgres',
-    password: 'postgres.fvqeeriisoediuwbftvhMidVmXksB2TFPSwB', // Project-ID gekoppeld in wachtwoord voor Supavisor
-    port: 6543, // De officiële transactie-pooler poort
-    ssl: {
-      rejectUnauthorized: false // Accepteert het interne certificaat van de Supabase pooler
-    }
-  };
+  // 1. Set the correct username format with your project reference ID
+  user: 'postgres.fvqeeriisoediuwbftvh',
+  
+  host: 'aws-1-eu-west-1.pooler.supabase.com',
+  database: 'postgres',
+  
+  // 2. Set only your actual database password here
+  password: 'MidVmXksB2TFPSwB',
+  
+  port: 6543,
+  ssl: true
+};
+
 
   try {
     const pgClient = new Client(dbConfig);
