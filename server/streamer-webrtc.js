@@ -38,8 +38,8 @@ async function startDatabaseSync() {
   try {
     // FIX: Hier staat nu de VOLLEDIGE, zuivere IPv4 pooler link zonder protocol-fouten!
     const pgClient = new Client({ 
-      connectionString: "postgresql://postgres.fvqeeriisoediuwbftvh:MidVmXksB2TFPSwB@://supabase.com" 
-    });
+  connectionString: "postgresql://postgres.fvqeeriisoediuwbftvh:MidVmXksB2TFPSwB@://supabase.com" 
+});
     await pgClient.connect();
     console.log("Database connection handshake successful via IPv4 Pooler!");
 
