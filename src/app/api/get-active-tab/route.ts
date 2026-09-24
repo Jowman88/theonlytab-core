@@ -3,16 +3,16 @@ import { Client } from 'pg';
 
 export async function GET() {
   const dbConfig = {
-  user: 'postgres.fvqeeriisoediuwbftvh',
-  host: 'aws-1-eu-west-1.pooler.supabase.com',
-  database: 'postgres',
-  password: 'MidVmXksB2TFPSwB', 
-  port: 6543,
-  // Change this from true to an configuration object
-  ssl: {
-    rejectUnauthorized: false 
-  }
-};
+    user: 'postgres.fvqeeriisoediuwbftvh', 
+    host: 'aws-1-eu-west-1.pooler.supabase.com', // 100% Gecorrigeerd naar .com!
+    database: 'postgres',
+    password: 'MidVmXksB2TFPSwB', 
+    port: 6543,
+    ssl: {
+      rejectUnauthorized: false
+    }
+  };
+
   try {
     const pgClient = new Client(dbConfig);
     await pgClient.connect();
@@ -25,12 +25,12 @@ export async function GET() {
     );
     await pgClient.end();
 
-    // We sturen de eerste rij mee als een los object (geen array haken!)
+    // SUCCES FIX: We sturen direct de eerste rij mee als los object (geen array haken!)
     if (activeRes.rows && activeRes.rows.length > 0) {
       return NextResponse.json({ data: activeRes.rows[0] });
     }
 
-    // De fallback back-up is nu ook een zuiver enkelvoudig object
+    // FALLBACK FIX: De back-up is nu ook een zuiver enkelvoudig object
     const houseDefault = {
       id: "house-default-1",
       currentUrl: "https://theonlytab.io",
