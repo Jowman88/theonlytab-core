@@ -173,7 +173,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
             <button 
               type="button"
               onClick={() => setIsFormOpen(false)} 
-              className="text-xs text-neutral-500 hover:text-white font-medium bg-[#1C1C21] border border-neutral-800 hover:border-neutral-700 px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1 lg:hidden"
+              className="text-xs text-neutral-500 hover:text-white font-medium bg-[#1C1C21] border border-neutral-800 hover:border-neutral-700 px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1"
             >
               <X size={12} />
               <span>Cancel</span>
