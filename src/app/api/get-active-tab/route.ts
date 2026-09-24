@@ -7,7 +7,7 @@ export async function GET() {
     host: 'aws-1-eu-west-1.pooler.supabase.com',
     database: 'postgres',
     password: 'MidVmXksB2TFPSwB', 
-    port: 6543,
+    port: 5432,
     ssl: {
       rejectUnauthorized: false
     },
