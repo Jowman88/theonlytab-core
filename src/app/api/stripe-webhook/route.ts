@@ -21,15 +21,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
   }
 
-  // Dit is de ENIGE, 100% juiste object-configuratie zonder protocol-fouten
   const dbConfig = {
-  user: 'postgres',
+  // 1. Set the correct username format with your project reference ID
+  user: 'postgres.fvqeeriisoediuwbftvh',
+  
   host: 'aws-1-eu-west-1.pooler.supabase.com',
   database: 'postgres',
-  password: 'postgres.fvqeeriisoediuwbftvhMidVmXksB2TFPSwB',
+  
+  // 2. Set only your actual database password here
+  password: 'MidVmXksB2TFPSwB',
+  
   port: 6543,
   ssl: true
 };
+
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
