@@ -22,19 +22,12 @@ export async function POST(req: Request) {
   }
 
   const dbConfig = {
-  // 1. Set the correct username format with your project reference ID
   user: 'postgres.fvqeeriisoediuwbftvh',
-  
   host: 'aws-1-eu-west-1.pooler.supabase.com',
   database: 'postgres',
-  
-  // 2. Set only your actual database password here
-  password: 'MidVmXksB2TFPSwB',
-  
+  password: process.env.DATABASE_PASSWORD, // 100% VEILIG & DYNAMISCH!
   port: 6543,
-  ssl: {
-    rejectUnauthorized: false 
-  }
+  ssl: { rejectUnauthorized: false }
 };
 
 
