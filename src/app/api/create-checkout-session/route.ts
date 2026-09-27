@@ -50,7 +50,6 @@ export async function POST(req: Request) {
 
     let requiredStealPrice = 19.00; 
     
-    // FIX: We pakken direct de eerste index rows[0] om undefined crashes te voorkomen!
     if (activeRes.rows && activeRes.rows.length > 0) {
       const activeSlot = activeRes.rows[0];
       const currentPaid = parseFloat(activeSlot.current_bid || '0');
@@ -83,7 +82,7 @@ export async function POST(req: Request) {
     }
 
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card', 'ideal'],
+      // FIX: payment_method_types is volledig VERWIJDERD om Managed Payments de controle te geven!
       line_items: [{
         price_data: {
           currency: 'usd',
