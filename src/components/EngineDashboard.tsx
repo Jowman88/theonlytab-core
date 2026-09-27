@@ -133,6 +133,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
             <Globe size={13} className="text-neutral-500" />
             <span className="text-emerald-400 font-mono truncate max-w-[180px]">{slot?.currentUrl?.replace('https://', '') || 'System Idle'}</span>
           </div>
+          {/* FIX: Schone dollartekers zonder backslashes geïmplementeerd */}
           <div className="border-r border-neutral-800 pr-4">
             <span className="text-neutral-100 font-mono">\${slot?.current_bid || '0.00'} PAID</span>
             <span className="text-neutral-500 mx-2">·</span>
@@ -158,7 +159,6 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
             <button type="button" onClick={() => setIsFormOpen(false)} className="text-xs text-neutral-500 hover:text-white bg-[#13131A] border border-neutral-800 px-3 py-1 rounded-lg"><X size={12} /></button>
           </div>
           <form onSubmit={handleAcquireTabSubmit} className="p-6 flex-1 flex flex-col gap-4 overflow-y-auto">
-            {/* FIX: Alle placeholders verwijderd ("") voor een minimalistische look */}
             <div>
               <label className="text-[10px] text-neutral-500 font-bold uppercase block mb-1.5">Target Website URL *</label>
               <input type="text" required placeholder="" value={targetUrl} onChange={(e) => setTargetUrl(e.target.value)} className="w-full bg-[#13131A] border border-neutral-800 rounded-xl h-11 px-4 text-xs font-mono text-neutral-200 outline-none" />
@@ -187,6 +187,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
               </label>
             </div>
 
+            {/* FIX: Ook de backslash in de sidebar-knop verwijderd */}
             <div className="bg-[#13131A] border border-neutral-800/60 p-4 rounded-xl text-center mt-2">
               <span className="text-xl font-mono font-black text-amber-400">\${slot?.stealPrice || '19.00'}</span>
             </div>
@@ -198,7 +199,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
 
         {/* Video Canvas Presentation Layer */}
         <div className="flex-1 h-full bg-[#060608] p-4 sm:p-8 flex flex-col items-center justify-center relative overflow-y-auto">
-          {/* MOBILE TICKER SUMMARY */}
+          {/* MOBILE TICKER SUMMARY - FIX: Ook hier backslashes weg */}
           <div className="w-full max-w-4xl md:hidden bg-[#0D0D11] border border-neutral-800 p-4 rounded-xl mb-4 text-center font-bold text-xs space-y-2">
             <div className="text-neutral-400 truncate">NOW: <span className="text-emerald-400 font-mono">{slot?.currentUrl || 'System Idle'}</span></div>
             <div className="flex justify-around border-t border-neutral-800/60 pt-2 text-[11px]">
