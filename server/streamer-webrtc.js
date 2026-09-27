@@ -61,7 +61,7 @@ async function initPuppeteer() {
     await page.setBypassCSP(true);
     
     console.log("Cloud browser successfully initialized and stabilized via system layout.");
-  } catch (err) {
+   catch (err) {
     console.error("Fatal Error initializing Puppeteer runtime layout:", err.message);
   }
 }
