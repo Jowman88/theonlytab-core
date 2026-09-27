@@ -34,7 +34,7 @@ export async function GET() {
           stealPrice: nextStealPrice.toFixed(2),
           secondsOnStage,
           secondsLeftInLock,
-          isLocked: secondsLeftInLock > 0
+          isLocked: secondsLeftInLock > 0,
         }
       });
     }
@@ -48,11 +48,27 @@ export async function GET() {
         stealPrice: '19.00',
         secondsOnStage: 0,
         secondsLeftInLock: 0,
-        isLocked: false
+        isLocked: false,
       }
     });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error('GET /api/get-active-tab failed:', err);
+    return NextResponse.json(
+      {
+        error: err?.message || 'Unable to load active tab',
+        data: {
+          id: 'house-default-id',
+          currentUrl: 'https://theonlytab.io',
+          displayName: 'The Only Tab HQ',
+          current_bid: '0.00',
+          stealPrice: '19.00',
+          secondsOnStage: 0,
+          secondsLeftInLock: 0,
+          isLocked: false,
+        },
+      },
+      { status: 200 }
+    );
   } finally {
     client.release();
   }
