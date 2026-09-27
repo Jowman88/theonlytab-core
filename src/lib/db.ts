@@ -4,9 +4,12 @@ let dbPool: Pool | null = null;
 
 function getPoolConfig(): PoolConfig {
   if (process.env.DATABASE_URL) {
-    return { connectionString: process.env.DATABASE_URL };
-  }
-
+    return {
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false,
+  },
+};
   return {
     user: process.env.DB_USER || 'postgres.fvqeeriisoediuwbftvh',
     host: process.env.DB_HOST || 'aws-1-eu-west-1.pooler.supabase.com',
