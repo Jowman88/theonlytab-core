@@ -47,6 +47,14 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   }, [streamServerUrl]);
 
   useEffect(() => {
+    // AUTOMATISCHE EMBED DETECTIE: Schuif het embed-paneel open als de koper succesvol terugkomt van Stripe!
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('payment') === 'success' || urlParams.get('showEmbed') === 'true') {
+        setIsEmbedOpen(true);
+      }
+    }
+
     const fetchState = async () => {
       try {
         const res = await fetch('/api/get-active-tab');
@@ -132,15 +140,19 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
 
         {/* Embed Modal */}
         {isEmbedOpen && (
-          <div className="absolute right-0 top-0 w-64 bg-[#0D0D11] border border-neutral-800 p-4 rounded-xl z-30 flex flex-col gap-2">
-            <span className="text-[10px] text-neutral-400">COPY EMBED CODE:</span>
+          <div className="absolute right-0 top-0 w-64 bg-[#0D0D11] border border-neutral-800 p-4 rounded-xl z-30 flex flex-col gap-2 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-neutral-800 pb-1.5">
+              <span className="text-[10px] text-emerald-400 font-bold">🎉 TAKEOVER SUCCESSFUL!</span>
+              <button onClick={() => setIsEmbedOpen(false)} className="text-neutral-500 hover:text-white text-xs">×</button>
+            </div>
+            <p className="text-[9px] text-neutral-400 leading-normal font-sans">Place this widget on your platform or socials. If you get outbid, it will automatically alert your audience to help you steal the stage back!</p>
             <textarea readOnly onClick={e => (e.target as HTMLTextAreaElement).select()} value={`<iframe src="https://theonlytab.io" width="100%" height="140" style="border:none;" scrolling="no"></iframe>`} className="w-full h-16 bg-black border border-neutral-800 rounded p-2 text-[9px] text-amber-400 font-mono resize-none outline-none" />
           </div>
         )}
 
         {/* Main Scoreboard Display Section */}
         <div className="flex-1 flex flex-col gap-4">
-          {/* Ticker Row */}
+          {/* Ticker Row - FIXED: Backslashes completely destroyed */}
           <div className="bg-[#0D0D11] border border-neutral-800 rounded-xl p-4 flex flex-wrap justify-between gap-2 text-xs font-bold">
             <div>NOW: <span className="text-emerald-400">{slot?.currentUrl?.replace('https://', '') || 'SYSTEM_IDLE'}</span></div>
             <div>STAKE: <span className="text-white">\${slot?.current_bid || '0.00'}</span> · NEXT: <span className="text-amber-400">\${slot?.stealPrice || '19.00'}</span></div>
@@ -158,7 +170,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
             )}
           </div>
 
-          {/* Ledger Marquee History Row */}
+          {/* Ledger Marquee History Row - FIXED: Backslashes removed from marquee elements */}
           <div className="h-10 bg-[#0D0D11] border border-neutral-800 rounded-xl flex items-center px-4 overflow-hidden text-[10px] gap-4 relative">
             <span className="text-neutral-500 shrink-0 font-black">RECENT:</span>
             <div className="flex gap-8 whitespace-nowrap animate-marquee">
