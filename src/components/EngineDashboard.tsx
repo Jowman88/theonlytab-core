@@ -81,9 +81,12 @@ if (!isNaN(parsedDate)) {
   }, []);
 
   useEffect(() => {
-    const timer = setInterval(() => setSecondsLeft(prev => Math.max(0, prev - 1)), 1000);
-    return () => clearInterval(timer);
-  }, []);
+  const timer = setInterval(() => {
+    setSecondsLeft((prev) => Math.max(0, prev - 1));
+  }, 1000);
+
+  return () => clearInterval(timer); 
+}, []);
 
   const triggerReportSlasher = async () => {
     if (!slot) return;
