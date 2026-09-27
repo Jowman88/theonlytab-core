@@ -30,8 +30,7 @@ async function initPuppeteer() {
     
     browser = await puppeteer.launch({
       headless: "new",
-      // FIX: We verwijderen executablePath volledig zodat Puppeteer 
-      // automatisch zijn eigen native meegeleverde Chromium-binary opstart!
+      // Geen hardcoded schijfpaden meer; Puppeteer wijst nu automatisch de meegeleverde Chromium-binary toe
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -48,20 +47,10 @@ async function initPuppeteer() {
     
     page = await browser.newPage();
     await page.setDefaultNavigationTimeout(15000);
-    await page.setBypassCSP(true);
+    await page.setBypassCSP(true); // Omzeilt CSP/X-Frame-Options beveiligingen van externe websites
     
     console.log("Cloud browser successfully initialized and stabilized via package engine.");
   } catch (err) {
-    console.error("Fatal Error initializing Puppeteer runtime layout:", err.message);
-  }
-}
-    
-    page = await browser.newPage();
-    await page.setDefaultNavigationTimeout(15000);
-    await page.setBypassCSP(true);
-    
-    console.log("Cloud browser successfully initialized and stabilized via system layout.");
-   {
     console.error("Fatal Error initializing Puppeteer runtime layout:", err.message);
   }
 }
@@ -71,7 +60,7 @@ async function startStreamingCore() {
 
   await initPuppeteer();
 
-  // 🛡️ ACCURAAT SLUITENDE DATABASE SYNC LOOP
+  // Real-time database synchronisatie loop (elke 4 seconden)
   setInterval(async () => {
     try {
       const pgClient = new Client({
@@ -96,6 +85,8 @@ async function startStreamingCore() {
       if (targetUrl !== currentUrlInStream && page) {
         console.log(`Stream target shifted! Steering browser to: ${targetUrl}`);
         currentUrlInStream = targetUrl;
+        
+        // Versnelde navigatie (wacht enkel op de HTML body structuur, niet op zware trackers)
         await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {});
 
         await page.evaluate((labelText) => {
@@ -144,7 +135,7 @@ async function startStreamingCore() {
       });
       io.emit('v-frame', screenshotBase64);
     } catch (streamErr) {
-      // Slokt navigatie-flikkeringen geruisloos op
+      // Slokt navigatie-flikkeringen geruisloos op tijdens het laden van pagina's
     }
   }, 41);
 }
