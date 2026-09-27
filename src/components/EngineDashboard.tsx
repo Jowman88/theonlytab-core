@@ -18,6 +18,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [slot, setSlot] = useState<SlotData | null>(null);
   const [lockTimer, setLockTimer] = useState<number>(0);
+  const [hasFrames, setHasFrames] = useState<boolean>(false);
 
   // Formulier statussen
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
@@ -41,6 +42,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       if (!ctx) return;
       const img = new Image();
       img.onload = () => {
+        setHasFrames(true);
         canvasRef.current!.width = img.width;
         canvasRef.current!.height = img.height;
         ctx.drawImage(img, 0, 0);
@@ -49,6 +51,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
     });
     return () => { socket.disconnect(); };
   }, [streamServerUrl]);
+
   useEffect(() => {
     const fetchState = async () => {
       try {
@@ -191,7 +194,24 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
           </div>
 
           <div className="w-full max-w-4xl aspect-video bg-[#0D0D11] border border-neutral-800/80 rounded-2xl overflow-hidden shadow-2xl relative flex items-center justify-center">
-            <canvas ref={canvasRef} className="w-full h-full object-contain" />
+            <canvas ref={canvasRef} className={`w-full h-full object-contain ${!hasFrames ? 'hidden' : 'block'}`} />
+            
+            {/* FIX: Placeholder sluit nu 100% onwrikbaar aan via state-check */}
+            {!hasFrames && (
+              <div className="absolute inset-0 bg-[#060608] flex flex-col items-center justify-center font-sans overflow-hidden">
+                <div className="absolute w-[250px] h-[250px] bg-emerald-500/5 rounded-full blur-[80px] animate-pulse" />
+                <div className="flex flex-col items-center gap-4 z-10">
+                  <div className="relative flex items-center justify-center w-14 h-14 bg-[#0D0D11] border border-neutral-800/80 rounded-2xl shadow-xl overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-t from-emerald-500/20 to-transparent opacity-50 animate-pulse" />
+                    <Zap size={22} className="text-emerald-400 animate-bounce" style={{ animationDuration: '3s' }} />
+                  </div>
+                  <div className="text-center space-y-1">
+                    <h1 className="text-white text-xs font-black tracking-[0.25em] uppercase pl-[0.25em]">The Only Tab</h1>
+                    <p className="text-[9px] text-neutral-500 font-bold uppercase tracking-[0.3em] pl-[0.3em] animate-pulse">Awaiting Takeover</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Subheader Dashboard Metrics Under Video */}
