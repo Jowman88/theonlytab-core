@@ -43,8 +43,11 @@ async function initPuppeteer() {
       defaultViewport: { width: 1280, height: 720 }
     });
     page = await browser.newPage();
-await page.setBypassCSP(true);
-    await page.setDefaultNavigationTimeout(30000);
+    await page.setDefaultNavigationTimeout(15000);
+    
+    // FIX 1: Omzeil per direct alle CSP/X-Frame frame-blokkades van grote sites zoals YouTube!
+    await page.setBypassCSP(true);
+    
     console.log("Cloud browser successfully initialized.");
   } catch (err) {
     console.error("Fatal Error initializing Puppeteer:", err.message);
@@ -77,31 +80,30 @@ async function startStreamingCore() {
       let displayLabel = "SYSTEM IDLE";
 
       if (res.rows && res.rows.length > 0) {
-        targetUrl = res.rows[0].current_url;
-        displayLabel = res.rows[0].display_name || "LIVE FEED";
+        targetUrl = res.rows.current_url;
+        displayLabel = res.rows.display_name || "LIVE FEED";
       }
 
       if (targetUrl !== currentUrlInStream && page) {
         console.log(`Stream target shifted! Steering browser to: ${targetUrl}`);
         currentUrlInStream = targetUrl;
+        
+        // FIX 2: Laadt direct zodra de HTML staat (domcontentloaded) met een strakke timeout om bevriezing te voorkomen!
         await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {});
 
-        // 🛡️ INJECTEER HET BRUTE, PREMIUM VIDEO WATERMERK DIRECT IN DE CHROMIUM PAGINA LAAG
         await page.evaluate((labelText) => {
-          // Verwijder een eventueel oud watermerk om duplicaten te voorkomen
           const oldBadge = document.getElementById('tot-live-badge');
           if (oldBadge) oldBadge.remove();
 
           const badge = document.createElement('div');
           badge.id = 'tot-live-badge';
           
-          // Ultra-strakke high-contrast styling conform jouw visie
           Object.assign(badge.style, {
             position: 'fixed',
             top: '24px',
             right: '24px',
             backgroundColor: '#13131A',
-            color: '#F59E0B', // Amber/goud
+            color: '#F59E0B', 
             border: '2px solid #262626',
             borderRadius: '12px',
             padding: '10px 18px',
@@ -109,7 +111,7 @@ async function startStreamingCore() {
             fontSize: '14px',
             fontWeight: '900',
             letterSpacing: '0.15em',
-            zIndex: '2147483647', // Maximale z-index dekking
+            zIndex: '2147483647', 
             boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.7)',
             textTransform: 'uppercase'
           });
