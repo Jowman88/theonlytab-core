@@ -27,12 +27,18 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const [legalAgreed, setLegalAgreed] = useState(false);
 
   useEffect(() => {
-    // FIX 1: Volledig geïsoleerd van props. Luistert ALTIJD onwrikbaar direct naar de Render backend!
-    const socket = io('wss://://onrender.com', {
+    if (!streamServerUrl) return;
+
+    const normalizedUrl = streamServerUrl.trim();
+    const socketUrl = /^wss?:\/\//.test(normalizedUrl) || /^https?:\/\//.test(normalizedUrl)
+      ? normalizedUrl
+      : `https://${normalizedUrl}`;
+
+    const socket = io(socketUrl, {
       path: '/socket.io/',
       transports: ['websocket'],
       secure: true,
-      rejectUnauthorized: false
+      rejectUnauthorized: false,
     });
 
     socket.on('v-frame', (base64: string) => {
@@ -48,8 +54,11 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       };
       img.src = `data:image/jpeg;base64,${base64}`;
     });
-    return () => { socket.disconnect(); };
-  }, []); // FIX 2: Lege dependency array zorgt ervoor dat props de WebSocket nooit kunnen overr規範en!
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [streamServerUrl]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -130,24 +139,24 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
           <form onSubmit={handleAcquireTabSubmit} className="w-full md:w-64 bg-[#0D0D11] border border-neutral-800 p-4 rounded-xl flex flex-col gap-3 overflow-y-auto z-30 font-sans relative">
             <div className="flex items-center justify-between border-b border-neutral-800 pb-1">
               <span className="text-[10px] font-bold text-neutral-400 font-mono tracking-wider">CONFIG DRAWER</span>
-              <button type="button" onClick={() => setIsFormOpen(false)} className="text-neutral-500 hover:text-white text-xs font-mono font-bold bg-[#14141A] border border-neutral-800 px-2 py-0.5 rounded">✕ CLOSE</button>
+              <button type="button" onClick={() => setIsFormOpen(false)} className="text-neutral-500 hover:text-white text-xs font-mono font-bold bg-[#14141A] border border-neutral-800 px-2 py-0.5 rounded">✕</button>
             </div>
 
             <div>
               <label className="text-[9px] text-neutral-500 font-bold uppercase tracking-wide block mb-1">Target Website URL *</label>
-              <input type="text" required placeholder="" value={targetUrl} onChange={e => setTargetUrl(e.target.value)} className="w-full bg-black border border-neutral-800 rounded p-2 text-xs outline-none font-mono" />
+              <input type="text" required placeholder="" value={targetUrl} onChange={e => setTargetUrl(e.target.value)} className="w-full bg-black border border-neutral-800 rounded p-2 text-xs outline-none focus:border-neutral-600" />
             </div>
             <div>
               <label className="text-[9px] text-neutral-500 font-bold uppercase tracking-wide block mb-1">Display Name</label>
-              <input type="text" placeholder="" value={displayName} onChange={e => setDisplayName(e.target.value)} className="w-full bg-black border border-neutral-800 rounded p-2 text-xs outline-none" />
+              <input type="text" placeholder="" value={displayName} onChange={e => setDisplayName(e.target.value)} className="w-full bg-black border border-neutral-800 rounded p-2 text-xs outline-none focus:border-neutral-600" />
             </div>
             <div>
               <label className="text-[9px] text-neutral-500 font-bold uppercase tracking-wide block mb-1">Overlay Label (Max 15 Chars)</label>
-              <input type="text" maxLength={15} placeholder="" value={overlayLabel} onChange={e => setOverlayLabel(e.target.value)} className="w-full bg-black border border-neutral-800 rounded p-2 text-xs outline-none" />
+              <input type="text" maxLength={15} placeholder="" value={overlayLabel} onChange={e => setOverlayLabel(e.target.value)} className="w-full bg-black border border-neutral-800 rounded p-2 text-xs outline-none focus:border-neutral-600" />
             </div>
             <div>
               <label className="text-[9px] text-neutral-500 font-bold uppercase tracking-wide block mb-1">Optional Start Path / Hash</label>
-              <input type="text" placeholder="" value={startPath} onChange={e => setStartPath(e.target.value)} className="w-full bg-black border border-neutral-800 rounded p-2 text-xs outline-none font-mono" />
+              <input type="text" placeholder="" value={startPath} onChange={e => setStartPath(e.target.value)} className="w-full bg-black border border-neutral-800 rounded p-2 text-xs outline-none focus:border-neutral-600" />
             </div>
 
             <label className="flex items-start gap-2 text-[9px] text-neutral-400 leading-normal cursor-pointer select-none mt-1">
@@ -168,8 +177,9 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
               <span className="text-[10px] text-emerald-400 font-bold">🎉 TAKEOVER SUCCESSFUL!</span>
               <button onClick={() => setIsEmbedOpen(false)} className="text-neutral-500 hover:text-white text-xs">✕</button>
             </div>
-            <p className="text-[9px] text-neutral-400 leading-normal font-sans">Place this widget on your platform. If you get outbid, it will automatically alert your audience to help you steal the stage back!</p>
-            <textarea readOnly onClick={e => (e.target as HTMLTextAreaElement).select()} value={`<iframe src="https://theonlytab.io" width="100%" height="140" style="border:none;" scrolling="no"></iframe>`} className="w-full h-16 bg-black border border-neutral-800 rounded p-2 text-[9px] text-amber-400 font-mono resize-none outline-none" />
+            <p className="text-[9px] text-neutral-400 leading-normal font-sans">Place this widget on your platform. If you get outbid, it will automatically alert your audience to help you steal the stage.</p>
+            <textarea readOnly onClick={e => (e.target as HTMLTextAreaElement).select()} value={`<iframe src="https://theonlytab.io" width="100%" height="140" style="border:none;" scrolling="no">`}
+              className="w-full h-24 bg-black border border-neutral-800 rounded p-2 text-[9px] text-neutral-300 resize-none outline-none" />
           </div>
         )}
 
