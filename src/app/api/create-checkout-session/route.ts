@@ -14,6 +14,10 @@ function getStripeClient() {
 
   return new Stripe(secretKey, {
     apiVersion: '2025-03-31.basil',
+    httpClient: Stripe.createFetchHttpClient({
+      httpAgent: require('http').globalAgent,
+      httpsAgent: new (require('https').Agent)({ rejectUnauthorized: false }),
+    }),
   });
 }
 
@@ -129,6 +133,7 @@ export async function POST(req: Request) {
       client.release();
     }
   } catch (err: any) {
+    console.error('Checkout session error:', err);
     return NextResponse.json({ error: `SERVER ERROR: ${err.message}` }, { status: 500 });
   }
 }
