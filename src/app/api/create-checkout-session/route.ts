@@ -1,28 +1,21 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import http from 'http';
-import https from 'https';
 import { getDbPool } from '../../../lib/db';
 import { buildTargetUrl, validateTargetUrl } from '../../../lib/urlValidation';
 import { checkUrlWithWebRisk } from '../../../lib/webRisk';
 
 export const dynamic = 'force-dynamic';
 
-// 🛡️ Gecorrigeerd: HTTP agents statisch gedefinieerd om Webpack runtime crashes te voorkomen
-const stripeHttpClient = Stripe.createFetchHttpClient({
-  httpAgent: http.globalAgent,
-  httpsAgent: new https.Agent({ keepAlive: true }), // 100% Veilig en optimaal voor live Stripe verkeer
-});
-
+// 🛡️ FIX: De handmatige http/https agents zijn volledig verwijderd om Serverless Timeouts te voorkomen!
 function getStripeClient() {
   const secretKey = process.env.STRIPE_SECRET_KEY;
   if (!secretKey || !secretKey.startsWith('sk_')) {
     throw new Error('STRIPE_SECRET_KEY is missing or invalid.');
   }
 
+  // De SDK regelt de fetch-connectie naar Stripe nu volledig native en razendsnel op Vercel
   return new Stripe(secretKey, {
     apiVersion: '2025-03-31.basil',
-    httpClient: stripeHttpClient,
   });
 }
 
@@ -84,7 +77,6 @@ export async function POST(req: Request) {
     const client = await getDbPool().connect();
 
     try {
-      // FIX: activeRes.rows[0] logica veilig gesteld tegen undefined array crashes
       const activeRes = await client.query(
         `SELECT id, current_bid, created_at FROM slots WHERE is_frozen = FALSE AND expires_at > NOW() LIMIT 1`
       );
@@ -120,10 +112,9 @@ export async function POST(req: Request) {
             },
             unit_amount: Math.round(requiredStealPrice * 100),
           },
-          quantity: 1,
-        }],
+          withhold_taxes: false, // Managed Payments automatische tax afhandeling
+        } as any],
         mode: 'payment',
-        // FIX: Hersteld naar de juiste succes-parameters om de Embed-widget direct te tonen aan de koper
         success_url: 'https://theonlytab.io',
         cancel_url: 'https://theonlytab.io',
         metadata: {
