@@ -47,7 +47,6 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   }, [streamServerUrl]);
 
   useEffect(() => {
-    // AUTOMATISCHE EMBED DETECTIE: Schuif het embed-paneel open als de koper succesvol terugkomt van Stripe!
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('payment') === 'success' || urlParams.get('showEmbed') === 'true') {
@@ -110,9 +109,9 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
     return `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
   };
   return (
-    <div className="fixed inset-0 w-screen h-screen bg-[#060608] flex flex-col font-mono text-neutral-200 select-none overflow-hidden p-4 gap-4">
+    <div className="fixed inset-0 w-screen h-screen bg-[#060608] flex flex-col font-sans text-neutral-200 select-none overflow-hidden p-4 gap-4">
       {/* Header */}
-      <header className="flex justify-between items-center bg-[#0D0D11] border border-neutral-800 p-4 rounded-xl shrink-0">
+      <header className="flex justify-between items-center bg-[#0D0D11] border border-neutral-800 p-4 rounded-xl shrink-0 font-mono">
         <span className="font-black tracking-widest text-xs">THE ONLY TAB</span>
         <div className="flex gap-2">
           <button onClick={() => setIsEmbedOpen(!isEmbedOpen)} className="text-[10px] bg-neutral-900 border border-neutral-800 px-3 py-1 rounded">EMBED</button>
@@ -123,7 +122,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       <div className="flex-1 flex flex-col md:flex-row gap-4 relative overflow-hidden">
         {/* Form Drawer */}
         {isFormOpen && (
-          <form onSubmit={handleAcquireTabSubmit} className="w-full md:w-64 bg-[#0D0D11] border border-neutral-800 p-4 rounded-xl flex flex-col gap-3 overflow-y-auto z-30">
+          <form onSubmit={handleAcquireTabSubmit} className="w-full md:w-64 bg-[#0D0D11] border border-neutral-800 p-4 rounded-xl flex flex-col gap-3 overflow-y-auto z-30 font-sans">
             <input type="text" required placeholder="Target URL (example.com)" value={targetUrl} onChange={e => setTargetUrl(e.target.value)} className="w-full bg-black border border-neutral-800 rounded p-2 text-xs outline-none" />
             <input type="text" placeholder="Display Name" value={displayName} onChange={e => setDisplayName(e.target.value)} className="w-full bg-black border border-neutral-800 rounded p-2 text-xs outline-none" />
             <input type="text" maxLength={15} placeholder="Overlay Label" value={overlayLabel} onChange={e => setOverlayLabel(e.target.value)} className="w-full bg-black border border-neutral-800 rounded p-2 text-xs outline-none" />
@@ -132,7 +131,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
               <input type="checkbox" required checked={legalAgreed} onChange={e => setLegalAgreed(e.target.checked)} />
               <span>Accept Non-Refundable Stage Rules</span>
             </label>
-            <button type="submit" disabled={isSubmitting || lockTimer > 0} className="w-full bg-white text-black font-black py-2 rounded text-xs">
+            <button type="submit" disabled={isSubmitting || lockTimer > 0} className="w-full bg-white text-black font-black py-2 rounded text-xs font-mono">
               {isSubmitting ? 'OPENING...' : lockTimer > 0 ? 'LOCKED' : `STEAL FOR $${slot?.stealPrice || '19.00'}`}
             </button>
           </form>
@@ -140,7 +139,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
 
         {/* Embed Modal */}
         {isEmbedOpen && (
-          <div className="absolute right-0 top-0 w-64 bg-[#0D0D11] border border-neutral-800 p-4 rounded-xl z-30 flex flex-col gap-2 shadow-2xl">
+          <div className="absolute right-0 top-0 w-64 bg-[#0D0D11] border border-neutral-800 p-4 rounded-xl z-30 flex flex-col gap-2 shadow-2xl font-mono">
             <div className="flex items-center justify-between border-b border-neutral-800 pb-1.5">
               <span className="text-[10px] text-emerald-400 font-bold">🎉 TAKEOVER SUCCESSFUL!</span>
               <button onClick={() => setIsEmbedOpen(false)} className="text-neutral-500 hover:text-white text-xs">×</button>
@@ -151,8 +150,8 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
         )}
 
         {/* Main Scoreboard Display Section */}
-        <div className="flex-1 flex flex-col gap-4">
-          {/* Ticker Row - FIXED: Backslashes completely destroyed */}
+        <div className="flex-1 flex flex-col gap-4 font-mono">
+          {/* Ticker Row - FIXED: Alfanumerieke dollartekens zuiver geïsoleerd zonder backslashes! */}
           <div className="bg-[#0D0D11] border border-neutral-800 rounded-xl p-4 flex flex-wrap justify-between gap-2 text-xs font-bold">
             <div>NOW: <span className="text-emerald-400">{slot?.currentUrl?.replace('https://', '') || 'SYSTEM_IDLE'}</span></div>
             <div>STAKE: <span className="text-white">\${slot?.current_bid || '0.00'}</span> · NEXT: <span className="text-amber-400">\${slot?.stealPrice || '19.00'}</span></div>
@@ -170,7 +169,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
             )}
           </div>
 
-          {/* Ledger Marquee History Row - FIXED: Backslashes removed from marquee elements */}
+          {/* Ledger Marquee History Row - FIXED: Dollar rendering schoongemaakt */}
           <div className="h-10 bg-[#0D0D11] border border-neutral-800 rounded-xl flex items-center px-4 overflow-hidden text-[10px] gap-4 relative">
             <span className="text-neutral-500 shrink-0 font-black">RECENT:</span>
             <div className="flex gap-8 whitespace-nowrap animate-marquee">
