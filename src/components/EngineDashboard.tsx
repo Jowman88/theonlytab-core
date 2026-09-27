@@ -79,11 +79,9 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
     return () => clearInterval(timer);
   }, []);
 
-  const handleAcquireTabSubmit = async (e: React.FormEvent) => {
+    const handleAcquireTabSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!targetUrl) return alert('Enter a target URL.');
-    if (!legalAgreed) return alert('You must agree to the Terms of Service to proceed.');
-    
     setIsSubmitting(true);
     try {
       const res = await fetch('/api/create-checkout-session', {
@@ -96,6 +94,20 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
           startPath: startPath || ''
         })
       });
+
+      const errData = await res.json();
+      if (!res.ok) {
+        // FIX: Toont nu ALTIJD de exacte serverfout (zoals Stripe token missend of database timeout)
+        alert(errData.error || "Transaction refused.");
+        setIsSubmitting(false);
+        return;
+      }
+      if (errData.url) window.location.href = errData.url;
+    } catch (err) {
+      alert("Network timeout communicating with backend.");
+      setIsSubmitting(false);
+    }
+  };
       if (!res.ok) {
         alert("Feed is currently locked or text was flagged by automated moderation.");
         setIsSubmitting(false);
