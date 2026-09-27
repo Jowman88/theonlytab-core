@@ -19,7 +19,7 @@ export async function POST(req: Request) {
 
   const dbConfig = {
     user: 'postgres.fvqeeriisoediuwbftvh',
-    host: '://supabase.com',
+    host: 'aws-1-eu-west-1.pooler.supabase.com',
     database: 'postgres',
     password: process.env.DATABASE_PASSWORD,
     port: 6543,
