@@ -112,7 +112,7 @@ export async function POST(req: Request) {
             },
             unit_amount: Math.round(requiredStealPrice * 100),
           },
-          withhold_taxes: false, // Managed Payments automatische tax afhandeling
+          
         } as any],
         mode: 'payment',
         success_url: 'https://theonlytab.io',
