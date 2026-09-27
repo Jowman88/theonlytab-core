@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { Client } from 'pg';
 import Stripe from 'stripe';
 
-// FIX: API-versie geüpgraded naar de allernieuwste standaard om Managed Payments direct te activeren!
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2025-03-31.basil' as any });
 
 const BANNED_WORDS = [
@@ -35,7 +34,7 @@ export async function POST(req: Request) {
 
     if (containsProfanity(overlayLabel) || containsProfanity(displayName) || containsProfanity(targetUrl)) {
       return NextResponse.json(
-        { error: 'TEXT REFUSED: Inappropriate language or banned terms detected.' }, 
+        { error: 'TEXT REFUSED: Inappropriate language detected.' }, 
         { status: 400 }
       );
     }
@@ -44,9 +43,7 @@ export async function POST(req: Request) {
     await pgClient.connect();
     
     const activeRes = await pgClient.query(
-      `SELECT id, current_bid, created_at FROM slots 
-       WHERE is_frozen = FALSE AND expires_at > NOW()
-       LIMIT 1`
+      `SELECT id, current_bid, created_at FROM slots WHERE is_frozen = FALSE AND expires_at > NOW() LIMIT 1`
     );
 
     let requiredStealPrice = 19.00; 
@@ -82,6 +79,7 @@ export async function POST(req: Request) {
       }
     }
 
+    // FIX: Alle metadata-sleutels zijn nu strikt lowercase om Stripe data-mismatches te voorkomen!
     const session = await stripe.checkout.sessions.create({
       line_items: [{
         price_data: {
@@ -99,17 +97,16 @@ export async function POST(req: Request) {
       success_url: 'https://theonlytab.io',
       cancel_url: 'https://theonlytab.io',
       metadata: {
-        targetUrl: finalTargetUrl,
-        displayName: displayName || 'Anonymous Takeover',
-        overlayLabel: overlayLabel || '',
-        bidAmount: requiredStealPrice.toFixed(2),
-        expiresAt: new Date(Date.now() + 90 * 60 * 1000).toISOString()
+        targeturl: finalTargetUrl,
+        displayname: displayName || 'Anonymous Takeover',
+        overlaylabel: overlayLabel || '',
+        bidamount: requiredStealPrice.toFixed(2),
+        expiresat: new Date(Date.now() + 90 * 60 * 1000).toISOString()
       },
     });
 
     return NextResponse.json({ url: session.url });
   } catch (err: any) {
-    console.error("Checkout route internal error:", err.message);
     return NextResponse.json({ error: `SERVER ERROR: ${err.message}` }, { status: 500 });
   }
 }
