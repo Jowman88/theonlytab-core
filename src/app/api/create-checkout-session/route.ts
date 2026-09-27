@@ -32,7 +32,6 @@ export async function POST(req: Request) {
   try {
     const { targetUrl, displayName, overlayLabel, startPath } = await req.json();
 
-    // 1. Moderatie check
     if (containsProfanity(overlayLabel) || containsProfanity(displayName) || containsProfanity(targetUrl)) {
       return NextResponse.json(
         { error: 'TEXT REFUSED: Inappropriate language or banned terms detected.' }, 
@@ -43,32 +42,28 @@ export async function POST(req: Request) {
     const pgClient = new Client(dbConfig);
     await pgClient.connect();
     
-    // Haal de actieve adverteerder op
     const activeRes = await pgClient.query(
       `SELECT id, current_bid, created_at FROM slots 
        WHERE is_frozen = FALSE AND expires_at > NOW()
        LIMIT 1`
     );
 
-    let requiredStealPrice = 19.00; // Standaard Floor prijs
+    let requiredStealPrice = 19.00; 
     
+    // FIX: We pakken direct de eerste index rows[0] om undefined crashes te voorkomen!
     if (activeRes.rows && activeRes.rows.length > 0) {
       const activeSlot = activeRes.rows[0];
-      
-      // Controleer of het een ECHTE adverteerder is (boven de 0 dollar), anders negeren we de lock
       const currentPaid = parseFloat(activeSlot.current_bid || '0');
       
       if (currentPaid > 0 && activeSlot.created_at) {
         const createdAt = new Date(activeSlot.created_at).getTime();
         const minutesOnStage = (Date.now() - createdAt) / (1000 * 60);
 
-        // Enforceer de 12-minuten lock
         if (!isNaN(minutesOnStage) && minutesOnStage < 12) {
           await pgClient.end();
-          return NextResponse.json({ error: `FEED LOCKED: This tab is protected for the first 12 minutes.` }, { status: 400 });
+          return NextResponse.json({ error: `FEED LOCKED: Protected for the first 12 minutes.` }, { status: 400 });
         }
         
-        // Bereken de verhoogde Steal Price (+25% of minimaal +\$10)
         const percentageIncrease = currentPaid * 1.25;
         const flatIncrease = currentPaid + 10.00;
         requiredStealPrice = Math.max(percentageIncrease, flatIncrease);
@@ -77,7 +72,6 @@ export async function POST(req: Request) {
 
     await pgClient.end();
 
-    // Bouw de start-pad URL op
     let finalTargetUrl = targetUrl;
     if (startPath) {
       const cleanPath = startPath.trim();
@@ -109,13 +103,13 @@ export async function POST(req: Request) {
         displayName: displayName || 'Anonymous Takeover',
         overlayLabel: overlayLabel || '',
         bidAmount: requiredStealPrice.toFixed(2),
-        expiresAt: new Date(Date.now() + 90 * 60 * 1000).toISOString() // 90 minuten maximum cap
+        expiresAt: new Date(Date.now() + 90 * 60 * 1000).toISOString()
       },
     });
 
     return NextResponse.json({ url: session.url });
   } catch (err: any) {
-    console.error("Checkout route error:", err.message);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error("Checkout route internal error:", err.message);
+    return NextResponse.json({ error: `SERVER ERROR: ${err.message}` }, { status: 500 });
   }
 }
