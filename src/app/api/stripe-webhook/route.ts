@@ -3,7 +3,7 @@ import { Client } from 'pg';
 import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2023-10-16' as any,
+  apiVersion: '2025-03-31.basil' as any,
 });
 
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
@@ -16,6 +16,7 @@ export async function POST(req: Request) {
   try {
     event = stripe.webhooks.constructEvent(body, sig, endpointSecret);
   } catch (err: any) {
+    console.error("Stripe signature verification failed:", err.message);
     return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
   }
 
@@ -23,7 +24,7 @@ export async function POST(req: Request) {
     user: 'postgres.fvqeeriisoediuwbftvh',
     host: 'aws-1-eu-west-1.pooler.supabase.com',
     database: 'postgres',
-    password: process.env.DATABASE_PASSWORD,
+    password: process.env.DATABASE_PASSWORD, // Gekoppeld aan de veilige kluis
     port: 6543,
     ssl: { rejectUnauthorized: false }
   };
@@ -34,16 +35,15 @@ export async function POST(req: Request) {
     const displayName = session.metadata?.displayName;
     const bidAmount = session.metadata?.bidAmount;
     const expiresAt = session.metadata?.expiresAt;
-    const overlayLabel = session.metadata?.overlayLabel || '';
 
     try {
       const pgClient = new Client(dbConfig);
       await pgClient.connect();
       
-      // Freeze de huidige actieve sessie
+      // 1. Freeze direct de oude sessie
       await pgClient.query('UPDATE slots SET is_frozen = TRUE WHERE is_frozen = FALSE');
       
-      // Sla de nieuwe bieder op inclusief het custom video overlay label
+      // 2. Schrijf de nieuwe bieder op met de ECHTE actuele live timestamp!
       await pgClient.query(
         `INSERT INTO slots (current_url, display_name, current_bid, expires_at, is_frozen, created_at, purchase_price, steal_price) 
          VALUES ($1, $2, $3, $4, FALSE, NOW(), $3, $3)`,
@@ -51,10 +51,10 @@ export async function POST(req: Request) {
       );
       
       await pgClient.end();
-      console.log(`Successfully processed slot takeover for: ${displayName}`);
+      console.log(`[SUCCESS] Webhook fully processed stage takeover for: ${displayName}`);
     } catch (dbErr: any) {
       console.error("Webhook Database Insertion Error:", dbErr.message);
-      return NextResponse.json({ error: "Database internal crash" }, { status: 500 });
+      return NextResponse.json({ error: "Database internal deployment crash" }, { status: 500 });
     }
   }
 
