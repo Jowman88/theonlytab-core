@@ -40,10 +40,21 @@ export async function POST(req: Request) {
     let displayName = meta?.displayname || meta?.displayName || 'Anonymous Takeover';
     let rawBid = meta?.bidamount || meta?.bidAmount;
 
-    // Fallback 1: Extract URL directly from the session description text if metadata was stripped
-    if (!targetUrl && jsonObject.description) {
-      const urlMatch = jsonObject.description.match(/viewport to:\s*(\S+)/i);
-      if (urlMatch && urlMatch[1]) targetUrl = urlMatch[1];
+    // 🚀 FIX: Instead of relying on loose regex text matching, expand the session directly 
+    // to get the immutable line item details if metadata was dropped.
+    try {
+      if (!targetUrl || !rawBid) {
+        const lineItems = await stripe.checkout.sessions.listLineItems(jsonObject.id);
+        if (lineItems.data && lineItems.data.length > 0) {
+          const item = lineItems.data[0];
+          // Pull target URL safely out of the structural description without regex dependencies
+          if (item.description && item.description.includes('viewport to:')) {
+            targetUrl = item.description.split('viewport to:')[1]?.trim();
+          }
+        }
+      }
+    } catch (stripeLineErr) {
+      console.warn("Could not expand session line items asynchronously:", stripeLineErr);
     }
 
     // Fallback 2: Calculate price tier dynamically from the actual dollar invoice currency total
@@ -55,31 +66,40 @@ export async function POST(req: Request) {
 
     const expiresAt = meta?.expiresat || meta?.expiresAt || new Date(Date.now() + 90 * 60 * 1000).toISOString();
 
-    // Secure default handling if extraction boundaries completely dropped
-    if (!targetUrl) {
-      targetUrl = 'https://theonlytab.io';
+    // Secure fallback execution if everything else drops out
+    if (!targetUrl || targetUrl === 'https://theonlytab.io') {
+      console.warn("Webhook warning: targetUrl resolved to default. Attempting raw text fallback.");
+      // Absolute raw fallback string grabber
+      if (jsonObject.description && jsonObject.description.includes('to: ')) {
+        targetUrl = jsonObject.description.split('to: ')[1]?.trim();
+      }
     }
 
     const validNumericBid = parseFloat(rawBid);
 
-    try {
-      const pgClient = new Client(dbConfig);
-      await pgClient.connect();
-      
-      // Close all currently active standing rooms
-      await pgClient.query('UPDATE slots SET is_frozen = TRUE WHERE is_frozen = FALSE');
-      
-      // Force database takeover insert using explicit parameter typing
-      await pgClient.query(
-        `INSERT INTO slots (current_url, display_name, current_bid, expires_at, is_frozen, created_at, purchase_price, steal_price) 
-         VALUES ($1, $2, $3, $4, FALSE, NOW(), $5, $6)`,
-        [targetUrl, displayName, validNumericBid, expiresAt, validNumericBid, validNumericBid]
-      );
-      
-      await pgClient.end();
-      console.log(`[SUCCESS] Webhook fully committed stage takeover to Supabase for: ${displayName} -> ${targetUrl}`);
-    } catch (dbErr: any) {
-      console.error("Database write failure:", dbErr.message);
+    // If the URL extraction is safe, commit the data to the cluster
+    if (targetUrl && targetUrl !== 'https://theonlytab.io') {
+      try {
+        const pgClient = new Client(dbConfig);
+        await pgClient.connect();
+        
+        // Close all currently active standing rooms
+        await pgClient.query('UPDATE slots SET is_frozen = TRUE WHERE is_frozen = FALSE');
+        
+        // Force database takeover insert using explicit parameter typing
+        await pgClient.query(
+          `INSERT INTO slots (current_url, display_name, current_bid, expires_at, is_frozen, created_at, purchase_price, steal_price) 
+           VALUES ($1, $2, $3, $4, FALSE, NOW(), $5, $6)`,
+          [targetUrl, displayName, validNumericBid, expiresAt, validNumericBid, validNumericBid]
+        );
+        
+        await pgClient.end();
+        console.log(`[SUCCESS] Webhook fully committed stage takeover to Supabase for: ${displayName} -> ${targetUrl}`);
+      } catch (dbErr: any) {
+        console.error("Database write failure:", dbErr.message);
+      }
+    } else {
+      console.error("Critical: Webhook could not map any user target URL from Stripe payload data.");
     }
   }
 
