@@ -227,3 +227,5 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
             <canvas ref={canvasRef} className="w-full h-full object-contain" />
             
             {/* Premium Placeholder Logo Overlay */}
+
+            <Zap size={24} className="text-emerald-400 animate-bounce" style={{ animationDuration: '3s' }} />The Only TabAwaiting Active Feed{/* Floating Control Bar under video */}Active Space{slot?.displayName || 'System Idle'}Current Value{slot?.current_bid ? $${slot.current_bid} : '$0.00'}Time Remaining{formatClock(secondsLeft)}Flag ({reportCount})<buttontype="button"onClick={() => setIsFormOpen(true)}className="h-9 px-5 rounded-lg bg-neutral-100 hover:bg-white text-neutral-900 text-xs font-bold transition-all flex items-center gap-1 active:scale-[0.97]">Bid Now);}
