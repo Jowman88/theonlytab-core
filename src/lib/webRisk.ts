@@ -1,4 +1,9 @@
+import { validateTargetUrl } from './urlValidation';
+
 export async function checkUrlWithWebRisk(url: string): Promise<boolean> {
-  // Test Mode Bypass: Geeft altijd direct groen licht om crashes te voorkomen
-  return true;
+  if (process.env.WEB_RISK_DISABLED === 'true') {
+    return true;
+  }
+
+  return validateTargetUrl(url).ok;
 }

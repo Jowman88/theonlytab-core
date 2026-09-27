@@ -1,111 +1,114 @@
 import { NextResponse } from 'next/server';
-import { Client } from 'pg';
-import Stripe from 'stripe';
+import { dbPool } from '../../../lib/db';
+import { buildTargetUrl, validateTargetUrl } from '../../../lib/urlValidation';
+import { checkUrlWithWebRisk } from '../../../lib/webRisk';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2025-03-31.basil' as any });
+const stripe = new (require('stripe'))(process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2025-03-31.basil' });
 
 const BANNED_WORDS = [
-  'nigger', 'kike', 'faggot', 'tranny', 'hitler', 'nazi', 
+  'nigger', 'kike', 'faggot', 'tranny', 'hitler', 'nazi',
   'kanker', 'kankeren', 'kankerlijer', 'kkr', 'neger', 'homo',
   'fuck', 'bitch', 'asshole', 'pussy', 'dick', 'cock', 'scam'
 ];
 
 function containsProfanity(text: string): boolean {
   if (!text) return false;
-  const cleanText = text.toLowerCase().trim();
-  return BANNED_WORDS.some(badWord => {
-    const regex = new RegExp(badWord, 'i');
-    return regex.test(cleanText);
+  const cleaned = text.toLowerCase().trim();
+  return BANNED_WORDS.some((badWord) => {
+    const regex = new RegExp(`\\b${badWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+    return regex.test(cleaned);
   });
 }
 
 export async function POST(req: Request) {
-  const dbConfig = {
-    user: 'postgres.fvqeeriisoediuwbftvh',
-    host: 'aws-1-eu-west-1.pooler.supabase.com',
-    database: 'postgres',
-    password: process.env.DATABASE_PASSWORD,
-    port: 6543,
-    ssl: { rejectUnauthorized: false }
-  };
-
   try {
     const { targetUrl, displayName, overlayLabel, startPath } = await req.json();
 
-    if (containsProfanity(overlayLabel) || containsProfanity(displayName) || containsProfanity(targetUrl)) {
+    if (!targetUrl || typeof targetUrl !== 'string') {
+      return NextResponse.json({ error: 'TARGET URL REQUIRED: Please provide a website URL.' }, { status: 400 });
+    }
+
+    const validation = validateTargetUrl(targetUrl);
+    if (!validation.ok || !validation.normalizedUrl) {
+      return NextResponse.json({ error: validation.message || 'TARGET URL INVALID: Please provide a valid public website URL.' }, { status: 400 });
+    }
+
+    if (!(await checkUrlWithWebRisk(validation.normalizedUrl))) {
+      return NextResponse.json({ error: 'URL refused by the safety gate.' }, { status: 400 });
+    }
+
+    const displayNameValue = (displayName || 'Anonymous Takeover').trim();
+    const overlayLabelValue = (overlayLabel || '').trim();
+
+    if (containsProfanity(overlayLabelValue) || containsProfanity(displayNameValue) || containsProfanity(validation.normalizedUrl)) {
       return NextResponse.json(
-        { error: 'TEXT REFUSED: Inappropriate language detected.' }, 
+        { error: 'TEXT REFUSED: Inappropriate language detected.' },
         { status: 400 }
       );
     }
 
-    const pgClient = new Client(dbConfig);
-    await pgClient.connect();
-    
-    const activeRes = await pgClient.query(
-      `SELECT id, current_bid, created_at FROM slots WHERE is_frozen = FALSE AND expires_at > NOW() LIMIT 1`
-    );
+    if (displayNameValue.length > 80 || overlayLabelValue.length > 15) {
+      return NextResponse.json({ error: 'DISPLAY NAME OR OVERLAY LABEL IS TOO LONG.' }, { status: 400 });
+    }
 
-    let requiredStealPrice = 19.00; 
-    
-    if (activeRes.rows && activeRes.rows.length > 0) {
-      const activeSlot = activeRes.rows[0];
-      const currentPaid = parseFloat(activeSlot.current_bid || '0');
-      
-      if (currentPaid > 0 && activeSlot.created_at) {
-        const createdAt = new Date(activeSlot.created_at).getTime();
-        const minutesOnStage = (Date.now() - createdAt) / (1000 * 60);
+    const client = await dbPool.connect();
 
-        if (!isNaN(minutesOnStage) && minutesOnStage < 12) {
-          await pgClient.end();
-          return NextResponse.json({ error: `FEED LOCKED: Protected for the first 12 minutes.` }, { status: 400 });
+    try {
+      const activeRes = await client.query(
+        `SELECT id, current_bid, created_at FROM slots WHERE is_frozen = FALSE AND expires_at > NOW() LIMIT 1`
+      );
+
+      let requiredStealPrice = 19.0;
+
+      if (activeRes.rows && activeRes.rows.length > 0) {
+        const activeSlot = activeRes.rows[0];
+        const currentPaid = parseFloat(activeSlot.current_bid || '0');
+
+        if (currentPaid > 0 && activeSlot.created_at) {
+          const createdAt = new Date(activeSlot.created_at).getTime();
+          const minutesOnStage = (Date.now() - createdAt) / (1000 * 60);
+
+          if (!isNaN(minutesOnStage) && minutesOnStage < 12) {
+            return NextResponse.json({ error: 'FEED LOCKED: Protected for the first 12 minutes.' }, { status: 400 });
+          }
+
+          const percentageIncrease = currentPaid * 1.25;
+          const flatIncrease = currentPaid + 10.0;
+          requiredStealPrice = Math.max(percentageIncrease, flatIncrease);
         }
-        
-        const percentageIncrease = currentPaid * 1.25;
-        const flatIncrease = currentPaid + 10.00;
-        requiredStealPrice = Math.max(percentageIncrease, flatIncrease);
       }
-    }
 
-    await pgClient.end();
+      const finalTargetUrl = buildTargetUrl(validation.normalizedUrl, startPath);
 
-    let finalTargetUrl = targetUrl;
-    if (startPath) {
-      const cleanPath = startPath.trim();
-      if (cleanPath.startsWith('/') || cleanPath.startsWith('#')) {
-        finalTargetUrl = `${targetUrl}${cleanPath}`;
-      } else {
-        finalTargetUrl = `${targetUrl}/${cleanPath}`;
-      }
-    }
-
-    const session = await stripe.checkout.sessions.create({
-      line_items: [{
-        price_data: {
-          currency: 'usd',
-          product_data: {
-            name: `STEAL FEED: ${displayName || 'Anonymous'}`,
-            description: `Force takeover viewport to: ${finalTargetUrl}`,
-            tax_code: 'txcd_10701100'
+      const session = await stripe.checkout.sessions.create({
+        line_items: [{
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: `STEAL FEED: ${displayNameValue || 'Anonymous'}`,
+              description: `Force takeover viewport to: ${finalTargetUrl}`,
+              tax_code: 'txcd_10701100'
+            },
+            unit_amount: Math.round(requiredStealPrice * 100),
           },
-          unit_amount: Math.round(requiredStealPrice * 100),
+          quantity: 1,
+        }],
+        mode: 'payment',
+        success_url: 'https://theonlytab.io',
+        cancel_url: 'https://theonlytab.io',
+        metadata: {
+          targeturl: finalTargetUrl,
+          displayname: displayNameValue,
+          overlaylabel: overlayLabelValue,
+          bidamount: requiredStealPrice.toFixed(2),
+          expiresat: new Date(Date.now() + 90 * 60 * 1000).toISOString()
         },
-        quantity: 1,
-      }],
-      mode: 'payment',
-      success_url: 'https://theonlytab.io',
-      cancel_url: 'https://theonlytab.io',
-      metadata: {
-        // Enforce 100% strict lowercase keys to line up with the webhook engine
-        targeturl: finalTargetUrl,
-        displayname: displayName || 'Anonymous Takeover',
-        overlaylabel: overlayLabel || '',
-        bidamount: requiredStealPrice.toFixed(2),
-        expiresat: new Date(Date.now() + 90 * 60 * 1000).toISOString()
-      },
-    });
+      });
 
-    return NextResponse.json({ url: session.url });
+      return NextResponse.json({ url: session.url });
+    } finally {
+      client.release();
+    }
   } catch (err: any) {
     return NextResponse.json({ error: `SERVER ERROR: ${err.message}` }, { status: 500 });
   }

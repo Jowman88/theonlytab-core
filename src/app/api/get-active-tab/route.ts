@@ -1,38 +1,27 @@
 import { NextResponse } from 'next/server';
-import { Client } from 'pg';
+import { dbPool } from '../../../lib/db';
 
 export async function GET() {
-  const dbConfig = {
-    user: 'postgres.fvqeeriisoediuwbftvh',
-    host: 'aws-1-eu-west-1.pooler.supabase.com',
-    database: 'postgres',
-    password: process.env.DATABASE_PASSWORD,
-    port: 6543,
-    ssl: { rejectUnauthorized: false }
-  };
+  const client = await dbPool.connect();
 
   try {
-    const pgClient = new Client(dbConfig);
-    await pgClient.connect();
+    await client.query(`UPDATE slots SET is_frozen = TRUE WHERE is_frozen = FALSE AND created_at < NOW() - INTERVAL '90 minutes'`);
 
-    // Cron Check: Automatically freeze slots that cross the 90-minute maximum stage cap
-    await pgClient.query(`UPDATE slots SET is_frozen = TRUE WHERE is_frozen = FALSE AND created_at < NOW() - INTERVAL '90 minutes'`);
-
-    const activeRes = await pgClient.query(
+    const activeRes = await client.query(
       `SELECT id, current_url as "currentUrl", display_name as "displayName", current_bid, expires_at as "expiresAt", created_at as "createdAt" 
        FROM slots 
        WHERE is_frozen = FALSE AND expires_at > NOW() 
+       ORDER BY created_at ASC
        LIMIT 1`
     );
-    await pgClient.end();
 
     if (activeRes.rows && activeRes.rows.length > 0) {
       const row = activeRes.rows[0];
       const currentPaid = parseFloat(row.current_bid);
       const percentageIncrease = currentPaid * 1.25;
-      const flatIncrease = currentPaid + 10.00;
+      const flatIncrease = currentPaid + 10.0;
       const nextStealPrice = Math.max(percentageIncrease, flatIncrease);
-      
+
       const secondsOnStage = Math.floor((Date.now() - new Date(row.createdAt).getTime()) / 1000);
       const secondsLeftInLock = Math.max(0, (12 * 60) - secondsOnStage);
 
@@ -48,14 +37,13 @@ export async function GET() {
       });
     }
 
-    // Default System Idle Fallback
     return NextResponse.json({
       data: {
-        id: "house-default-id",
-        currentUrl: "https://theonlytab.io",
-        displayName: "The Only Tab HQ",
-        current_bid: "0.00",
-        stealPrice: "19.00",
+        id: 'house-default-id',
+        currentUrl: 'https://theonlytab.io',
+        displayName: 'The Only Tab HQ',
+        current_bid: '0.00',
+        stealPrice: '19.00',
         secondsOnStage: 0,
         secondsLeftInLock: 0,
         isLocked: false
@@ -63,5 +51,7 @@ export async function GET() {
     });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
+  } finally {
+    client.release();
   }
 }
