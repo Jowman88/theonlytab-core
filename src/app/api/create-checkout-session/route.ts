@@ -101,7 +101,7 @@ export async function POST(req: Request) {
         }
       }
 
-      const session = await stripe.checkout.sessions.create({
+            const session = await stripe.checkout.sessions.create({
         line_items: [{
           price_data: {
             currency: 'usd',
@@ -112,7 +112,20 @@ export async function POST(req: Request) {
             },
             unit_amount: Math.round(requiredStealPrice * 100),
           },
-          
+          quantity: 1, // <-- FIX: Staat nu exact op de juiste hoofdregel binnen line_items[0]!
+        }],
+        mode: 'payment',
+        success_url: 'https://theonlytab.io',
+        cancel_url: 'https://theonlytab.io',
+        metadata: {
+          targeturl: finalTargetUrl,
+          displayname: displayNameValue,
+          overlaylabel: overlayLabelValue,
+          bidamount: requiredStealPrice.toFixed(2),
+          expiresat: new Date(Date.now() + 90 * 60 * 1000).toISOString()
+        },
+      });
+      
         } as any],
         mode: 'payment',
         success_url: 'https://theonlytab.io',
