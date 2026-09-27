@@ -158,21 +158,22 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
             <button type="button" onClick={() => setIsFormOpen(false)} className="text-xs text-neutral-500 hover:text-white bg-[#13131A] border border-neutral-800 px-3 py-1 rounded-lg"><X size={12} /></button>
           </div>
           <form onSubmit={handleAcquireTabSubmit} className="p-6 flex-1 flex flex-col gap-4 overflow-y-auto">
+            {/* FIX: Alle placeholders verwijderd ("") voor een minimalistische look */}
             <div>
               <label className="text-[10px] text-neutral-500 font-bold uppercase block mb-1.5">Target Website URL *</label>
-              <input type="text" required placeholder="example.com" value={targetUrl} onChange={(e) => setTargetUrl(e.target.value)} className="w-full bg-[#13131A] border border-neutral-800 rounded-xl h-11 px-4 text-xs font-mono text-neutral-200 outline-none" />
+              <input type="text" required placeholder="" value={targetUrl} onChange={(e) => setTargetUrl(e.target.value)} className="w-full bg-[#13131A] border border-neutral-800 rounded-xl h-11 px-4 text-xs font-mono text-neutral-200 outline-none" />
             </div>
             <div>
               <label className="text-[10px] text-neutral-500 font-bold uppercase block mb-1.5">Display Name</label>
-              <input type="text" placeholder="Brand / Alias" value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="w-full bg-[#13131A] border border-neutral-800 rounded-xl h-11 px-4 text-xs text-neutral-200 outline-none" />
+              <input type="text" placeholder="" value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="w-full bg-[#13131A] border border-neutral-800 rounded-xl h-11 px-4 text-xs text-neutral-200 outline-none" />
             </div>
             <div>
               <label className="text-[10px] text-neutral-500 font-bold uppercase block mb-1.5">Custom Overlay Label (Max 15 Chars)</label>
-              <input type="text" maxLength={15} placeholder="LIVE CLIP TEXT" value={overlayLabel} onChange={(e) => setOverlayLabel(e.target.value)} className="w-full bg-[#13131A] border border-neutral-800 rounded-xl h-11 px-4 text-xs text-neutral-200 outline-none" />
+              <input type="text" maxLength={15} placeholder="" value={overlayLabel} onChange={(e) => setOverlayLabel(e.target.value)} className="w-full bg-[#13131A] border border-neutral-800 rounded-xl h-11 px-4 text-xs text-neutral-200 outline-none" />
             </div>
             <div>
               <label className="text-[10px] text-neutral-500 font-bold uppercase block mb-1.5">Optional Start Path / Hash</label>
-              <input type="text" placeholder="/pricing" value={startPath} onChange={(e) => setStartPath(e.target.value)} className="w-full bg-[#13131A] border border-neutral-800 rounded-xl h-11 px-4 text-xs font-mono text-neutral-200 outline-none" />
+              <input type="text" placeholder="" value={startPath} onChange={(e) => setStartPath(e.target.value)} className="w-full bg-[#13131A] border border-neutral-800 rounded-xl h-11 px-4 text-xs font-mono text-neutral-200 outline-none" />
             </div>
 
             {/* LEGAL LIABILITIES SECTION */}
