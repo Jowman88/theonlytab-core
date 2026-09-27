@@ -82,13 +82,14 @@ export async function POST(req: Request) {
     }
 
     const session = await stripe.checkout.sessions.create({
-      // FIX: payment_method_types is volledig VERWIJDERD om Managed Payments de controle te geven!
       line_items: [{
         price_data: {
           currency: 'usd',
           product_data: {
             name: `STEAL FEED: ${displayName || 'Anonymous'}`,
             description: `Force takeover viewport to: ${finalTargetUrl}`,
+            // FIX: Toegevoegd conform Stripe Managed Payments wetgeving voor digitale webdiensten!
+            tax_code: 'txcd_10701100'
           },
           unit_amount: Math.round(requiredStealPrice * 100),
         },
