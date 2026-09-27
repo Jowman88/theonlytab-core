@@ -26,7 +26,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   useEffect(() => {
-    const socket = io('wss://theonlytab-server.onrender.com', {
+    const socket = io('wss://://onrender.com', {
       path: '/socket.io/',
       transports: ['websocket'],
       secure: true,
@@ -54,39 +54,32 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
         const res = await fetch('/api/get-active-tab');
         if (res.ok) {
           const payload = await res.json();
-          const rawData = Array.isArray(payload.data) ? payload.data[0] : payload.data;
+          const rawData = Array.isArray(payload.data) ? payload.data : payload.data;
           setSlot(rawData);
 
-// FIX: Als expiresAt leeg, null, of 'null' als tekst is, crash niet maar zet timer direct stil
-if (!rawData || !rawData.expiresAt || rawData.expiresAt === 'null') {
-  setSecondsLeft(0);
-  setSlot(rawData);
-  return;
-}
-
-const parsedDate = Date.parse(rawData.expiresAt);
-if (!isNaN(parsedDate)) {
-  setSecondsLeft(Math.max(0, Math.floor((parsedDate - Date.now()) / 1000)));
-} else {
-  setSecondsLeft(0);
-}
+          if (rawData && rawData.expiresAt) {
+            const parsedDate = new Date(rawData.expiresAt).getTime();
+            if (!isNaN(parsedDate)) {
+              setSecondsLeft(Math.max(0, Math.floor((parsedDate - Date.now()) / 1000)));
+              return;
+            }
+          }
+          setSecondsLeft(0);
+        }
       } catch (e) {
         console.error("Bypass invalid date popup", e);
       }
     };
 
     fetchState();
-    const interval = setInterval(fetchState, 3000);
+    const interval = setInterval(fetchState, 15000); // Rustige 15 seconden interval om Vercel traffic te sparen!
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
-  const timer = setInterval(() => {
-    setSecondsLeft((prev) => Math.max(0, prev - 1));
-  }, 1000);
-
-  return () => clearInterval(timer); 
-}, []);
+    const timer = setInterval(() => setSecondsLeft(prev => Math.max(0, prev - 1)), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const triggerReportSlasher = async () => {
     if (!slot) return;
@@ -105,6 +98,7 @@ if (!isNaN(parsedDate)) {
       } else {
         setReportCount(data.current_count);
       }
+    }
   };
 
   const handleAcquireTabSubmit = async (e: React.FormEvent) => {
@@ -150,6 +144,7 @@ if (!isNaN(parsedDate)) {
     const secs = (s % 60).toString().padStart(2, '0');
     return `${mins}:${secs}`;
   };
+
   return (
     <div className="fixed inset-0 w-screen h-screen bg-[#0A0A0C] flex flex-col font-sans antialiased text-neutral-200 select-none overflow-hidden">
       {/* Premium Header */}
@@ -169,12 +164,11 @@ if (!isNaN(parsedDate)) {
         <div className="w-24" />
       </header>
 
-      {/* Main Container Area */}
-<div className="flex-1 w-full flex flex-col lg:flex-row relative overflow-hidden">
-
+      {/* Main Container Area - Responsive Stack */}
+      <div className="flex-1 w-full flex flex-col lg:flex-row relative overflow-hidden">
         
         {/* Dynamic Drawer / Formulier Paneel */}
-       <div className={`fixed lg:absolute top-0 left-0 h-full w-full sm:w-80 bg-[#121215] border-r border-neutral-800/60 z-30 transform transition-transform duration-300 flex flex-col ${isFormOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className={`fixed lg:relative top-0 left-0 h-full w-full sm:w-80 bg-[#121215] border-r border-neutral-800/60 z-30 transform transition-transform duration-300 flex flex-col ${isFormOpen ? 'translate-x-0' : '-translate-x-full'}`}>
           <div className="p-6 border-b border-neutral-800/60 flex items-center justify-between">
             <h3 className="font-bold text-xs uppercase tracking-wider text-neutral-100">Configure Your Tab</h3>
             <button 
@@ -232,66 +226,4 @@ if (!isNaN(parsedDate)) {
           <div className="w-full max-w-4xl aspect-video bg-[#121215] border border-neutral-800/60 rounded-2xl overflow-hidden shadow-2xl relative flex items-center justify-center">
             <canvas ref={canvasRef} className="w-full h-full object-contain" />
             
-            {/* 100% PREMIUM GEANIMEERDE LOGO PLACEHOLDER */}
-            <div className="absolute inset-0 bg-[#0A0A0C] flex flex-col items-center justify-center font-sans overflow-hidden pointer-events-none group-has-[canvas[width]]:opacity-0 transition-opacity duration-500">
-              <div className="absolute w-[300px] h-[300px] bg-emerald-500/5 rounded-full blur-[80px] animate-pulse" />
-              <div className="flex flex-col items-center gap-4 z-10">
-                <div className="relative flex items-center justify-center w-16 h-16 bg-[#121215] border border-neutral-800/80 rounded-2xl shadow-xl overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-t from-emerald-500/20 to-transparent opacity-50 animate-pulse" />
-                  <Zap size={24} className="text-emerald-400 animate-bounce" style={{ animationDuration: '3s' }} />
-                </div>
-                <div className="text-center space-y-1">
-                  <h1 className="text-white text-xs font-black tracking-[0.25em] uppercase pl-[0.25em]">
-                    The Only Tab
-                  </h1>
-                  <p className="text-[9px] text-neutral-500 font-bold uppercase tracking-[0.3em] pl-[0.3em] animate-pulse">
-                    Awaiting Active Feed
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Floating Control Bar under video */}
-          <div className="w-full max-w-4xl mt-6 flex items-center justify-between bg-[#121215]/90 border border-neutral-800/60 p-4 rounded-xl backdrop-blur-md shadow-xl">
-            <div className="flex items-center gap-8">
-              <div>
-                <span className="text-[9px] text-neutral-500 font-bold uppercase tracking-widest block mb-1">Active Space</span>
-                <span className="text-xs font-bold text-neutral-200">{slot?.displayName || 'System Idle'}</span>
-              </div>
-              <div>
-                <span className="text-[9px] text-neutral-500 font-bold uppercase tracking-widest block mb-1">Current Value</span>
-                <span className="text-xs font-mono font-bold text-neutral-100">{slot?.current_bid ? `$${slot.current_bid}` : '\$0.00'}</span>
-              </div>
-              <div>
-                <span className="text-[9px] text-neutral-500 font-bold uppercase tracking-widest block mb-1">Time Remaining</span>
-                <span className="text-xs font-mono font-bold text-emerald-400">{formatClock(secondsLeft)}</span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={triggerReportSlasher}
-                className="h-9 px-4 rounded-lg border border-neutral-800 hover:border-red-900/60 bg-[#1C1C21] text-xs text-neutral-400 hover:text-red-400 transition-colors flex items-center gap-1.5"
-              >
-                <ShieldAlert size={13} />
-                <span>Flag ({reportCount})</span>
-              </button>
-              
-              <button
-                type="button"
-                onClick={() => setIsFormOpen(true)}
-                className="h-9 px-5 rounded-lg bg-neutral-100 hover:bg-white text-neutral-900 text-xs font-bold transition-all flex items-center gap-1 active:scale-[0.97]"
-              >
-                <span>Bid Now</span>
-                <ChevronRight size={13} />
-              </button>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  );
-}
+            {/* Premium Placeholder Logo Overlay */}
