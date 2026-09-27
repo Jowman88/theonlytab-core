@@ -72,7 +72,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
     };
 
     fetchState();
-    const interval = setInterval(fetchState, 15000); // Rustige 15 seconden interval om Vercel traffic te sparen!
+    const interval = setInterval(fetchState, 15000); 
     return () => clearInterval(interval);
   }, []);
 
@@ -144,7 +144,6 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
     const secs = (s % 60).toString().padStart(2, '0');
     return `${mins}:${secs}`;
   };
-
   return (
     <div className="fixed inset-0 w-screen h-screen bg-[#0A0A0C] flex flex-col font-sans antialiased text-neutral-200 select-none overflow-hidden">
       {/* Premium Header */}
@@ -227,5 +226,65 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
             <canvas ref={canvasRef} className="w-full h-full object-contain" />
             
             {/* Premium Placeholder Logo Overlay */}
+            <div className="absolute inset-0 bg-[#0A0A0C] flex flex-col items-center justify-center font-sans overflow-hidden pointer-events-none transition-opacity duration-500">
+              <div className="absolute w-[300px] h-[300px] bg-emerald-500/5 rounded-full blur-[80px] animate-pulse" />
+              <div className="flex flex-col items-center gap-4 z-10">
+                <div className="relative flex items-center justify-center w-16 h-16 bg-[#121215] border border-neutral-800/80 rounded-2xl shadow-xl overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-t from-emerald-500/20 to-transparent opacity-50 animate-pulse" />
+                  <Zap size={24} className="text-emerald-400 animate-bounce" style={{ animationDuration: '3s' }} />
+                </div>
+                <div className="text-center space-y-1">
+                  <h1 className="text-white text-xs font-black tracking-[0.25em] uppercase pl-[0.25em]">
+                    The Only Tab
+                  </h1>
+                  <p className="text-[9px] text-neutral-500 font-bold uppercase tracking-[0.3em] pl-[0.3em] animate-pulse">
+                    Awaiting Active Feed
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
 
-            <Zap size={24} className="text-emerald-400 animate-bounce" style={{ animationDuration: '3s' }} />The Only TabAwaiting Active Feed{/* Floating Control Bar under video */}Active Space{slot?.displayName || 'System Idle'}Current Value{slot?.current_bid ? $${slot.current_bid} : '$0.00'}Time Remaining{formatClock(secondsLeft)}Flag ({reportCount})<buttontype="button"onClick={() => setIsFormOpen(true)}className="h-9 px-5 rounded-lg bg-neutral-100 hover:bg-white text-neutral-900 text-xs font-bold transition-all flex items-center gap-1 active:scale-[0.97]">Bid Now);}
+          {/* Floating Control Bar under video */}
+          <div className="w-full max-w-4xl mt-6 flex items-center justify-between bg-[#121215]/90 border border-neutral-800/60 p-4 rounded-xl backdrop-blur-md shadow-xl">
+            <div className="flex items-center gap-8">
+              <div>
+                <span className="text-[9px] text-neutral-500 font-bold uppercase tracking-widest block mb-1">Active Space</span>
+                <span className="text-xs font-bold text-neutral-200">{slot?.displayName || 'System Idle'}</span>
+              </div>
+              <div>
+                <span className="text-[9px] text-neutral-500 font-bold uppercase tracking-widest block mb-1">Current Value</span>
+                <span className="text-xs font-mono font-bold text-neutral-100">{slot?.current_bid ? `$${slot.current_bid}` : '\$0.00'}</span>
+              </div>
+              <div>
+                <span className="text-[9px] text-neutral-500 font-bold uppercase tracking-widest block mb-1">Time Remaining</span>
+                <span className="text-xs font-mono font-bold text-emerald-400">{formatClock(secondsLeft)}</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={triggerReportSlasher}
+                className="h-9 px-4 rounded-lg border border-neutral-800 hover:border-red-900/60 bg-[#1C1C21] text-xs text-neutral-400 hover:text-red-400 transition-colors flex items-center gap-1.5"
+              >
+                <ShieldAlert size={13} />
+                <span>Flag ({reportCount})</span>
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => setIsFormOpen(true)}
+                className="h-9 px-5 rounded-lg bg-neutral-100 hover:bg-white text-neutral-900 text-xs font-bold transition-all flex items-center gap-1 active:scale-[0.97]"
+              >
+                <span>Bid Now</span>
+                <ChevronRight size={13} />
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
