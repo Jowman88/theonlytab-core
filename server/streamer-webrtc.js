@@ -80,7 +80,7 @@ async function startStreamingCore() {
       let displayLabel = "SYSTEM IDLE";
 
       if (res.rows && res.rows.length > 0) {
-        targetUrl = res.rows.current_url;
+        targetUrl = res.rows[0].current_url;
         displayLabel = res.rows.display_name || "LIVE FEED";
       }
 
