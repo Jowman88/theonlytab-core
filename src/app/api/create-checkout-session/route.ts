@@ -4,7 +4,6 @@ import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2023-10-16' as any });
 
-// 🛡️ DE AUTOMATISCHE ZWARTE LIJST (Breid deze gerust handmatig uit met specifieke termen)
 const BANNED_WORDS = [
   'nigger', 'kike', 'faggot', 'tranny', 'hitler', 'nazi', 
   'kanker', 'kankeren', 'kankerlijer', 'kkr', 'neger', 'homo',
@@ -14,10 +13,7 @@ const BANNED_WORDS = [
 function containsProfanity(text: string): boolean {
   if (!text) return false;
   const cleanText = text.toLowerCase().trim();
-  
-  // Controleer of de tekst exact een verboden woord is of er delen van bevat
   return BANNED_WORDS.some(badWord => {
-    // Zoekt naar het verboden woord met flexibele grenzen zodat bv. "kanker.com" ook wordt geblokkeerd
     const regex = new RegExp(badWord, 'i');
     return regex.test(cleanText);
   });
@@ -36,7 +32,6 @@ export async function POST(req: Request) {
   try {
     const { targetUrl, displayName, overlayLabel, startPath } = await req.json();
 
-    // 1. VOER DIRECTE MODERATIE CHECK UIT OP HET CUSTOM LABEL EN DE DISPLAY NAME
     if (containsProfanity(overlayLabel) || containsProfanity(displayName)) {
       return NextResponse.json(
         { error: 'TEXT REFUSED: Inappropriate language or banned terms detected.' }, 
@@ -46,25 +41,31 @@ export async function POST(req: Request) {
 
     const pgClient = new Client(dbConfig);
     await pgClient.connect();
+    
+    // Haal de ECHTE actieve adverteerder op (we negeren de handmatige house-default rij voor de lock check)
     const activeRes = await pgClient.query(
-      `SELECT id, current_bid, created_at FROM slots WHERE is_frozen = FALSE AND expires_at > NOW() LIMIT 1`
+      `SELECT id, current_bid, created_at FROM slots 
+       WHERE is_frozen = FALSE AND expires_at > NOW() AND id != 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
+       LIMIT 1`
     );
 
-    let requiredStealPrice = 19.00; // Minimale Floor prijs
+    let requiredStealPrice = 19.00; 
     
-    if (activeRes.rows.length > 0) {
+    if (activeRes.rows && activeRes.rows.length > 0) {
       const activeSlot = activeRes.rows[0];
       const currentPaid = parseFloat(activeSlot.current_bid);
-      const createdAt = new Date(activeSlot.created_at).getTime();
-      const minutesOnStage = (Date.now() - createdAt) / (1000 * 60);
+      
+      if (activeSlot.created_at) {
+        const createdAt = new Date(activeSlot.created_at).getTime();
+        const minutesOnStage = (Date.now() - createdAt) / (1000 * 60);
 
-      // Enforceer de 12-minuten lock
-      if (minutesOnStage < 12) {
-        await pgClient.end();
-        return NextResponse.json({ error: `FEED LOCKED. Try again in ${Math.ceil(12 - minutesOnStage)} minutes.` }, { status: 400 });
+        // FIX: Enforceer de 12-minuten lock ALLEEN als de datum valide is omgerekend
+        if (!isNaN(minutesOnStage) && minutesOnStage < 12) {
+          await pgClient.end();
+          return NextResponse.json({ error: `FEED LOCKED. Try again in ${Math.ceil(12 - minutesOnStage)} minutes.` }, { status: 400 });
+        }
       }
 
-      // Bereken de Steal Price (+25% of minimaal +\$10 jump)
       const percentageIncrease = currentPaid * 1.25;
       const flatIncrease = currentPaid + 10.00;
       requiredStealPrice = Math.max(percentageIncrease, flatIncrease);
@@ -72,7 +73,6 @@ export async function POST(req: Request) {
 
     await pgClient.end();
 
-    // Reconstructeer de volledige URL inclusief het optionele start-pad of de hash
     let finalTargetUrl = targetUrl;
     if (startPath) {
       const cleanPath = startPath.trim();
@@ -104,7 +104,7 @@ export async function POST(req: Request) {
         displayName: displayName || 'Anonymous Takeover',
         overlayLabel: overlayLabel || '',
         bidAmount: requiredStealPrice.toFixed(2),
-        expiresAt: new Date(Date.now() + 90 * 60 * 1000).toISOString() // 90 minuten maximum cap
+        expiresAt: new Date(Date.now() + 90 * 60 * 1000).toISOString() 
       },
     });
 
@@ -113,3 +113,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+
