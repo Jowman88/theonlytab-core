@@ -205,12 +205,12 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
             
             <div className="space-y-1 md:text-center">
               <span className="text-[10px] text-neutral-500 font-bold tracking-widest block uppercase">CURRENT STAKE</span>
-              <div className="text-sm sm:text-base font-bold text-neutral-300">
-                <span className="text-white font-black">\${slot?.current_bid || '0.00'} PAID</span>
-                <span className="text-neutral-600 mx-2 sm:mx-3">·</span>
-                <span className="text-neutral-400">STEAL FOR </span>
-                <span className="text-amber-400 font-black">\${slot?.stealPrice || '19.00'}</span>
-              </div>
+                   <div className="text-sm sm:text-base font-bold text-neutral-300">
+            <span className="text-white font-black">${slot?.current_bid || '0.00'} PAID</span>
+            <span className="text-neutral-600 mx-2 sm:mx-3">·</span>
+            <span className="text-neutral-400">STEAL FOR </span>
+            <span className="text-amber-400 font-black">${slot?.stealPrice || '19.00'}</span>
+          </div>
             </div>
 
             <div className="space-y-1 md:text-right">
