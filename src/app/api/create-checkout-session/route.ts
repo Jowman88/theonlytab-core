@@ -1,14 +1,21 @@
-import Stripe from 'stripe';
 import { NextResponse } from 'next/server';
+import Stripe from 'stripe';
 import { getDbPool } from '../../../lib/db';
 import { buildTargetUrl, validateTargetUrl } from '../../../lib/urlValidation';
 import { checkUrlWithWebRisk } from '../../../lib/webRisk';
 
 export const dynamic = 'force-dynamic';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-03-31.basil',
-});
+function getStripeClient() {
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+  if (!secretKey || !secretKey.startsWith('sk_')) {
+    throw new Error('STRIPE_SECRET_KEY is missing or invalid.');
+  }
+
+  return new Stripe(secretKey, {
+    apiVersion: '2025-03-31.basil',
+  });
+}
 
 const BANNED_WORDS = [
   'nigger', 'kike', 'faggot', 'tranny', 'hitler', 'nazi',
@@ -45,7 +52,13 @@ export async function POST(req: Request) {
 
     const displayNameValue = String(displayName || 'Anonymous Takeover').trim();
     const overlayLabelValue = String(overlayLabel || '').trim();
-    const finalTargetUrl = buildTargetUrl(validation.normalizedUrl, startPath);
+
+    let finalTargetUrl: string;
+    try {
+      finalTargetUrl = buildTargetUrl(validation.normalizedUrl, startPath);
+    } catch (err: any) {
+      return NextResponse.json({ error: err.message || 'Invalid path supplied.' }, { status: 400 });
+    }
 
     if (containsProfanity(overlayLabelValue) || containsProfanity(displayNameValue) || containsProfanity(finalTargetUrl)) {
       return NextResponse.json(
@@ -58,6 +71,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'DISPLAY NAME OR OVERLAY LABEL IS TOO LONG.' }, { status: 400 });
     }
 
+    const stripe = getStripeClient();
     const client = await getDbPool().connect();
 
     try {
