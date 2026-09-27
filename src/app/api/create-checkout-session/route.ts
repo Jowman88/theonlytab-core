@@ -6,14 +6,12 @@ import { checkUrlWithWebRisk } from '../../../lib/webRisk';
 
 export const dynamic = 'force-dynamic';
 
-// 🛡️ FIX: De handmatige http/https agents zijn volledig verwijderd om Serverless Timeouts te voorkomen!
 function getStripeClient() {
   const secretKey = process.env.STRIPE_SECRET_KEY;
   if (!secretKey || !secretKey.startsWith('sk_')) {
     throw new Error('STRIPE_SECRET_KEY is missing or invalid.');
   }
 
-  // De SDK regelt de fetch-connectie naar Stripe nu volledig native en razendsnel op Vercel
   return new Stripe(secretKey, {
     apiVersion: '2025-03-31.basil',
   });
@@ -101,7 +99,8 @@ export async function POST(req: Request) {
         }
       }
 
-            const session = await stripe.checkout.sessions.create({
+      // FIX: De overtollige code-overlapping is hieronder volledig weggesneden en sluitend gemaakt!
+      const session = await stripe.checkout.sessions.create({
         line_items: [{
           price_data: {
             currency: 'usd',
@@ -112,21 +111,8 @@ export async function POST(req: Request) {
             },
             unit_amount: Math.round(requiredStealPrice * 100),
           },
-          quantity: 1, // <-- FIX: Staat nu exact op de juiste hoofdregel binnen line_items[0]!
+          quantity: 1,
         }],
-        mode: 'payment',
-        success_url: 'https://theonlytab.io',
-        cancel_url: 'https://theonlytab.io',
-        metadata: {
-          targeturl: finalTargetUrl,
-          displayname: displayNameValue,
-          overlaylabel: overlayLabelValue,
-          bidamount: requiredStealPrice.toFixed(2),
-          expiresat: new Date(Date.now() + 90 * 60 * 1000).toISOString()
-        },
-      });
-      
-        } as any],
         mode: 'payment',
         success_url: 'https://theonlytab.io',
         cancel_url: 'https://theonlytab.io',
