@@ -120,16 +120,14 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       </header>
 
       <div className="flex-1 flex flex-col md:flex-row gap-4 relative overflow-hidden">
-        {/* Form Drawer Overlay */}
+        {/* Form Drawer */}
         {isFormOpen && (
           <form onSubmit={handleAcquireTabSubmit} className="w-full md:w-64 bg-[#0D0D11] border border-neutral-800 p-4 rounded-xl flex flex-col gap-3 overflow-y-auto z-30 font-sans relative">
-            {/* SLEEK CLOSE BUTTON: Puts the cancel action right back into the container header */}
             <div className="flex items-center justify-between border-b border-neutral-800 pb-1">
               <span className="text-[10px] font-bold text-neutral-400 font-mono tracking-wider">CONFIG DRAWER</span>
               <button type="button" onClick={() => setIsFormOpen(false)} className="text-neutral-500 hover:text-white text-xs font-mono font-bold bg-[#14141A] border border-neutral-800 px-2 py-0.5 rounded">✕ CLOSE</button>
             </div>
 
-            {/* FIXED PLACEHOLDERS: All gray example texts completely stripped out */}
             <div>
               <label className="text-[9px] text-neutral-500 font-bold uppercase tracking-wide block mb-1">Target Website URL *</label>
               <input type="text" required placeholder="" value={targetUrl} onChange={e => setTargetUrl(e.target.value)} className="w-full bg-black border border-neutral-800 rounded p-2 text-xs outline-none font-mono" />
@@ -153,7 +151,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
             </label>
 
             <button type="submit" disabled={isSubmitting || lockTimer > 0 || !legalAgreed} className="w-full bg-white text-black font-black py-2.5 rounded text-xs font-mono mt-1">
-              {isSubmitting ? 'OPENING...' : lockTimer > 0 ? 'FEED LOCKED' : 'STEAL FOR \$' + (slot?.stealPrice || '19.00')}
+              {isSubmitting ? 'OPENING...' : lockTimer > 0 ? 'FEED LOCKED' : 'STEAL FOR ' + ' ' + ' \$' + (slot?.stealPrice || '19.00')}
             </button>
           </form>
         )}
@@ -172,13 +170,14 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
 
         {/* Main Scoreboard Display Section */}
         <div className="flex-1 flex flex-col gap-4 font-mono">
+          {/* Ticker Row - FIXED: Dollartekens onwrikbaar geïsoleerd via string expressie handling! */}
           <div className="bg-[#0D0D11] border border-neutral-800 rounded-xl p-4 flex flex-wrap justify-between gap-2 text-xs font-bold">
             <div>NOW: <span className="text-emerald-400">{slot?.currentUrl?.replace('https://', '') || 'SYSTEM_IDLE'}</span></div>
-            <div>STAKE: <span className="text-white">\${slot?.current_bid || '0.00'}</span> · NEXT: <span className="text-amber-400">\${slot?.stealPrice || '19.00'}</span></div>
+            <div>STAKE: <span className="text-white">{"\$"}{slot?.current_bid || '0.00'}</span> · NEXT: <span className="text-amber-400">{"\$"}{slot?.stealPrice || '19.00'}</span></div>
             <div className={lockTimer > 0 ? 'text-red-400' : 'text-emerald-400'}>{lockTimer > 0 ? `LOCKED ${formatClock(lockTimer)}` : 'OPEN TO STEAL'}</div>
           </div>
 
-          {/* Canvas Frame Area */}
+          {/* Canvas Wrapper */}
           <div className="flex-1 bg-[#0D0D11] border border-neutral-900 rounded-xl relative flex items-center justify-center min-h-[200px]">
             <canvas ref={canvasRef} className={`w-full h-full object-contain ${!hasFrames ? 'hidden' : 'block'}`} />
             {!hasFrames && (
@@ -189,7 +188,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
             )}
           </div>
 
-          {/* Ledger Marquee History Row */}
+          {/* Ledger Marquee History Row - FIXED: Dollar rendering volledig geïsoleerd */}
           <div className="h-10 bg-[#0D0D11] border border-neutral-800 rounded-xl flex items-center px-4 overflow-hidden text-[10px] gap-4 relative">
             <span className="text-neutral-500 shrink-0 font-black">RECENT:</span>
             <div className="flex gap-8 whitespace-nowrap animate-marquee">
@@ -197,13 +196,13 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                 <div key={idx} className="flex gap-1.5">
                   <span className="text-neutral-200 font-bold">{item.displayName}</span>
                   <span className="text-emerald-400">{item.currentUrl?.replace('https://', '')}</span>
-                  <span className="text-amber-400">\${item.currentBid}</span>
+                  <span className="text-amber-400">{"\$"}{item.currentBid}</span>
                 </div>
               )) : <span className="text-neutral-600">Awaiting ledger seeds...</span>}
             </div>
           </div>
 
-          {/* Bottom Footer Status Metrics */}
+          {/* Bottom Mini Footer Status */}
           <div className="flex justify-between text-[9px] text-neutral-500 font-bold px-1">
             <div>ON STAGE: {slot?.displayName || 'SYSTEM IDLE'}</div>
             <div>TIME ON STAGE: {formatClock(stageTimer)}</div>
