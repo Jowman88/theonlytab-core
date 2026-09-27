@@ -26,11 +26,12 @@ let currentUrlInStream = "";
 
 async function initPuppeteer() {
   try {
-    console.log("Launching headless cloud browser via native system binary allocation...");
+    console.log("Launching headless cloud browser via native package layer allocation...");
     
     browser = await puppeteer.launch({
       headless: "new",
-      executablePath: '/usr/bin/google-chrome',
+      // FIX: We verwijderen executablePath volledig zodat Puppeteer 
+      // automatisch zijn eigen native meegeleverde Chromium-binary opstart!
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -44,6 +45,16 @@ async function initPuppeteer() {
       ],
       defaultViewport: { width: 1280, height: 720 }
     });
+    
+    page = await browser.newPage();
+    await page.setDefaultNavigationTimeout(15000);
+    await page.setBypassCSP(true);
+    
+    console.log("Cloud browser successfully initialized and stabilized via package engine.");
+  } catch (err) {
+    console.error("Fatal Error initializing Puppeteer runtime layout:", err.message);
+  }
+}
     
     page = await browser.newPage();
     await page.setDefaultNavigationTimeout(15000);
