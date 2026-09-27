@@ -22,7 +22,7 @@ function containsProfanity(text: string): boolean {
 export async function POST(req: Request) {
   const dbConfig = {
     user: 'postgres.fvqeeriisoediuwbftvh',
-    host: 'aws-1-eu-west-1.pooler.supabase.com',
+    host: '://supabase.com',
     database: 'postgres',
     password: process.env.DATABASE_PASSWORD,
     port: 6543,
@@ -79,7 +79,6 @@ export async function POST(req: Request) {
       }
     }
 
-    // FIX: Alle metadata-sleutels zijn nu strikt lowercase om Stripe data-mismatches te voorkomen!
     const session = await stripe.checkout.sessions.create({
       line_items: [{
         price_data: {
@@ -97,6 +96,7 @@ export async function POST(req: Request) {
       success_url: 'https://theonlytab.io',
       cancel_url: 'https://theonlytab.io',
       metadata: {
+        // Enforce 100% strict lowercase keys to line up with the webhook engine
         targeturl: finalTargetUrl,
         displayname: displayName || 'Anonymous Takeover',
         overlaylabel: overlayLabel || '',
