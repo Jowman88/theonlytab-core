@@ -132,7 +132,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
               <span>Accept Non-Refundable Stage Rules</span>
             </label>
             <button type="submit" disabled={isSubmitting || lockTimer > 0} className="w-full bg-white text-black font-black py-2 rounded text-xs font-mono">
-              {isSubmitting ? 'OPENING...' : lockTimer > 0 ? 'LOCKED' : `STEAL FOR $${slot?.stealPrice || '19.00'}`}
+              {isSubmitting ? 'OPENING...' : lockTimer > 0 ? 'LOCKED' : 'STEAL FOR ' + ' \$' + (slot?.stealPrice || '19.00')}
             </button>
           </form>
         )}
@@ -151,10 +151,10 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
 
         {/* Main Scoreboard Display Section */}
         <div className="flex-1 flex flex-col gap-4 font-mono">
-          {/* Ticker Row - FIXED: Alfanumerieke dollartekens zuiver geïsoleerd zonder backslashes! */}
+          {/* Ticker Row - FIXED: Dollartekens via curly brackets geïsoleerd! */}
           <div className="bg-[#0D0D11] border border-neutral-800 rounded-xl p-4 flex flex-wrap justify-between gap-2 text-xs font-bold">
             <div>NOW: <span className="text-emerald-400">{slot?.currentUrl?.replace('https://', '') || 'SYSTEM_IDLE'}</span></div>
-            <div>STAKE: <span className="text-white">\${slot?.current_bid || '0.00'}</span> · NEXT: <span className="text-amber-400">\${slot?.stealPrice || '19.00'}</span></div>
+            <div>STAKE: <span className="text-white">{"\$"}{slot?.current_bid || '0.00'}</span> · NEXT: <span className="text-amber-400">{"\$"}{slot?.stealPrice || '19.00'}</span></div>
             <div className={lockTimer > 0 ? 'text-red-400' : 'text-emerald-400'}>{lockTimer > 0 ? `LOCKED ${formatClock(lockTimer)}` : 'OPEN TO STEAL'}</div>
           </div>
 
@@ -169,7 +169,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
             )}
           </div>
 
-          {/* Ledger Marquee History Row - FIXED: Dollar rendering schoongemaakt */}
+          {/* Ledger Marquee History Row */}
           <div className="h-10 bg-[#0D0D11] border border-neutral-800 rounded-xl flex items-center px-4 overflow-hidden text-[10px] gap-4 relative">
             <span className="text-neutral-500 shrink-0 font-black">RECENT:</span>
             <div className="flex gap-8 whitespace-nowrap animate-marquee">
@@ -177,7 +177,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                 <div key={idx} className="flex gap-1.5">
                   <span className="text-neutral-200 font-bold">{item.displayName}</span>
                   <span className="text-emerald-400">{item.currentUrl?.replace('https://', '')}</span>
-                  <span className="text-amber-400">\${item.currentBid}</span>
+                  <span className="text-amber-400">{"\$"}{item.currentBid}</span>
                 </div>
               )) : <span className="text-neutral-600">Awaiting ledger seeds...</span>}
             </div>
