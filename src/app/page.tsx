@@ -4,6 +4,8 @@ import EngineDashboard from '../components/EngineDashboard';
 export const dynamic = 'force-dynamic';
 
 export default function Home() {
-  const wsUrl = process.env.NEXT_PUBLIC_WS_STREAM_URL || "ws://localhost:8080";
-  return <EngineDashboard streamServerUrl={wsUrl} />;
+  // 🛡️ UNBREKABLE STAGE BOOT:
+  // We sturen een lege string mee. Hierdoor móet het dashboard wel terugvallen
+  // op onze stabiele wss://://onrender.com string in EngineDashboard.tsx!
+  return <EngineDashboard streamServerUrl="" />;
 }
