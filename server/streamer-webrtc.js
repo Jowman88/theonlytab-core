@@ -24,11 +24,18 @@ let browser = null;
 let page = null;
 let currentUrlInStream = "";
 
+
 async function initPuppeteer() {
   try {
-    console.log("Launching headless cloud browser via Puppeteer...");
+    console.log("Launching headless cloud browser via Puppeteer standard framework...");
+    
+    // 🛡️ UNBREAKABLE LINUX RUNTIME BYPASS
+    // Forces Puppeteer to resolve the exact binary file location where Render caches the executable
+    const customChromePath = '/opt/render/.cache/puppeteer/chrome/linux-127.0.6533.88/chrome-linux64/chrome';
+    
     browser = await puppeteer.launch({
       headless: "new",
+      executablePath: customChromePath, // <-- FIX: Directly points the engine to the downloaded executable!
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -42,15 +49,14 @@ async function initPuppeteer() {
       ],
       defaultViewport: { width: 1280, height: 720 }
     });
+    
     page = await browser.newPage();
     await page.setDefaultNavigationTimeout(15000);
-    
-    // FIX 1: Omzeil per direct alle CSP/X-Frame frame-blokkades van grote sites zoals YouTube!
     await page.setBypassCSP(true);
     
-    console.log("Cloud browser successfully initialized.");
+    console.log("Cloud browser successfully initialized and stabilized.");
   } catch (err) {
-    console.error("Fatal Error initializing Puppeteer:", err.message);
+    console.error("Fatal Error initializing Puppeteer runtime layout:", err.message);
   }
 }
 
