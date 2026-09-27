@@ -43,6 +43,7 @@ async function initPuppeteer() {
       defaultViewport: { width: 1280, height: 720 }
     });
     page = await browser.newPage();
+await page.setBypassCSP(true);
     await page.setDefaultNavigationTimeout(30000);
     console.log("Cloud browser successfully initialized.");
   } catch (err) {
@@ -83,7 +84,7 @@ async function startStreamingCore() {
       if (targetUrl !== currentUrlInStream && page) {
         console.log(`Stream target shifted! Steering browser to: ${targetUrl}`);
         currentUrlInStream = targetUrl;
-        await page.goto(targetUrl, { waitUntil: 'networkidle2' }).catch(() => {});
+        await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {});
 
         // 🛡️ INJECTEER HET BRUTE, PREMIUM VIDEO WATERMERK DIRECT IN DE CHROMIUM PAGINA LAAG
         await page.evaluate((labelText) => {
