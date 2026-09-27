@@ -24,15 +24,12 @@ let browser = null;
 let page = null;
 let currentUrlInStream = "";
 
-
 async function initPuppeteer() {
   try {
     console.log("Launching headless cloud browser via native system binary allocation...");
     
     browser = await puppeteer.launch({
       headless: "new",
-      // FIX: We halen de hardcoded cache-paden weg en dwingen Puppeteer om de 
-      // via het Buildpack geïnstalleerde stabiele systeem-Chrome aan te roepen!
       executablePath: '/usr/bin/google-chrome',
       args: [
         '--no-sandbox',
@@ -57,32 +54,19 @@ async function initPuppeteer() {
     console.error("Fatal Error initializing Puppeteer runtime layout:", err.message);
   }
 }
-    
-    page = await browser.newPage();
-    await page.setDefaultNavigationTimeout(15000);
-    await page.setBypassCSP(true);
-    
-    console.log("Cloud browser successfully initialized and stabilized.");
-  } catch (err) {
-    console.error("Fatal Error initializing Puppeteer runtime layout:", err.message);
-  }
-}
 
 async function startStreamingCore() {
-  const dbConfig = {
-    user: 'postgres.fvqeeriisoediuwbftvh',
-    host: 'aws-1-eu-west-1.pooler.supabase.com',
-    database: 'postgres',
-    password: process.env.DATABASE_PASSWORD,
-    port: 6543,
-    ssl: { rejectUnauthorized: false }
-  };
+  const dbConnectionString = process.env.DATABASE_URL;
 
   await initPuppeteer();
 
+  // 🛡️ ACCURAAT SLUITENDE DATABASE SYNC LOOP
   setInterval(async () => {
     try {
-      const pgClient = new Client(dbConfig);
+      const pgClient = new Client({
+        connectionString: dbConnectionString,
+        ssl: { rejectUnauthorized: false }
+      });
       await pgClient.connect();
       
       const res = await pgClient.query(
@@ -94,15 +78,13 @@ async function startStreamingCore() {
       let displayLabel = "SYSTEM IDLE";
 
       if (res.rows && res.rows.length > 0) {
-        targetUrl = res.rows[0].current_url;
+        targetUrl = res.rows.current_url;
         displayLabel = res.rows.display_name || "LIVE FEED";
       }
 
       if (targetUrl !== currentUrlInStream && page) {
         console.log(`Stream target shifted! Steering browser to: ${targetUrl}`);
         currentUrlInStream = targetUrl;
-        
-        // FIX 2: Laadt direct zodra de HTML staat (domcontentloaded) met een strakke timeout om bevriezing te voorkomen!
         await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {});
 
         await page.evaluate((labelText) => {
