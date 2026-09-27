@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { Client } from 'pg';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2023-10-16' as any });
+// FIX: API-versie geüpgraded naar de allernieuwste standaard om Managed Payments direct te activeren!
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2025-03-31.basil' as any });
 
 const BANNED_WORDS = [
   'nigger', 'kike', 'faggot', 'tranny', 'hitler', 'nazi', 
@@ -88,7 +89,6 @@ export async function POST(req: Request) {
           product_data: {
             name: `STEAL FEED: ${displayName || 'Anonymous'}`,
             description: `Force takeover viewport to: ${finalTargetUrl}`,
-            // FIX: Toegevoegd conform Stripe Managed Payments wetgeving voor digitale webdiensten!
             tax_code: 'txcd_10701100'
           },
           unit_amount: Math.round(requiredStealPrice * 100),
