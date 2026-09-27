@@ -127,7 +127,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
     const secs = (s % 60).toString().padStart(2, '0');
     return `${mins}:${secs}`;
   };
-  return (
+
     <div className="fixed inset-0 w-screen h-screen bg-[#060608] flex flex-col font-sans antialiased text-neutral-200 select-none overflow-hidden">
       {/* High-Contrast Sport Header */}
       <header className="h-16 bg-[#0D0D11] border-b border-neutral-800/80 flex items-center justify-between px-6 z-20 shrink-0">
