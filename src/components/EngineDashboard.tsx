@@ -68,9 +68,14 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       }
     }
 
+    let isMounted = true;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
     const fetchState = async () => {
       try {
-        const res = await fetch('/api/get-active-tab');
+        const res = await fetch('/api/get-active-tab', { cache: 'no-store' });
+        if (!isMounted) return;
+
         if (res.ok) {
           const p = await res.json();
           if (p?.data) {
@@ -79,16 +84,30 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
             setStageTimer(parseFloat(p.data.current_bid || '0') <= 0 ? 0 : Number(p.data.secondsOnStage) || 0);
           }
         }
-        const hRes = await fetch('/api/get-ticker-history');
+
+        const hRes = await fetch('/api/get-ticker-history', { cache: 'no-store' });
+        if (!isMounted) return;
+
         if (hRes.ok) {
           const hP = await hRes.json();
           setHistoryList(hP.history || []);
         }
-      } catch (e) { console.error(e); }
+
+        timer = setTimeout(fetchState, 10000);
+      } catch (e) {
+        console.error('Active tab polling failed:', e);
+        if (isMounted) {
+          timer = setTimeout(fetchState, 30000);
+        }
+      }
     };
+
     fetchState();
-    const interval = setInterval(fetchState, 10000);
-    return () => clearInterval(interval);
+
+    return () => {
+      isMounted = false;
+      if (timer) clearTimeout(timer);
+    };
   }, []);
 
   useEffect(() => {
@@ -143,19 +162,19 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
 
             <div>
               <label className="text-[9px] text-neutral-500 font-bold uppercase tracking-wide block mb-1">Target Website URL *</label>
-              <input type="text" required placeholder="example.com" value={targetUrl} onChange={e => setTargetUrl(e.target.value)} className="w-full bg-black border border-neutral-800 rounded p-2 text-xs outline-none focus:border-emerald-500 text-neutral-200" />
+              <input type="text" required placeholder="example.com" value={targetUrl} onChange={e => setTargetUrl(e.target.value)} className="w-full bg-black border border-neutral-800 rounded p-2 text-xs text-white" />
             </div>
             <div>
               <label className="text-[9px] text-neutral-500 font-bold uppercase tracking-wide block mb-1">Display Name</label>
-              <input type="text" placeholder="Anonymous Takeover" value={displayName} onChange={e => setDisplayName(e.target.value)} className="w-full bg-black border border-neutral-800 rounded p-2 text-xs outline-none focus:border-emerald-500 text-neutral-200" />
+              <input type="text" placeholder="Anonymous Takeover" value={displayName} onChange={e => setDisplayName(e.target.value)} className="w-full bg-black border border-neutral-800 rounded p-2 text-xs text-white" />
             </div>
             <div>
               <label className="text-[9px] text-neutral-500 font-bold uppercase tracking-wide block mb-1">Overlay Label (Max 15 Chars)</label>
-              <input type="text" maxLength={15} placeholder="" value={overlayLabel} onChange={e => setOverlayLabel(e.target.value)} className="w-full bg-black border border-neutral-800 rounded p-2 text-xs outline-none focus:border-emerald-500 text-neutral-200" />
+              <input type="text" maxLength={15} placeholder="" value={overlayLabel} onChange={e => setOverlayLabel(e.target.value)} className="w-full bg-black border border-neutral-800 rounded p-2 text-xs text-white" />
             </div>
             <div>
               <label className="text-[9px] text-neutral-500 font-bold uppercase tracking-wide block mb-1">Optional Start Path / Hash</label>
-              <input type="text" placeholder="/pricing or #faq" value={startPath} onChange={e => setStartPath(e.target.value)} className="w-full bg-black border border-neutral-800 rounded p-2 text-xs outline-none focus:border-emerald-500 text-neutral-200" />
+              <input type="text" placeholder="/pricing or #faq" value={startPath} onChange={e => setStartPath(e.target.value)} className="w-full bg-black border border-neutral-800 rounded p-2 text-xs text-white" />
             </div>
 
             <label className="flex items-start gap-2 text-[9px] text-neutral-400 leading-normal cursor-pointer select-none mt-1">
@@ -163,7 +182,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
               <span>Accept Non-Refundable Takeover Stage Rules</span>
             </label>
 
-            <button type="submit" disabled={isSubmitting || lockTimer > 0 || !legalAgreed} className="w-full bg-white text-black font-black py-2.5 rounded text-xs font-mono mt-1 disabled:opacity-60">
+            <button type="submit" disabled={isSubmitting || lockTimer > 0 || !legalAgreed} className="w-full bg-white text-black font-black py-2.5 rounded text-xs font-mono mt-1 disabled:opacity-50">
               {isSubmitting ? 'OPENING...' : lockTimer > 0 ? 'FEED LOCKED' : 'STEAL FOR ' + ' $' + (slot?.stealPrice || '19.00')}
             </button>
           </form>
@@ -175,8 +194,8 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
               <span className="text-[10px] text-emerald-400 font-bold">🎉 TAKEOVER SUCCESSFUL!</span>
               <button onClick={() => setIsEmbedOpen(false)} className="text-neutral-500 hover:text-white text-xs">✕</button>
             </div>
-            <p className="text-[9px] text-neutral-400 leading-normal font-sans">Place this widget on your platform. If you get outbid, it will automatically alert your audience to help you steal back the feed.</p>
-            <textarea readOnly onClick={(e) => (e.target as HTMLTextAreaElement).select()} value={`<iframe src="https://theonlytab.io" width="100%" height="140" style="border:none;" scrolling="no"></iframe>`} className="w-full h-24 bg-black border border-neutral-800 rounded p-2 text-[9px] text-neutral-300 resize-none outline-none" />
+            <p className="text-[9px] text-neutral-400 leading-normal font-sans">Place this widget on your platform. If you get outbid, it will automatically alert your audience to help you steal the feed.</p>
+            <textarea readOnly onClick={(e) => (e.target as HTMLTextAreaElement).select()} value={`<iframe src="https://theonlytab.io" width="100%" height="140" style="border:none;" scrolling="no" allow="fullscreen"></iframe>`} className="w-full h-20 bg-black border border-neutral-800 rounded p-2 text-[9px] text-neutral-200 resize-none" />
           </div>
         )}
 
