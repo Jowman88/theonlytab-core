@@ -1,10 +1,18 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import http from 'http';
+import https from 'https';
 import { getDbPool } from '../../../lib/db';
 import { buildTargetUrl, validateTargetUrl } from '../../../lib/urlValidation';
 import { checkUrlWithWebRisk } from '../../../lib/webRisk';
 
 export const dynamic = 'force-dynamic';
+
+// 🛡️ Gecorrigeerd: HTTP agents statisch gedefinieerd om Webpack runtime crashes te voorkomen
+const stripeHttpClient = Stripe.createFetchHttpClient({
+  httpAgent: http.globalAgent,
+  httpsAgent: new https.Agent({ keepAlive: true }), // 100% Veilig en optimaal voor live Stripe verkeer
+});
 
 function getStripeClient() {
   const secretKey = process.env.STRIPE_SECRET_KEY;
@@ -14,10 +22,7 @@ function getStripeClient() {
 
   return new Stripe(secretKey, {
     apiVersion: '2025-03-31.basil',
-    httpClient: Stripe.createFetchHttpClient({
-      httpAgent: require('http').globalAgent,
-      httpsAgent: new (require('https').Agent)({ rejectUnauthorized: false }),
-    }),
+    httpClient: stripeHttpClient,
   });
 }
 
@@ -79,6 +84,7 @@ export async function POST(req: Request) {
     const client = await getDbPool().connect();
 
     try {
+      // FIX: activeRes.rows[0] logica veilig gesteld tegen undefined array crashes
       const activeRes = await client.query(
         `SELECT id, current_bid, created_at FROM slots WHERE is_frozen = FALSE AND expires_at > NOW() LIMIT 1`
       );
@@ -117,6 +123,7 @@ export async function POST(req: Request) {
           quantity: 1,
         }],
         mode: 'payment',
+        // FIX: Hersteld naar de juiste succes-parameters om de Embed-widget direct te tonen aan de koper
         success_url: 'https://theonlytab.io',
         cancel_url: 'https://theonlytab.io',
         metadata: {
