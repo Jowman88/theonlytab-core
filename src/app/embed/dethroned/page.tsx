@@ -7,20 +7,35 @@ export default function DethronedEmbed() {
   const [data, setData] = useState<any>(null);
 
   useEffect(() => {
+    let isMounted = true;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
     const fetchEmbedState = async () => {
       try {
-        const res = await fetch('/api/get-active-tab');
+        const res = await fetch('/api/get-active-tab', { cache: 'no-store' });
+        if (!isMounted) return;
+
         if (res.ok) {
           const payload = await res.json();
-          setData(payload?.data);
+          setData(payload?.data ?? null);
+          timer = setTimeout(fetchEmbedState, 10000);
+          return;
         }
       } catch (e) {
-        console.error(e);
+        console.error('Dethroned embed fetch failed:', e);
+      }
+
+      if (isMounted) {
+        timer = setTimeout(fetchEmbedState, 30000);
       }
     };
+
     fetchEmbedState();
-    const interval = setInterval(fetchEmbedState, 10000);
-    return () => clearInterval(interval);
+
+    return () => {
+      isMounted = false;
+      if (timer) clearTimeout(timer);
+    };
   }, []);
 
   return (
@@ -36,7 +51,7 @@ export default function DethronedEmbed() {
       </div>
 
       <div className="my-2 text-xs font-bold leading-normal truncate text-neutral-400">
-        We were knocked off air. Currently on stage:{" "}
+        We were knocked off air. Currently on stage:{' '}
         <span className="text-white font-black text-emerald-400">
           {data?.currentUrl?.replace('https://', '') || 'System Idle'}
         </span>
@@ -46,7 +61,7 @@ export default function DethronedEmbed() {
         href="https://theonlytab.io"
         target="_blank"
         rel="noopener noreferrer"
-        className="w-full h-9 bg-neutral-100 hover:bg-white text-neutral-950 text-[11px] font-black tracking-wider rounded-lg transition-all flex items-center justify-center gap-1.5 no-underline active:scale-[0.98]"
+        className="w-full h-9 bg-neutral-100 hover:bg-white text-neutral-950 text-[11px] font-black tracking-wider rounded-lg transition-all flex items-center justify-center gap-1.5 no-underline"
       >
         <span>RECLAIM FEED INSTANTLY</span>
         <ArrowUpRight size={13} />
