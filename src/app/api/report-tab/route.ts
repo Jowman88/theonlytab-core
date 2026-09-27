@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { dbPool } from '../../../lib/db';
 
+export const dynamic = 'force-dynamic';
+
 const reportTimestamps = new Map<string, number[]>();
 const REPORT_WINDOW_MS = 60 * 1000;
 const REPORT_LIMIT_PER_WINDOW = 3;
