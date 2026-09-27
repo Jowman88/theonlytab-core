@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
-import { Zap, ArrowUpRight, Globe, X, Link2, User, ChevronRight, Type, Hash, ShieldCheck } from 'lucide-react';
+import { Zap, ArrowUpRight, Globe, X, Link2, User, ChevronRight, Type, Hash } from 'lucide-react';
 
 interface SlotData {
   id: string;
@@ -20,15 +20,12 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const [lockTimer, setLockTimer] = useState<number>(0);
   const [hasFrames, setHasFrames] = useState<boolean>(false);
 
-  // Form input states
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
   const [targetUrl, setTargetUrl] = useState<string>('');
   const [displayName, setDisplayName] = useState<string>('');
   const [overlayLabel, setOverlayLabel] = useState<string>('');
   const [startPath, setStartPath] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-
-  // Legal Binding Compliance State
   const [legalAgreed, setLegalAgreed] = useState<boolean>(false);
 
   useEffect(() => {
@@ -54,6 +51,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
     });
     return () => { socket.disconnect(); };
   }, [streamServerUrl]);
+
   useEffect(() => {
     const fetchState = async () => {
       try {
@@ -79,9 +77,10 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
     return () => clearInterval(timer);
   }, []);
 
-    const handleAcquireTabSubmit = async (e: React.FormEvent) => {
+  const handleAcquireTabSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!targetUrl) return alert('Enter a target URL.');
+    if (!legalAgreed) return alert('Accept the Terms to proceed.');
     setIsSubmitting(true);
     try {
       const res = await fetch('/api/create-checkout-session', {
@@ -94,28 +93,15 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
           startPath: startPath || ''
         })
       });
-
       const errData = await res.json();
       if (!res.ok) {
-        // FIX: Toont nu ALTIJD de exacte serverfout (zoals Stripe token missend of database timeout)
         alert(errData.error || "Transaction refused.");
         setIsSubmitting(false);
         return;
       }
       if (errData.url) window.location.href = errData.url;
     } catch (err) {
-      alert("Network timeout communicating with backend.");
-      setIsSubmitting(false);
-    }
-  };
-      if (!res.ok) {
-        alert("Feed is currently locked or text was flagged by automated moderation.");
-        setIsSubmitting(false);
-        return;
-      }
-      const { url } = await res.json();
-      if (url) window.location.href = url;
-    } catch (err) {
+      alert("Network error.");
       setIsSubmitting(false);
     }
   };
@@ -189,32 +175,21 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
               <input type="text" placeholder="/pricing" value={startPath} onChange={(e) => setStartPath(e.target.value)} className="w-full bg-[#13131A] border border-neutral-800 rounded-xl h-11 px-4 text-xs font-mono text-neutral-200 outline-none" />
             </div>
 
-            {/* LEGAL LIABILITY GIRDLE BLOCK */}
+            {/* LEGAL LIABILITIES SECTION */}
             <div className="bg-[#13131A] border border-neutral-800/80 p-3.5 rounded-xl space-y-2 mt-1">
               <p className="text-[9px] text-neutral-500 leading-normal text-left font-medium">
-                Purchases are strictly **non-refundable**. If your stream is outbid ("stolen"), no refunds apply. Malware, pornography, or illegal material will be slashed immediately without warning. This platform is protected under Safe Harbor intermediaries directives.
+                Purchases are strictly non-refundable. If your stream is outbid ("stolen"), no refunds apply. Malware, pornography, or illegal material will be slashed immediately without warning.
               </p>
               <label className="flex items-start gap-2.5 cursor-pointer pt-1.5 border-t border-neutral-800/60 select-none">
-                <input 
-                  type="checkbox" 
-                  required 
-                  checked={legalAgreed} 
-                  onChange={(e) => setLegalAgreed(e.target.checked)} 
-                  className="mt-0.5 accent-emerald-500 h-3.5 w-3.5 border-neutral-800 rounded bg-[#060608]" 
-                />
+                <input type="checkbox" required checked={legalAgreed} onChange={(e) => setLegalAgreed(e.target.checked)} className="mt-0.5 accent-emerald-500 h-3.5 w-3.5 border-neutral-800 rounded bg-[#060608]" />
                 <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wide">I accept the Terms</span>
               </label>
             </div>
 
-            <div className="bg-[#13131A] border border-neutral-800/60 p-3 rounded-xl text-center mt-1">
+            <div className="bg-[#13131A] border border-neutral-800/60 p-4 rounded-xl text-center mt-2">
               <span className="text-xl font-mono font-black text-amber-400">\${slot?.stealPrice || '19.00'}</span>
             </div>
-
-            <button 
-              type="submit" 
-              disabled={isSubmitting || lockTimer > 0 || !legalAgreed} 
-              className="w-full bg-neutral-100 hover:bg-white disabled:bg-neutral-800 disabled:text-neutral-500 text-neutral-900 font-black h-11 rounded-xl text-xs transition-all flex items-center justify-center gap-1.5"
-            >
+            <button type="submit" disabled={isSubmitting || lockTimer > 0 || !legalAgreed} className="w-full bg-neutral-100 hover:bg-white disabled:bg-neutral-800 disabled:text-neutral-500 text-neutral-900 font-black h-11 rounded-xl text-xs transition-all flex items-center justify-center gap-1.5">
               <span>{isSubmitting ? 'Opening Stripe...' : lockTimer > 0 ? 'FEED LOCKED' : !legalAgreed ? 'ACCEPT TERMS' : 'Pay & Take Stage'}</span>
             </button>
           </form>
