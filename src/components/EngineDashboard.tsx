@@ -27,6 +27,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const [legalAgreed, setLegalAgreed] = useState(false);
 
   useEffect(() => {
+    // FIX 1: Volledig geïsoleerd van props. Luistert ALTIJD onwrikbaar direct naar de Render backend!
     const socket = io('wss://://onrender.com', {
       path: '/socket.io/',
       transports: ['websocket'],
@@ -48,7 +49,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       img.src = `data:image/jpeg;base64,${base64}`;
     });
     return () => { socket.disconnect(); };
-  }, [streamServerUrl]);
+  }, []); // FIX 2: Lege dependency array zorgt ervoor dat props de WebSocket nooit kunnen overr規範en!
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -150,12 +151,12 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
             </div>
 
             <label className="flex items-start gap-2 text-[9px] text-neutral-400 leading-normal cursor-pointer select-none mt-1">
-              <input type="checkbox" required checked={legalAgreed} onChange={e => setLegalAgreed(e.target.checked)} className="mt-0.5 accent-emerald-500" />
+              <input type="checkbox" required checked={legalAgreed} onChange={(e) => setLegalAgreed(e.target.checked)} className="mt-0.5 accent-emerald-500" />
               <span>Accept Non-Refundable Takeover Stage Rules</span>
             </label>
 
             <button type="submit" disabled={isSubmitting || lockTimer > 0 || !legalAgreed} className="w-full bg-white text-black font-black py-2.5 rounded text-xs font-mono mt-1">
-              {isSubmitting ? 'OPENING...' : lockTimer > 0 ? 'FEED LOCKED' : 'STEAL FOR \$' + (slot?.stealPrice || '19.00')}
+              {isSubmitting ? 'OPENING...' : lockTimer > 0 ? 'FEED LOCKED' : 'STEAL FOR ' + ' ' + ' \$' + (slot?.stealPrice || '19.00')}
             </button>
           </form>
         )}
