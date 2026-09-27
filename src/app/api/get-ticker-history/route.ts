@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { dbPool } from '../../../lib/db';
+import { getDbPool } from '../../../lib/db';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  const client = await dbPool.connect();
+  const client = await getDbPool().connect();
 
   try {
     const historyRes = await client.query(

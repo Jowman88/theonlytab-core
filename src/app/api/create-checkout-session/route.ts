@@ -1,9 +1,14 @@
+import Stripe from 'stripe';
 import { NextResponse } from 'next/server';
-import { dbPool } from '../../../lib/db';
+import { getDbPool } from '../../../lib/db';
 import { buildTargetUrl, validateTargetUrl } from '../../../lib/urlValidation';
 import { checkUrlWithWebRisk } from '../../../lib/webRisk';
 
-const stripe = new (require('stripe'))(process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2025-03-31.basil' });
+export const dynamic = 'force-dynamic';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+  apiVersion: '2025-03-31.basil',
+});
 
 const BANNED_WORDS = [
   'nigger', 'kike', 'faggot', 'tranny', 'hitler', 'nazi',
@@ -22,7 +27,8 @@ function containsProfanity(text: string): boolean {
 
 export async function POST(req: Request) {
   try {
-    const { targetUrl, displayName, overlayLabel, startPath } = await req.json();
+    const body = await req.json();
+    const { targetUrl, displayName, overlayLabel, startPath } = body;
 
     if (!targetUrl || typeof targetUrl !== 'string') {
       return NextResponse.json({ error: 'TARGET URL REQUIRED: Please provide a website URL.' }, { status: 400 });
@@ -37,10 +43,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'URL refused by the safety gate.' }, { status: 400 });
     }
 
-    const displayNameValue = (displayName || 'Anonymous Takeover').trim();
-    const overlayLabelValue = (overlayLabel || '').trim();
+    const displayNameValue = String(displayName || 'Anonymous Takeover').trim();
+    const overlayLabelValue = String(overlayLabel || '').trim();
+    const finalTargetUrl = buildTargetUrl(validation.normalizedUrl, startPath);
 
-    if (containsProfanity(overlayLabelValue) || containsProfanity(displayNameValue) || containsProfanity(validation.normalizedUrl)) {
+    if (containsProfanity(overlayLabelValue) || containsProfanity(displayNameValue) || containsProfanity(finalTargetUrl)) {
       return NextResponse.json(
         { error: 'TEXT REFUSED: Inappropriate language detected.' },
         { status: 400 }
@@ -51,7 +58,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'DISPLAY NAME OR OVERLAY LABEL IS TOO LONG.' }, { status: 400 });
     }
 
-    const client = await dbPool.connect();
+    const client = await getDbPool().connect();
 
     try {
       const activeRes = await client.query(
@@ -77,8 +84,6 @@ export async function POST(req: Request) {
           requiredStealPrice = Math.max(percentageIncrease, flatIncrease);
         }
       }
-
-      const finalTargetUrl = buildTargetUrl(validation.normalizedUrl, startPath);
 
       const session = await stripe.checkout.sessions.create({
         line_items: [{

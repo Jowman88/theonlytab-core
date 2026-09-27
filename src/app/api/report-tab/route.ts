@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { dbPool } from '../../../lib/db';
+import { getDbPool } from '../../../lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
 
     reportTimestamps.set(cacheKey, [...recentReports, now]);
 
-    const client = await dbPool.connect();
+    const client = await getDbPool().connect();
 
     try {
       const updateRes = await client.query(
