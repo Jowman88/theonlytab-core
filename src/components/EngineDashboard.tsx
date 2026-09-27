@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
-import { Zap, ArrowUpRight, Globe, X, Link2, User, ChevronRight, Type, Hash, ShieldAlert } from 'lucide-react';
+import { Zap, ArrowUpRight, Globe, X, Link2, User, ChevronRight, Type, Hash } from 'lucide-react';
 
 interface SlotData {
   id: string;
@@ -21,7 +21,6 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const [stageTimer, setStageTimer] = useState<number>(0);
   const [hasFrames, setHasFrames] = useState<boolean>(false);
 
-  // Form Drawer states
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
   const [targetUrl, setTargetUrl] = useState<string>('');
   const [displayName, setDisplayName] = useState<string>('');
@@ -63,7 +62,14 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
           if (payload?.data) {
             setSlot(payload.data);
             setLockTimer(Number(payload.data.secondsLeftInLock) || 0);
-            setStageTimer(Number(payload.data.secondsOnStage) || 0);
+            
+            // FIX: Als het bod 0 is (House Default), dwingen we de timer hard op 0 om de reset-lus te stoppen!
+            const currentBidVal = parseFloat(payload.data.current_bid || '0');
+            if (currentBidVal <= 0) {
+              setStageTimer(0);
+            } else {
+              setStageTimer(Number(payload.data.secondsOnStage) || 0);
+            }
           }
         }
       } catch (e) {
@@ -71,17 +77,18 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       }
     };
     fetchState();
-    const interval = setInterval(fetchState, 5000); 
+    const interval = setInterval(fetchState, 5000); // 5 seconden sync loop
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
       setLockTimer(prev => Math.max(0, prev - 1));
-      setStageTimer(prev => prev + 1);
+      // Verhoog de teller alleen lokaal als er echt een actieve bieder op het podium staat
+      setStageTimer(prev => (slot?.current_bid && parseFloat(slot.current_bid) > 0 ? prev + 1 : 0));
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [slot]);
 
   const handleAcquireTabSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -170,7 +177,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                 Purchases are non-refundable. If your stream is outbid, no refunds apply. Malware or illegal content will be slashed instantly.
               </p>
               <label className="flex items-start gap-2.5 cursor-pointer pt-1.5 border-t border-neutral-900 select-none">
-                <input type="checkbox" required checked={legalAgreed} onChange={(e) => setLegalAgreed(e.target.checked)} className="mt-0.5 accent-emerald-500 h-3.5 w-3.5 border-neutral-900 rounded bg-[#050507]" />
+                <input type="checkbox" required checked={legalAgreed} onChange={(e) => setLegalAgreed(e.target.checked)} className="mt-0.5 accent-emerald-500 h-3.5 w-3.5 border-neutral-800 rounded bg-[#050507]" />
                 <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wide">Accept Terms</span>
               </label>
             </div>
@@ -184,11 +191,11 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
           </form>
         </div>
 
-        {/* Dynamic Presentation Grid */}
+        {/* Dynamic Presentation Scoreboard Grid */}
         <div className="flex-1 h-full flex flex-col p-4 sm:p-6 gap-4 sm:gap-6 overflow-y-auto">
           
-          {/* HUGE RADICAL SPORT TICKER ROW */}
-          <div className="w-full bg-[#0B0B0F] border border-neutral-900 rounded-2xl p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-2xl shrink-0">
+          {/* FIXED TICKER ROW - NO BACKSLASHES */}
+          <div className="w-full bg-[#0B0B0F] border border-neutral-900 rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-2xl shrink-0">
             <div className="space-y-1">
               <span className="text-[10px] text-neutral-500 font-bold tracking-widest block uppercase">NOW BROADCASTING</span>
               <h2 className="text-xl sm:text-2xl font-black text-white tracking-wide truncate max-w-[280px] sm:max-w-md">
@@ -214,13 +221,13 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
             </div>
           </div>
 
-          {/* Core Video Canvas Frame Container Area */}
+          {/* Video Canvas Container Area */}
           <div className="flex-1 w-full bg-[#0B0B0F] border border-neutral-900 rounded-3xl overflow-hidden shadow-2xl relative flex items-center justify-center min-h-[220px] sm:min-h-[380px]">
             <canvas ref={canvasRef} className={`w-full h-full object-contain ${!hasFrames ? 'hidden' : 'block'}`} />
             
             {!hasFrames && (
               <div className="absolute inset-0 bg-[#060608] flex flex-col items-center justify-center">
-                <div className="absolute w-[200px] h-[200px] bg-emerald-500/5 rounded-full blur-[80px] animate-pulse" />
+                <div className="absolute w-[250px] h-[250px] bg-emerald-500/5 rounded-full blur-[80px] animate-pulse" />
                 <div className="flex flex-col items-center gap-4 z-10">
                   <div className="relative flex items-center justify-center w-14 h-14 bg-[#0B0B0F] border border-neutral-900 rounded-2xl shadow-xl overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-t from-emerald-500/20 to-transparent opacity-50 animate-pulse" />
@@ -228,7 +235,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                   </div>
                   <div className="text-center space-y-1">
                     <h1 className="text-white text-xs font-black tracking-[0.25em] uppercase pl-[0.25em]">THE ONLY TAB</h1>
-                    <p className="text-[9px] text-neutral-500 font-bold uppercase tracking-[0.3em] pl-[0.3em] animate-pulse">Awaiting Broadcast Node</p>
+                    <p className="text-[9px] text-neutral-500 font-bold uppercase tracking-[0.3em] pl-[0.3em] animate-pulse">Awaiting Takeover</p>
                   </div>
                 </div>
               </div>
@@ -248,7 +255,6 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
               </div>
             </div>
             
-            {/* LIVE FEED MARQUEE TICKER TRACK */}
             <div className="flex items-center gap-2 text-neutral-500 uppercase text-[9px] tracking-widest bg-[#111116] border border-neutral-900 px-3 py-1 rounded-md">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
               <span>LIVE TRANSMISSION FEED</span>
