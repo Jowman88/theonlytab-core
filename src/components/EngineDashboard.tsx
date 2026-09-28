@@ -139,7 +139,18 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
-    setIsTouchDevice(window.matchMedia('(pointer: coarse)').matches);
+
+    const touchMediaQuery = window.matchMedia('(pointer: coarse)');
+    const handlePointerTypeChange = () => setIsTouchDevice(touchMediaQuery.matches);
+    handlePointerTypeChange();
+
+    if (typeof touchMediaQuery.addEventListener === 'function') {
+      touchMediaQuery.addEventListener('change', handlePointerTypeChange);
+      return () => touchMediaQuery.removeEventListener('change', handlePointerTypeChange);
+    }
+
+    touchMediaQuery.addListener(handlePointerTypeChange);
+    return () => touchMediaQuery.removeListener(handlePointerTypeChange);
   }, []);
 
   useEffect(() => {
@@ -299,12 +310,16 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       streamFrame.addEventListener('mousemove', resetIdleTimer, listenerOptions);
     }
     streamFrame.addEventListener('touchstart', resetIdleTimer, listenerOptions);
+    streamFrame.addEventListener('pointerdown', resetIdleTimer, listenerOptions);
+    streamFrame.addEventListener('pointermove', resetIdleTimer, listenerOptions);
 
     return () => {
       if (!isTouchDevice) {
         streamFrame.removeEventListener('mousemove', resetIdleTimer, true);
       }
       streamFrame.removeEventListener('touchstart', resetIdleTimer, true);
+      streamFrame.removeEventListener('pointerdown', resetIdleTimer, true);
+      streamFrame.removeEventListener('pointermove', resetIdleTimer, true);
       clearIdleTimeout();
     };
   }, [isFullscreen, isTouchDevice, resetIdleTimer]);
