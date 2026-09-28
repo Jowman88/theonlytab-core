@@ -66,6 +66,10 @@ const isValidTargetUrl = (value: string) => {
 
 export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: string }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const stealStageButtonRef = useRef<HTMLButtonElement | null>(null);
+  const embedDialogRef = useRef<HTMLDivElement | null>(null);
+  const confirmDialogRef = useRef<HTMLDivElement | null>(null);
+  const lastFocusedElementRef = useRef<HTMLElement | null>(null);
   const [slot, setSlot] = useState<SlotData | null>(null);
   const [lockTimer, setLockTimer] = useState<number>(0);
   const [stageTimer, setStageTimer] = useState<number>(0);
@@ -97,7 +101,18 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const historyTickerItems = useMemo(() => (historyList.length > 0 ? [...historyList, ...historyList] : []), [historyList]);
   const isLocked = lockTimer > 0;
   const stealPrice = slot?.stealPrice || '19.00';
-  const canStartCheckout = validatedFields.targetUrl && legalAgreed && !isLocked && !isSubmitting;
+  const checkoutValidationError = !validatedFields.targetUrl
+    ? 'Enter a valid website URL to launch checkout.'
+    : !validatedFields.startPath
+      ? 'Start path must begin with /, ?, or # when provided.'
+      : !validatedFields.displayName
+        ? 'Display name must be at least 2 characters or left blank.'
+        : !legalAgreed
+          ? 'You must accept the takeover rules before continuing.'
+          : isLocked
+            ? 'The feed is currently locked. Wait for the lock timer to expire before trying again.'
+            : '';
+  const canStartCheckout = !checkoutValidationError && !isSubmitting;
   const embedCode = '<iframe src="https://theonlytab.io" width="100%" height="140" style="border:none;background:transparent;" scrolling="no"></iframe>';
 
   useEffect(() => {
@@ -105,7 +120,6 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       path: '/socket.io/',
       transports: ['polling', 'websocket'],
       secure: true,
-      rejectUnauthorized: false,
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
@@ -222,7 +236,22 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   }, [statusNotice]);
 
   useEffect(() => {
-    if (!isEmbedOpen && !isConfirmOpen) return undefined;
+    if (!isEmbedOpen && !isConfirmOpen) {
+      if (lastFocusedElementRef.current) {
+        lastFocusedElementRef.current.focus();
+        lastFocusedElementRef.current = null;
+      } else {
+        stealStageButtonRef.current?.focus();
+      }
+      return undefined;
+    }
+
+    if (!lastFocusedElementRef.current && document.activeElement instanceof HTMLElement) {
+      lastFocusedElementRef.current = document.activeElement;
+    }
+
+    const activeDialog = isConfirmOpen ? confirmDialogRef.current : embedDialogRef.current;
+    activeDialog?.focus();
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
@@ -260,28 +289,8 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
     }, {} as Record<FieldName, boolean>);
     setTouchedFields(nextTouchedState);
 
-    if (!validatedFields.targetUrl) {
-      setFormError('Enter a valid website URL to launch checkout.');
-      return false;
-    }
-
-    if (!validatedFields.startPath) {
-      setFormError('Start path must begin with /, ?, or # when provided.');
-      return false;
-    }
-
-    if (!validatedFields.displayName) {
-      setFormError('Display name must be at least 2 characters or left blank.');
-      return false;
-    }
-
-    if (!legalAgreed) {
-      setFormError('You must accept the takeover rules before continuing.');
-      return false;
-    }
-
-    if (isLocked) {
-      setFormError('The feed is currently locked. Wait for the lock timer to expire before trying again.');
+    if (checkoutValidationError) {
+      setFormError(checkoutValidationError);
       return false;
     }
 
@@ -465,6 +474,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
               <button
                 type="button"
                 onClick={() => setIsFormOpen((current) => !current)}
+                ref={stealStageButtonRef}
                 className="group inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-300/25 bg-[linear-gradient(135deg,_rgba(52,211,153,0.95),_rgba(6,182,212,0.88))] px-5 py-3 text-sm font-black uppercase tracking-[0.22em] text-slate-950 shadow-[0_0_30px_rgba(16,185,129,0.35)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_40px_rgba(16,185,129,0.5)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07080c] sm:px-6 sm:py-3.5 sm:text-base"
               >
                 <Zap className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
@@ -802,7 +812,9 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
           />
           <div className="dashboard-fade-in absolute inset-0 z-[60] flex items-center justify-center p-4">
             <div
-              className="dashboard-slide-up relative w-full max-w-2xl rounded-[2rem] border border-emerald-400/25 bg-[linear-gradient(180deg,_rgba(12,18,16,0.98),_rgba(7,10,12,0.98))] p-6 shadow-[0_30px_120px_rgba(0,0,0,0.6)] ring-1 ring-white/5 sm:p-7"
+              ref={embedDialogRef}
+              tabIndex={-1}
+              className="dashboard-slide-up relative w-full max-w-2xl rounded-[2rem] border border-emerald-400/25 bg-[linear-gradient(180deg,_rgba(12,18,16,0.98),_rgba(7,10,12,0.98))] p-6 shadow-[0_30px_120px_rgba(0,0,0,0.6)] ring-1 ring-white/5 focus:outline-none sm:p-7"
               role="dialog"
               aria-modal="true"
               aria-labelledby="takeover-success-title"
@@ -858,7 +870,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
             onClick={() => setIsConfirmOpen(false)}
           />
           <div className="dashboard-fade-in absolute inset-0 z-[70] flex items-center justify-center p-4">
-            <div className="dashboard-slide-up relative w-full max-w-xl rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,_rgba(16,19,24,0.98),_rgba(7,9,13,0.98))] p-6 shadow-[0_30px_120px_rgba(0,0,0,0.6)] ring-1 ring-white/5 sm:p-7" role="dialog" aria-modal="true" aria-labelledby="checkout-confirm-title">
+            <div ref={confirmDialogRef} tabIndex={-1} className="dashboard-slide-up relative w-full max-w-xl rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,_rgba(16,19,24,0.98),_rgba(7,9,13,0.98))] p-6 shadow-[0_30px_120px_rgba(0,0,0,0.6)] ring-1 ring-white/5 focus:outline-none sm:p-7" role="dialog" aria-modal="true" aria-labelledby="checkout-confirm-title">
             <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/25 bg-amber-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-amber-200">
               <ShieldCheck className="h-4 w-4" />
               Confirm checkout details
