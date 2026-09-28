@@ -96,7 +96,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
           if (p?.data) {
             setSlot(p.data);
             setLockTimer(Number(p.data.secondsLeftInLock) || 0);
-            setStageTimer(parseFloat(p.data.current_bid || '0') <= 0 ? 0 : Number(p.data.secondsOnStage) || 0);
+            setStageTimer(Number.parseFloat(p.data.current_bid || '0') <= 0 ? 0 : Number(p.data.secondsOnStage) || 0);
           }
         }
         const hRes = await fetch('/api/get-ticker-history');
@@ -114,7 +114,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   useEffect(() => {
     const timer = setInterval(() => {
       setLockTimer(prev => Math.max(0, prev - 1));
-      setStageTimer(prev => (slot?.current_bid && parseFloat(slot.current_bid) > 0 ? prev + 1 : 0));
+      setStageTimer(prev => (slot?.current_bid && Number.parseFloat(slot.current_bid) > 0 ? prev + 1 : 0));
     }, 1000);
     return () => clearInterval(timer);
   }, [slot]);
