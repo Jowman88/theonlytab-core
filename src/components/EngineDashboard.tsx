@@ -141,26 +141,37 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
 
   useEffect(() => {
     const brandMark = brandMarkRef.current;
-    if (!brandMark || typeof ResizeObserver === 'undefined' || typeof window === 'undefined') return;
+    if (!brandMark || typeof window === 'undefined') return;
 
     const gap = 16;
+    const minimumDesktopInset = 112;
+    const desktopBreakpoint = window.matchMedia('(min-width: 640px)');
     const updateInset = () => {
+      if (!desktopBreakpoint.matches) {
+        setStatusBarLeftInset(0);
+        return;
+      }
+
       const rect = brandMark.getBoundingClientRect();
       const inset = rect.right + gap;
-      setStatusBarLeftInset(Math.max(0, inset));
+      setStatusBarLeftInset(Math.max(minimumDesktopInset, inset));
     };
 
     updateInset();
 
-    const resizeObserver = new ResizeObserver(() => {
-      updateInset();
-    });
+    let resizeObserver: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(() => {
+        updateInset();
+      });
 
-    resizeObserver.observe(brandMark);
+      resizeObserver.observe(brandMark);
+    }
+
     window.addEventListener('resize', updateInset);
 
     return () => {
-      resizeObserver.disconnect();
+      resizeObserver?.disconnect();
       window.removeEventListener('resize', updateInset);
     };
   }, []);
