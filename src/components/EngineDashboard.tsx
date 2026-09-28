@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -94,6 +94,9 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const [statusNotice, setStatusNotice] = useState<Notice>(null);
   const [copyFeedback, setCopyFeedback] = useState('Copy code');
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isCursorIdle, setIsCursorIdle] = useState(false);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const idleTimeoutRef = useRef<number | null>(null);
 
   const normalizedTargetUrl = targetUrl.trim().startsWith('http') ? targetUrl.trim() : `https://${targetUrl.trim()}`;
   const validatedFields = {
@@ -118,6 +121,26 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
             : '';
   const canStartCheckout = !checkoutValidationError && !isSubmitting;
   const embedCode = '<iframe src="https://theonlytab.io" width="100%" height="140" style="border:none;background:transparent;" scrolling="no"></iframe>';
+  const IDLE_TIMEOUT_DESKTOP_MS = 2000;
+  const IDLE_TIMEOUT_TOUCH_MS = 3000;
+
+  const resetIdleTimer = useCallback(() => {
+    setIsCursorIdle(false);
+
+    if (idleTimeoutRef.current !== null) {
+      window.clearTimeout(idleTimeoutRef.current);
+    }
+
+    idleTimeoutRef.current = window.setTimeout(
+      () => setIsCursorIdle(true),
+      isTouchDevice ? IDLE_TIMEOUT_TOUCH_MS : IDLE_TIMEOUT_DESKTOP_MS
+    );
+  }, [isTouchDevice]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+    setIsTouchDevice(window.matchMedia('(pointer: coarse)').matches);
+  }, []);
 
   useEffect(() => {
     const socket = io(streamServerUrl || 'https://theonlytab-server.onrender.com', {
@@ -247,6 +270,43 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
+
+  useEffect(() => {
+    const clearIdleTimeout = () => {
+      if (idleTimeoutRef.current !== null) {
+        window.clearTimeout(idleTimeoutRef.current);
+        idleTimeoutRef.current = null;
+      }
+    };
+
+    if (!isFullscreen) {
+      clearIdleTimeout();
+      setIsCursorIdle(false);
+      return undefined;
+    }
+
+    const streamFrame = streamFrameRef.current;
+    if (!streamFrame) {
+      clearIdleTimeout();
+      setIsCursorIdle(false);
+      return undefined;
+    }
+
+    resetIdleTimer();
+
+    if (!isTouchDevice) {
+      streamFrame.addEventListener('mousemove', resetIdleTimer);
+    }
+    streamFrame.addEventListener('touchstart', resetIdleTimer);
+
+    return () => {
+      if (!isTouchDevice) {
+        streamFrame.removeEventListener('mousemove', resetIdleTimer);
+      }
+      streamFrame.removeEventListener('touchstart', resetIdleTimer);
+      clearIdleTimeout();
+    };
+  }, [isFullscreen, isTouchDevice, resetIdleTimer]);
 
   useEffect(() => {
     if (!isEmbedOpen && !isConfirmOpen) {
@@ -736,13 +796,13 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
             <div className="flex min-h-0 flex-1 flex-col gap-3 sm:gap-4">
               <div
                 ref={streamFrameRef}
-                className={`relative flex min-h-[500px] flex-1 overflow-hidden border border-white/10 bg-[linear-gradient(180deg,_rgba(15,18,25,0.98),_rgba(8,9,13,0.98))] shadow-[0_30px_100px_rgba(0,0,0,0.45)] ring-1 ring-white/5 ${isFullscreen ? 'rounded-none p-0' : 'rounded-[1.75rem] p-3 sm:p-4'}`}
+                className={`relative flex min-h-[500px] flex-1 overflow-hidden border border-white/10 bg-[linear-gradient(180deg,_rgba(15,18,25,0.98),_rgba(8,9,13,0.98))] shadow-[0_30px_100px_rgba(0,0,0,0.45)] ring-1 ring-white/5 ${isFullscreen ? 'rounded-none p-0' : 'rounded-[1.75rem] p-3 sm:p-4'} ${isFullscreen && isCursorIdle && !isTouchDevice ? 'cursor-none' : ''}`}
               >
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.06),_transparent_28%)]" aria-hidden="true" />
                 <button
                   type="button"
                   onClick={toggleFullscreen}
-                  className="absolute right-4 top-4 z-10 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/45 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white/90 backdrop-blur transition hover:border-white/25 hover:bg-black/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+                  className={`absolute right-4 top-4 z-10 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/45 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white/90 backdrop-blur transition-colors transition-opacity duration-500 hover:border-white/25 hover:bg-black/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${isFullscreen && isCursorIdle ? 'pointer-events-none opacity-0' : 'opacity-100'}`}
                   aria-label={isFullscreen ? 'Exit fullscreen stream' : 'Enter fullscreen stream'}
                   aria-pressed={isFullscreen}
                 >
@@ -750,7 +810,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                   <span>{isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}</span>
                 </button>
                 {isFullscreen && (
-                  <div className="pointer-events-none absolute bottom-4 left-1/2 z-10 -translate-x-1/2 rounded-full border border-white/10 bg-black/45 px-3 py-1.5 text-[11px] font-medium text-white/80 backdrop-blur">
+                  <div className={`absolute bottom-4 left-1/2 z-10 -translate-x-1/2 rounded-full border border-white/10 bg-black/45 px-3 py-1.5 text-[11px] font-medium text-white/80 backdrop-blur transition-opacity duration-500 ${isFullscreen && isCursorIdle ? 'pointer-events-none opacity-0' : 'opacity-100'}`}>
                     Press Esc or tap Exit fullscreen
                   </div>
                 )}
