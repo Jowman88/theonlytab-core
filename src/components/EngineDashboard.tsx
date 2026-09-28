@@ -116,6 +116,9 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       setLockTimer(prev => Math.max(0, prev - 1));
       setStageTimer(prev => {
         const currentBid = Number.parseFloat(slot?.current_bid || '0');
+        if (Number.isNaN(currentBid)) {
+          return 0;
+        }
         return currentBid > 0 ? prev + 1 : 0;
       });
     }, 1000);
