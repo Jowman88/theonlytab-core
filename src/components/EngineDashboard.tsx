@@ -168,11 +168,24 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       resizeObserver.observe(brandMark);
     }
 
-    window.addEventListener('resize', updateInset);
+    let resizeFrame: number | null = null;
+    const handleResize = () => {
+      if (resizeFrame !== null) return;
+
+      resizeFrame = window.requestAnimationFrame(() => {
+        resizeFrame = null;
+        updateInset();
+      });
+    };
+
+    window.addEventListener('resize', handleResize);
 
     return () => {
+      if (resizeFrame !== null) {
+        window.cancelAnimationFrame(resizeFrame);
+      }
       resizeObserver?.disconnect();
-      window.removeEventListener('resize', updateInset);
+      window.removeEventListener('resize', handleResize);
     };
   }, []);
 
