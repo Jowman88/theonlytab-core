@@ -19,14 +19,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid slotId parameter.' }, { status: 400 });
     }
 
-    const forwardedFor = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
+    const forwardedFor =
+      request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
     const clientIp = forwardedFor.split(',')[0].trim();
     const cacheKey = `${clientIp}:${slotId}`;
     const now = Date.now();
 
-    const recentReports = (reportTimestamps.get(cacheKey) || []).filter((timestamp) => now - timestamp < REPORT_WINDOW_MS);
+    const recentReports = (reportTimestamps.get(cacheKey) || []).filter(
+      (timestamp) => now - timestamp < REPORT_WINDOW_MS
+    );
+
     if (recentReports.length >= REPORT_LIMIT_PER_WINDOW) {
-      return NextResponse.json({ error: 'Too many reports from this client. Please wait a moment and try again.' }, { status: 429 });
+      return NextResponse.json(
+        { error: 'Too many reports from this client. Please wait a moment and try again.' },
+        { status: 429 }
+      );
     }
 
     reportTimestamps.set(cacheKey, [...recentReports, now]);
@@ -34,6 +41,11 @@ export async function POST(request: Request) {
     const client = await getDbPool().connect();
 
     try {
+      await client.query(`
+        ALTER TABLE IF EXISTS slots
+        ADD COLUMN IF NOT EXISTS report_count INTEGER NOT NULL DEFAULT 0;
+      `);
+
       const updateRes = await client.query(
         `UPDATE slots SET report_count = report_count + 1 WHERE id = $1 RETURNING report_count`,
         [slotId]
