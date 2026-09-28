@@ -1,3 +1,83 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer utilities {
+  .dashboard-grid {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    background-size: 42px 42px;
+    mask-image: radial-gradient(circle at center, black 38%, transparent 100%);
+  }
+
+  .dashboard-fade-in {
+    animation: dashboard-fade-in 220ms ease-out;
+  }
+
+  .dashboard-slide-up {
+    animation: dashboard-slide-up 260ms ease-out;
+  }
+
+  .dashboard-pulse-alert {
+    animation: dashboard-alert-pulse 1.4s ease-in-out infinite;
+  }
+
+  .dashboard-marquee-track {
+    animation: dashboard-marquee 28s linear infinite;
+  }
+
+  .dashboard-marquee-track:hover {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes dashboard-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dashboard-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes dashboard-alert-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 0 rgba(251, 113, 133, 0));
+  }
+  50% {
+    opacity: 0.82;
+    filter: drop-shadow(0 0 18px rgba(251, 113, 133, 0.4));
+  }
+}
+
+@keyframes dashboard-marquee {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-fade-in,
+  .dashboard-slide-up,
+  .dashboard-pulse-alert,
+  .dashboard-marquee-track {
+    animation: none !important;
+  }
+}
