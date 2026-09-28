@@ -221,6 +221,24 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
     return () => window.clearTimeout(timeout);
   }, [statusNotice]);
 
+  useEffect(() => {
+    if (!isEmbedOpen && !isConfirmOpen) return undefined;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      if (isConfirmOpen) {
+        setIsConfirmOpen(false);
+        return;
+      }
+      if (isEmbedOpen) {
+        setIsEmbedOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isConfirmOpen, isEmbedOpen]);
+
   const formatClock = (seconds: number) => {
     if (!seconds || seconds <= 0) return '00:00';
     return `${Math.floor(seconds / 60).toString().padStart(2, '0')}:${(seconds % 60).toString().padStart(2, '0')}`;
@@ -718,7 +736,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                       <div className="space-y-2">
                         <p className="text-xl font-bold text-white">No stream connection</p>
                         <p className="max-w-md text-sm leading-6 text-neutral-400">
-                          The dashboard is disconnected from the takeover feed right now. We’ll keep trying to reconnect automatically.
+                          The dashboard is disconnected from the takeover feed right now. Refresh the page or reopen the stream server to restore the live view.
                         </p>
                       </div>
                     </div>
