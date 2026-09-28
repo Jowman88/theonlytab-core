@@ -154,8 +154,9 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       console.error('Connection error:', error);
     });
 
-    socket.on('disconnect', () => {
-      setSocketStatus('disconnected');
+    socket.on('disconnect', (reason) => {
+      const isClientDisconnect = reason === 'io client disconnect';
+      setSocketStatus(isClientDisconnect ? 'disconnected' : 'reconnecting');
       setHasFrames(false);
       console.log('Disconnected from stream server');
     });
@@ -400,16 +401,12 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
         </div>
       )}
 
-      {(isFormOpen || isEmbedOpen || isConfirmOpen) && (
+      {isFormOpen && (
         <button
           type="button"
           className="dashboard-fade-in absolute inset-0 z-30 bg-black/70 backdrop-blur-sm lg:hidden"
-          aria-label="Close open dialog"
-          onClick={() => {
-            setIsFormOpen(false);
-            setIsEmbedOpen(false);
-            setIsConfirmOpen(false);
-          }}
+          aria-label="Close config drawer"
+          onClick={() => setIsFormOpen(false)}
         />
       )}
 
@@ -773,8 +770,20 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       </div>
 
       {isEmbedOpen && (
-        <div className="dashboard-fade-in absolute inset-0 z-50 flex items-center justify-center p-4">
-          <div className="dashboard-slide-up relative w-full max-w-2xl rounded-[2rem] border border-emerald-400/25 bg-[linear-gradient(180deg,_rgba(12,18,16,0.98),_rgba(7,10,12,0.98))] p-6 shadow-[0_30px_120px_rgba(0,0,0,0.6)] ring-1 ring-white/5 sm:p-7">
+        <>
+          <button
+            type="button"
+            className="dashboard-fade-in absolute inset-0 z-50 bg-black/80 backdrop-blur-sm"
+            aria-label="Close takeover success dialog"
+            onClick={() => setIsEmbedOpen(false)}
+          />
+          <div className="dashboard-fade-in absolute inset-0 z-[60] flex items-center justify-center p-4">
+            <div
+              className="dashboard-slide-up relative w-full max-w-2xl rounded-[2rem] border border-emerald-400/25 bg-[linear-gradient(180deg,_rgba(12,18,16,0.98),_rgba(7,10,12,0.98))] p-6 shadow-[0_30px_120px_rgba(0,0,0,0.6)] ring-1 ring-white/5 sm:p-7"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="takeover-success-title"
+            >
             <button
               type="button"
               onClick={() => setIsEmbedOpen(false)}
@@ -787,7 +796,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                 <CheckCircle2 className="h-4 w-4" />
                 Takeover successful
               </div>
-              <h2 className="mt-4 text-2xl font-black text-white sm:text-3xl">Your stage widget is ready.</h2>
+              <h2 id="takeover-success-title" className="mt-4 text-2xl font-black text-white sm:text-3xl">Your stage widget is ready.</h2>
               <p className="mt-3 text-sm leading-7 text-neutral-300 sm:text-base">
                 Drop this embed into your blog, landing page, or community dashboard so your audience can track your control of the stage in real time.
               </p>
@@ -812,13 +821,21 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                 </button>
               </div>
             </div>
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {isConfirmOpen && (
-        <div className="dashboard-fade-in absolute inset-0 z-[60] flex items-center justify-center p-4">
-          <div className="dashboard-slide-up relative w-full max-w-xl rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,_rgba(16,19,24,0.98),_rgba(7,9,13,0.98))] p-6 shadow-[0_30px_120px_rgba(0,0,0,0.6)] ring-1 ring-white/5 sm:p-7" role="dialog" aria-modal="true" aria-labelledby="checkout-confirm-title">
+        <>
+          <button
+            type="button"
+            className="dashboard-fade-in absolute inset-0 z-[60] bg-black/80 backdrop-blur-sm"
+            aria-label="Close checkout confirmation dialog"
+            onClick={() => setIsConfirmOpen(false)}
+          />
+          <div className="dashboard-fade-in absolute inset-0 z-[70] flex items-center justify-center p-4">
+            <div className="dashboard-slide-up relative w-full max-w-xl rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,_rgba(16,19,24,0.98),_rgba(7,9,13,0.98))] p-6 shadow-[0_30px_120px_rgba(0,0,0,0.6)] ring-1 ring-white/5 sm:p-7" role="dialog" aria-modal="true" aria-labelledby="checkout-confirm-title">
             <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/25 bg-amber-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-amber-200">
               <ShieldCheck className="h-4 w-4" />
               Confirm checkout details
@@ -873,8 +890,9 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                 {isSubmitting ? 'Opening secure checkout…' : 'Confirm and continue'}
               </button>
             </div>
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );
