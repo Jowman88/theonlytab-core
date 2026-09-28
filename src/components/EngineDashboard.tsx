@@ -97,6 +97,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isCursorIdle, setIsCursorIdle] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [isStatusBarDesktop, setIsStatusBarDesktop] = useState(false);
   const [statusBarLeftInset, setStatusBarLeftInset] = useState(0);
   const idleTimeoutRef = useRef<number | null>(null);
 
@@ -147,7 +148,10 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
     const minimumDesktopInset = 112;
     const desktopBreakpoint = window.matchMedia('(min-width: 640px)');
     const updateInset = () => {
-      if (!desktopBreakpoint.matches) {
+      const isDesktop = desktopBreakpoint.matches;
+      setIsStatusBarDesktop(isDesktop);
+
+      if (!isDesktop) {
         setStatusBarLeftInset(0);
         return;
       }
@@ -159,6 +163,22 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
 
     updateInset();
 
+    const addMediaQueryListener = (query: MediaQueryList, listener: () => void) => {
+      if (typeof query.addEventListener === 'function') {
+        query.addEventListener('change', listener);
+        return;
+      }
+      query.addListener(listener);
+    };
+
+    const removeMediaQueryListener = (query: MediaQueryList, listener: () => void) => {
+      if (typeof query.removeEventListener === 'function') {
+        query.removeEventListener('change', listener);
+        return;
+      }
+      query.removeListener(listener);
+    };
+
     let resizeObserver: ResizeObserver | null = null;
     if (typeof ResizeObserver !== 'undefined') {
       resizeObserver = new ResizeObserver(() => {
@@ -167,6 +187,8 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
 
       resizeObserver.observe(brandMark);
     }
+
+    addMediaQueryListener(desktopBreakpoint, updateInset);
 
     let resizeFrame: number | null = null;
     const handleResize = () => {
@@ -184,6 +206,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       if (resizeFrame !== null) {
         window.cancelAnimationFrame(resizeFrame);
       }
+      removeMediaQueryListener(desktopBreakpoint, updateInset);
       resizeObserver?.disconnect();
       window.removeEventListener('resize', handleResize);
     };
@@ -835,7 +858,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
           <section className="flex min-h-0 flex-1 flex-col gap-4 lg:gap-5">
             <div
               className="flex flex-wrap items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] font-medium text-neutral-300 shadow-[0_16px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/5 sm:gap-3 sm:px-4 sm:pl-28"
-              style={{ paddingLeft: statusBarLeftInset > 0 ? `${statusBarLeftInset}px` : undefined }}
+              style={{ paddingLeft: isStatusBarDesktop && statusBarLeftInset > 0 ? `${statusBarLeftInset}px` : undefined }}
             >
               <Link
                 href="/"
