@@ -140,17 +140,34 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
 
-    const touchMediaQuery = window.matchMedia('(pointer: coarse)');
-    const handlePointerTypeChange = () => setIsTouchDevice(touchMediaQuery.matches);
+    const touchPrimaryMediaQuery = window.matchMedia('(pointer: coarse)');
+    const touchAnyMediaQuery = window.matchMedia('(any-pointer: coarse)');
+    const handlePointerTypeChange = () => setIsTouchDevice(touchPrimaryMediaQuery.matches || touchAnyMediaQuery.matches);
     handlePointerTypeChange();
 
-    if (typeof touchMediaQuery.addEventListener === 'function') {
-      touchMediaQuery.addEventListener('change', handlePointerTypeChange);
-      return () => touchMediaQuery.removeEventListener('change', handlePointerTypeChange);
-    }
+    const addMediaQueryListener = (query: MediaQueryList) => {
+      if (typeof query.addEventListener === 'function') {
+        query.addEventListener('change', handlePointerTypeChange);
+        return;
+      }
+      query.addListener(handlePointerTypeChange);
+    };
 
-    touchMediaQuery.addListener(handlePointerTypeChange);
-    return () => touchMediaQuery.removeListener(handlePointerTypeChange);
+    const removeMediaQueryListener = (query: MediaQueryList) => {
+      if (typeof query.removeEventListener === 'function') {
+        query.removeEventListener('change', handlePointerTypeChange);
+        return;
+      }
+      query.removeListener(handlePointerTypeChange);
+    };
+
+    addMediaQueryListener(touchPrimaryMediaQuery);
+    addMediaQueryListener(touchAnyMediaQuery);
+
+    return () => {
+      removeMediaQueryListener(touchPrimaryMediaQuery);
+      removeMediaQueryListener(touchAnyMediaQuery);
+    };
   }, []);
 
   useEffect(() => {
