@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getDbPool } from '../../../lib/db';
-import { calculateStealPrice, getBasePrice } from '../../../lib/pricing';
+import { calculateStealPrice, getBasePrice, PricingSettings } from '../../../lib/pricing';
+import { getServerPricingSettings } from '../../../lib/pricingConfig';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,8 +9,11 @@ const HOUSE_DEFAULT_URL = 'https://theonlytab.io/house-default';
 
 export async function GET() {
   const client = await getDbPool().connect();
+  let pricingSettings: PricingSettings | undefined;
 
   try {
+    pricingSettings = await getServerPricingSettings();
+
     await client.query(`UPDATE slots SET is_frozen = TRUE WHERE is_frozen = FALSE AND created_at < NOW() - INTERVAL '90 minutes'`);
 
     const activeRes = await client.query(
@@ -23,7 +27,7 @@ export async function GET() {
     if (activeRes.rows && activeRes.rows.length > 0) {
       const row = activeRes.rows[0];
       const currentPaid = Number.parseFloat(row.current_bid || '0');
-      const nextStealPrice = calculateStealPrice(currentPaid, new Date());
+      const nextStealPrice = calculateStealPrice(currentPaid, new Date(), pricingSettings);
 
       const secondsOnStage = Math.floor((Date.now() - new Date(row.createdAt).getTime()) / 1000);
       const secondsLeftInLock = Math.max(0, (12 * 60) - secondsOnStage);
@@ -46,13 +50,17 @@ export async function GET() {
         currentUrl: HOUSE_DEFAULT_URL,
         displayName: 'The Only Tab HQ',
         current_bid: '0.00',
-        stealPrice: getBasePrice(new Date()).toFixed(2),
+        stealPrice: getBasePrice(new Date(), pricingSettings).toFixed(2),
         secondsOnStage: 0,
         secondsLeftInLock: 0,
         isLocked: false,
       }
     });
   } catch (err: any) {
+    const fallbackStealPrice = pricingSettings
+      ? getBasePrice(new Date(), pricingSettings).toFixed(2)
+      : getBasePrice(new Date()).toFixed(2);
+
     console.error('GET /api/get-active-tab failed:', err);
     return NextResponse.json(
       {
@@ -62,7 +70,7 @@ export async function GET() {
           currentUrl: HOUSE_DEFAULT_URL,
           displayName: 'The Only Tab HQ',
           current_bid: '0.00',
-          stealPrice: getBasePrice(new Date()).toFixed(2),
+          stealPrice: fallbackStealPrice,
           secondsOnStage: 0,
           secondsLeftInLock: 0,
           isLocked: false,

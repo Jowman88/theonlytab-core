@@ -11,7 +11,7 @@ function redactUrl(url?: string | null) {
   if (!url) return 'unknown';
   try {
     const parsed = new URL(url);
-    return `${parsed.protocol}//${parsed.hostname}${parsed.pathname}`;
+    return `${parsed.protocol}//${parsed.hostname}`;
   } catch {
     return 'redacted';
   }
@@ -46,13 +46,18 @@ export async function POST(req: Request) {
     return NextResponse.json({ received: true });
   }
 
+  if (session.currency !== 'usd' || session.amount_total == null || session.amount_total <= 0) {
+    return NextResponse.json({ error: 'Invalid Stripe session amount.' }, { status: 400 });
+  }
+
   const targetUrl = session.metadata?.targeturl || session.metadata?.targetUrl;
   const displayName =
     session.metadata?.displayname || session.metadata?.displayName || 'Anonymous Takeover';
-  const rawBid =
-    session.metadata?.bidamount ||
-    session.metadata?.bidAmount ||
-    (session.amount_total != null ? (session.amount_total / 100).toFixed(2) : '19.00');
+  const rawBid = (session.amount_total / 100).toFixed(2);
+  const expectedBidCents = Number.parseInt(
+    String(session.metadata?.bidamountcents || session.metadata?.bidAmountCents || ''),
+    10
+  );
 
   const expiresAt =
     session.metadata?.expiresat ||
@@ -64,6 +69,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid target URL in Stripe session.' }, { status: 400 });
   }
 
+  if (Number.isFinite(expectedBidCents) && expectedBidCents > 0 && expectedBidCents !== session.amount_total) {
+    return NextResponse.json({ error: 'Stripe amount did not match expected price.' }, { status: 400 });
+  }
+
   const validNumericBid = Number.parseFloat(String(rawBid || '0'));
   if (!Number.isFinite(validNumericBid) || validNumericBid <= 0) {
     return NextResponse.json({ error: 'Invalid bid amount in Stripe session.' }, { status: 400 });
@@ -72,16 +81,6 @@ export async function POST(req: Request) {
   const dbClient = await getDbPool().connect();
 
   try {
-    await dbClient.query(`
-      ALTER TABLE IF EXISTS slots
-      ADD COLUMN IF NOT EXISTS report_count INTEGER NOT NULL DEFAULT 0;
-    `);
-
-    await dbClient.query(`
-      ALTER TABLE IF EXISTS slots
-      ADD COLUMN IF NOT EXISTS stripe_session_id TEXT UNIQUE;
-    `);
-
     const insertResult = await dbClient.query(
       `
       INSERT INTO slots (
@@ -103,6 +102,7 @@ export async function POST(req: Request) {
     );
 
     if (insertResult.rowCount === 0) {
+      console.log(`[INFO] Duplicate webhook session ignored: ${session.id}`);
       return NextResponse.json({ received: true, duplicate: true });
     }
 

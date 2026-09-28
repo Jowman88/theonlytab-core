@@ -4,6 +4,8 @@ import { getDbPool } from '../../../lib/db';
 import { buildTargetUrl, validateTargetUrl } from '../../../lib/urlValidation';
 import { checkUrlWithWebRisk } from '../../../lib/webRisk';
 import { calculateStealPrice, getBasePrice } from '../../../lib/pricing';
+import { getServerPricingSettings } from '../../../lib/pricingConfig';
+import { enforceRateLimit, getClientIpAddress } from '../../../lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,6 +37,21 @@ function containsProfanity(text: string): boolean {
 
 export async function POST(req: Request) {
   try {
+    const clientIp = getClientIpAddress(req);
+    const rateLimit = await enforceRateLimit({
+      bucket: 'checkout-session',
+      identifier: clientIp,
+      windowMs: 60_000,
+      maxRequests: 5,
+    });
+
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: 'Too many checkout attempts. Please wait and try again.' },
+        { status: 429, headers: { 'Retry-After': String(rateLimit.retryAfterSeconds) } }
+      );
+    }
+
     const body = await req.json();
     const { targetUrl, displayName, overlayLabel, startPath } = body;
 
@@ -73,6 +90,7 @@ export async function POST(req: Request) {
     }
 
     const stripe = getStripeClient();
+    const pricingSettings = await getServerPricingSettings();
     const client = await getDbPool().connect();
 
     try {
@@ -80,7 +98,7 @@ export async function POST(req: Request) {
         `SELECT id, current_bid, created_at FROM slots WHERE is_frozen = FALSE AND expires_at > NOW() LIMIT 1`
       );
 
-      let requiredStealPrice = getBasePrice(new Date());
+      let requiredStealPrice = getBasePrice(new Date(), pricingSettings);
 
       if (activeRes.rows && activeRes.rows.length > 0) {
         const activeSlot = activeRes.rows[0];
@@ -95,9 +113,15 @@ export async function POST(req: Request) {
             }
           }
 
-          requiredStealPrice = calculateStealPrice(currentPaid, new Date());
+          requiredStealPrice = calculateStealPrice(currentPaid, new Date(), pricingSettings);
         }
       }
+
+      if (!Number.isFinite(requiredStealPrice) || requiredStealPrice <= 0) {
+        return NextResponse.json({ error: 'Unable to determine valid checkout price.' }, { status: 500 });
+      }
+
+      const requiredStealPriceCents = Math.round(requiredStealPrice * 100);
 
       const session = await stripe.checkout.sessions.create({
         line_items: [{
@@ -108,7 +132,7 @@ export async function POST(req: Request) {
               description: `Force takeover viewport to: ${finalTargetUrl}`,
               tax_code: 'txcd_10701100'
             },
-            unit_amount: Math.round(requiredStealPrice * 100),
+            unit_amount: requiredStealPriceCents,
           },
           quantity: 1,
         }],
@@ -120,6 +144,8 @@ export async function POST(req: Request) {
           displayname: displayNameValue,
           overlaylabel: overlayLabelValue,
           bidamount: requiredStealPrice.toFixed(2),
+          bidamountcents: String(requiredStealPriceCents),
+          currency: 'usd',
           expiresat: new Date(Date.now() + 90 * 60 * 1000).toISOString()
         },
       });
