@@ -7,7 +7,7 @@ export interface UrlValidationResult {
 const disallowedHostnames = ['localhost', '127.0.0.1', '0.0.0.0'];
 
 function isIpv4PrivateOrLocal(hostname: string): boolean {
-  const ip = hostname.replace(/\[(.*)\]/, '$1');
+  const ip = hostname.startsWith('[') && hostname.endsWith(']') ? hostname.slice(1, -1) : hostname;
   if (!/^\d+(?:\.\d+){3}$/.test(ip)) return false;
 
   const octets = ip.split('.').map(Number);
