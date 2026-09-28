@@ -736,6 +736,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                   onClick={toggleFullscreen}
                   className="absolute right-4 top-4 z-10 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/45 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white/90 backdrop-blur transition hover:border-white/25 hover:bg-black/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
                   aria-label={isFullscreen ? 'Exit fullscreen stream' : 'Enter fullscreen stream'}
+                  aria-pressed={isFullscreen}
                 >
                   <Maximize2 className="h-4 w-4" />
                   <span>{isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}</span>
