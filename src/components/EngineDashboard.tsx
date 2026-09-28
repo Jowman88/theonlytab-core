@@ -240,7 +240,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
 
   useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(document.fullscreenElement === streamFrameRef.current);
+      setIsFullscreen(Boolean(streamFrameRef.current?.contains(document.fullscreenElement)));
     };
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
@@ -298,7 +298,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
     if (!streamFrameRef.current) return;
 
     try {
-      if (document.fullscreenElement === streamFrameRef.current) {
+      if (streamFrameRef.current.contains(document.fullscreenElement)) {
         await document.exitFullscreen();
         return;
       }
