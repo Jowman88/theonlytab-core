@@ -297,12 +297,17 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const toggleFullscreen = async () => {
     if (!streamFrameRef.current) return;
 
-    if (document.fullscreenElement === streamFrameRef.current) {
-      await document.exitFullscreen();
-      return;
-    }
+    try {
+      if (document.fullscreenElement === streamFrameRef.current) {
+        await document.exitFullscreen();
+        return;
+      }
 
-    await streamFrameRef.current.requestFullscreen();
+      await streamFrameRef.current.requestFullscreen();
+    } catch (error) {
+      console.error('Fullscreen request failed:', error);
+      setStatusNotice({ type: 'error', message: 'Fullscreen mode is unavailable in this browser right now.' });
+    }
   };
 
   const validateFormBeforeCheckout = () => {
