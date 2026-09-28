@@ -27,33 +27,57 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const [legalAgreed, setLegalAgreed] = useState(false);
 
   useEffect(() => {
-  const socket = io('https://theonlytab-server.onrender.com', {
-    path: '/socket.io/',
-    transports: ['polling', 'websocket'],  // polling first as fallback
-    secure: true,
-    rejectUnauthorized: false,
-    reconnection: true,
-    reconnectionDelay: 1000,
-    reconnectionDelayMax: 5000,
-    reconnectionAttempts: 10
-  });
+    const socket = io(streamServerUrl || 'https://theonlytab-server.onrender.com', {
+      path: '/socket.io/',
+      transports: ['polling', 'websocket'],  // polling first as fallback
+      secure: true,
+      rejectUnauthorized: false,
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: 10
+    });
 
-  socket.on('connect', () => {
-    console.log('Connected to stream server');
-  });
+    socket.on('connect', () => {
+      console.log('Connected to stream server');
+    });
 
-  socket.on('v-frame', (frameData) => {
-    // Handle frame display here
-  });
+    socket.on('v-frame', (frameData: string) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
 
-  socket.on('connect_error', (error) => {
-    console.error('Connection error:', error);
-  });
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
 
-  return () => {
-    socket.disconnect();
-  };
-}, []);
+      const img = new Image();
+      img.onload = () => {
+        // Keep the canvas backing store in sync with the incoming frame size
+        if (canvas.width !== img.width || canvas.height !== img.height) {
+          canvas.width = img.width;
+          canvas.height = img.height;
+        }
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        setHasFrames(true);
+      };
+      img.onerror = () => {
+        console.error('Failed to decode incoming stream frame');
+      };
+      img.src = `data:image/jpeg;base64,${frameData}`;
+    });
+
+    socket.on('connect_error', (error) => {
+      console.error('Connection error:', error);
+    });
+
+    socket.on('disconnect', () => {
+      console.log('Disconnected from stream server');
+      setHasFrames(false);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [streamServerUrl]);
 
   useEffect(() => {
     // 🛡️ REVENGE LOOP HOOK: Automatically sliding open the embed configurations ONLY for verified checkout redirect links
@@ -135,12 +159,12 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
           <form onSubmit={handleAcquireTabSubmit} className="w-full md:w-64 bg-[#0D0D11] border border-neutral-800 p-4 rounded-xl flex flex-col gap-3 overflow-y-auto z-30 font-sans relative">
             <div className="flex items-center justify-between border-b border-neutral-800 pb-1">
               <span className="text-[10px] font-bold text-neutral-400 font-mono tracking-wider">CONFIG DRAWER</span>
-              <button type="button" onClick={() => setIsFormOpen(false)} className="text-neutral-500 hover:text-white text-xs font-mono font-bold bg-[#14141A] border border-neutral-800 px-2 py-0.5 rounded">✕ CLOSE</button>
+              <button type="button" onClick={() => setIsFormOpen(false)} className="text-neutral-500 hover:text-white text-xs font-mono font-bold bg-[#14141A] border border-neutral-800 px-2 py-0.5 rounded">✕</button>
             </div>
 
             <div>
               <label className="text-[9px] text-neutral-500 font-bold uppercase tracking-wide block mb-1">Target Website URL *</label>
-              <input type="text" required placeholder="" value={targetUrl} onChange={e => setTargetUrl(e.target.value)} className="w-full bg-black border border-neutral-800 rounded p-2 text-xs outline-none font-mono" />
+              <input type="text" required placeholder="" value={targetUrl} onChange={e => setTargetUrl(e.target.value)} className="w-full bg-black border border-neutral-800 rounded p-2 text-xs outline-none" />
             </div>
             <div>
               <label className="text-[9px] text-neutral-500 font-bold uppercase tracking-wide block mb-1">Display Name</label>
@@ -152,7 +176,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
             </div>
             <div>
               <label className="text-[9px] text-neutral-500 font-bold uppercase tracking-wide block mb-1">Optional Start Path / Hash</label>
-              <input type="text" placeholder="" value={startPath} onChange={e => setStartPath(e.target.value)} className="w-full bg-black border border-neutral-800 rounded p-2 text-xs outline-none font-mono" />
+              <input type="text" placeholder="" value={startPath} onChange={e => setStartPath(e.target.value)} className="w-full bg-black border border-neutral-800 rounded p-2 text-xs outline-none" />
             </div>
 
             <label className="flex items-start gap-2 text-[9px] text-neutral-400 leading-normal cursor-pointer select-none mt-1">
@@ -177,7 +201,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
               <button onClick={() => setIsEmbedOpen(false)} className="text-neutral-500 hover:text-white text-sm font-bold">✕</button>
             </div>
             <p className="text-[10px] text-neutral-400 leading-normal font-sans">
-              You own the screen! Copy this widget iframe code to your personal blog, SaaS panel, or landing platforms. If you get dethroned, this widget instantly alerts your community to help you steal it back!
+              You own the screen! Copy this widget iframe code to your personal blog, SaaS panel, or landing platforms. If you get dethroned, this widget instantly alerts your community to help you steal it back.
             </p>
             <div className="space-y-1">
               <textarea 
