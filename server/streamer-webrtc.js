@@ -9,7 +9,7 @@ const app = express();
 const server = http.createServer(app);
 
 const io = new Server(server, {
-  path: '/socket.io/',
+  path: 'wss://theonlytab-server.onrender.com',
   cors: { origin: '*', methods: ['GET', 'POST'] },
   transports: ['websocket', 'polling']
 });
