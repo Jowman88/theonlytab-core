@@ -129,7 +129,7 @@ async function resolvePublicDestination(hostname) {
   try {
     const addresses = await dnsLookup(normalizedHost, { all: true, verbatim: true });
     const allowed = addresses.length > 0 && addresses.every((entry) => !isPrivateOrUnsafeIpAddress(entry.address));
-    hostResolutionCache.set(cacheKey, { allowed, expiresAt: Date.now() + (allowed ? 0 : 15_000) });
+    hostResolutionCache.set(cacheKey, { allowed, expiresAt: Date.now() + (allowed ? 5_000 : 15_000) });
     return allowed;
   } catch (error) {
     hostResolutionCache.set(cacheKey, { allowed: false, expiresAt: Date.now() + 15_000 });
