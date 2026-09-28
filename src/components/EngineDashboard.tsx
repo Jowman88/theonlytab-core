@@ -67,6 +67,7 @@ const isValidTargetUrl = (value: string) => {
 };
 
 export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: string }) {
+  const brandMarkRef = useRef<HTMLAnchorElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamFrameRef = useRef<HTMLDivElement | null>(null);
   const stealStageButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -96,6 +97,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isCursorIdle, setIsCursorIdle] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [statusBarLeftInset, setStatusBarLeftInset] = useState(0);
   const idleTimeoutRef = useRef<number | null>(null);
 
   const normalizedTargetUrl = targetUrl.trim().startsWith('http') ? targetUrl.trim() : `https://${targetUrl.trim()}`;
@@ -136,6 +138,32 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       isTouchDevice ? IDLE_TIMEOUT_TOUCH_MS : IDLE_TIMEOUT_DESKTOP_MS
     );
   }, [isTouchDevice]);
+
+  useEffect(() => {
+    const brandMark = brandMarkRef.current;
+    if (!brandMark || typeof ResizeObserver === 'undefined' || typeof window === 'undefined') return;
+
+    const gap = 16;
+    const updateInset = () => {
+      const rect = brandMark.getBoundingClientRect();
+      const inset = rect.right + gap;
+      setStatusBarLeftInset(Math.max(0, inset));
+    };
+
+    updateInset();
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateInset();
+    });
+
+    resizeObserver.observe(brandMark);
+    window.addEventListener('resize', updateInset);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', updateInset);
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
@@ -568,6 +596,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       )}
 
       <Link
+        ref={brandMarkRef}
         href="/"
         aria-label="Return to The Only Tab dashboard"
         className="group absolute left-3 top-3 z-20 flex items-center gap-1.5 rounded-full px-2 py-1 text-[9px] font-black uppercase tracking-[0.2em] whitespace-nowrap text-white/45 transition-colors hover:text-emerald-300 focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 sm:left-4 sm:top-4 sm:gap-2 sm:text-[10px] sm:tracking-[0.28em]"
@@ -780,7 +809,10 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
           )}
 
           <section className="flex min-h-0 flex-1 flex-col gap-4 lg:gap-5">
-            <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] font-medium text-neutral-300 shadow-[0_16px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/5 sm:gap-3 sm:px-4">
+            <div
+              className="flex flex-wrap items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] font-medium text-neutral-300 shadow-[0_16px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/5 sm:gap-3 sm:px-4 sm:pl-28"
+              style={{ paddingLeft: statusBarLeftInset > 0 ? `${statusBarLeftInset}px` : undefined }}
+            >
               <Link
                 href="/"
                 aria-label="Return to The Only Tab dashboard"
