@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getDbPool } from '../../../lib/db';
+import { logger } from '../../../lib/logger';
+import { ACTIVE_SLOT_ORDER_BY_SQL } from '../../../lib/paidTakeover';
 import { calculateStealPrice, getBasePrice, PricingSettings } from '../../../lib/pricing';
 import { getServerPricingSettings } from '../../../lib/pricingConfig';
 
@@ -14,18 +16,25 @@ export async function GET() {
   try {
     pricingSettings = await getServerPricingSettings();
 
-    await client.query(`UPDATE slots SET is_frozen = TRUE WHERE is_frozen = FALSE AND created_at < NOW() - INTERVAL '90 minutes'`);
+    await client.query(`UPDATE slots SET is_frozen = TRUE WHERE is_frozen = FALSE AND expires_at <= NOW()`);
 
     const activeRes = await client.query(
-      `SELECT id, current_url as "currentUrl", display_name as "displayName", current_bid, expires_at as "expiresAt", created_at as "createdAt" 
-       FROM slots 
-       WHERE is_frozen = FALSE AND expires_at > NOW() 
-       ORDER BY created_at ASC
-       LIMIT 1`
+      `SELECT id, current_url as "currentUrl", display_name as "displayName", current_bid, expires_at as "expiresAt", created_at as "createdAt"
+       FROM slots
+       WHERE is_frozen = FALSE AND expires_at > NOW()
+       ORDER BY ${ACTIVE_SLOT_ORDER_BY_SQL}
+       LIMIT 2`
     );
 
     if (activeRes.rows && activeRes.rows.length > 0) {
       const row = activeRes.rows[0];
+      if (activeRes.rows.length > 1) {
+        logger.warn('Multiple active slots detected during active-tab lookup', {
+          route: 'get-active-tab',
+          activeCount: activeRes.rows.length,
+          activeSlotId: row.id,
+        });
+      }
       const currentPaid = Number.parseFloat(row.current_bid || '0');
       const nextStealPrice = calculateStealPrice(currentPaid, new Date(), pricingSettings);
 
@@ -61,7 +70,10 @@ export async function GET() {
       ? getBasePrice(new Date(), pricingSettings).toFixed(2)
       : getBasePrice(new Date()).toFixed(2);
 
-    console.error('GET /api/get-active-tab failed:', err);
+    logger.error('GET /api/get-active-tab failed', {
+      route: 'get-active-tab',
+      error: err,
+    });
     return NextResponse.json(
       {
         error: err?.message || 'Unable to load active tab',

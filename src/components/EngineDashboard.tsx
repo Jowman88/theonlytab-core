@@ -17,6 +17,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { io } from 'socket.io-client';
+import { logger } from '../lib/logger';
 
 interface SlotData {
   id: string;
@@ -100,6 +101,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const [isStatusBarDesktop, setIsStatusBarDesktop] = useState(false);
   const [statusBarLeftInset, setStatusBarLeftInset] = useState(0);
   const idleTimeoutRef = useRef<number | null>(null);
+  const hasLoggedFrameRef = useRef(false);
 
   const normalizedTargetUrl = targetUrl.trim().startsWith('http') ? targetUrl.trim() : `https://${targetUrl.trim()}`;
   const validatedFields = {
@@ -257,15 +259,28 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
 
     socket.on('connect', () => {
       setSocketStatus('connected');
-      console.log('Connected to stream server');
+      logger.info('Dashboard socket connected', {
+        route: 'engine-dashboard',
+        socketStatus: 'connected',
+      });
     });
 
-    socket.io.on('reconnect_attempt', () => {
+    socket.io.on('reconnect_attempt', (attempt) => {
       setSocketStatus('reconnecting');
+      logger.warn('Dashboard socket reconnecting', {
+        route: 'engine-dashboard',
+        socketStatus: 'reconnecting',
+        attemptCount: attempt,
+      });
     });
 
-    socket.io.on('reconnect', () => {
+    socket.io.on('reconnect', (attempt) => {
       setSocketStatus('connected');
+      logger.info('Dashboard socket reconnected', {
+        route: 'engine-dashboard',
+        socketStatus: 'connected',
+        attemptCount: attempt,
+      });
     });
 
     socket.on('v-frame', (frameData: string) => {
@@ -283,23 +298,42 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
         }
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         setHasFrames(true);
+        if (!hasLoggedFrameRef.current) {
+          hasLoggedFrameRef.current = true;
+          logger.debug('Dashboard frame received', {
+            route: 'engine-dashboard',
+            socketStatus: 'connected',
+          });
+        }
       };
       img.onerror = () => {
-        console.error('Failed to decode incoming stream frame');
+        logger.warn('Dashboard frame decode failed', {
+          route: 'engine-dashboard',
+          streamServerUrl,
+        });
       };
       img.src = `data:image/jpeg;base64,${frameData}`;
     });
 
     socket.on('connect_error', (error) => {
       setSocketStatus('reconnecting');
-      console.error('Connection error:', error);
+      logger.error('Dashboard socket connection error', {
+        route: 'engine-dashboard',
+        socketStatus: 'reconnecting',
+        error,
+      });
     });
 
     socket.on('disconnect', (reason) => {
       const isClientDisconnect = reason === 'io client disconnect';
       setSocketStatus(isClientDisconnect ? 'disconnected' : 'reconnecting');
       setHasFrames(false);
-      console.log('Disconnected from stream server');
+      hasLoggedFrameRef.current = false;
+      logger.warn('Dashboard socket disconnected', {
+        route: 'engine-dashboard',
+        socketStatus: isClientDisconnect ? 'disconnected' : 'reconnecting',
+        reason,
+      });
     });
 
     return () => {
@@ -332,7 +366,10 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
           setHistoryList(historyPayload.history || []);
         }
       } catch (error) {
-        console.error(error);
+        logger.error('Dashboard state refresh failed', {
+          route: 'engine-dashboard',
+          error,
+        });
       }
     };
 
@@ -471,7 +508,10 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
 
       await streamFrameRef.current.requestFullscreen();
     } catch (error) {
-      console.error('Fullscreen request failed:', error);
+      logger.warn('Fullscreen request failed', {
+        route: 'engine-dashboard',
+        error,
+      });
       setStatusNotice({ type: 'error', message: 'Fullscreen mode is unavailable in this browser right now.' });
     }
   };

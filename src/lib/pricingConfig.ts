@@ -17,7 +17,7 @@ function parseJsonEnv(value?: string): unknown {
   }
 }
 
-function getEnvPricingOverrides(): Partial<PricingSettings> {
+function getEnvPricingOverrides(): Record<string, unknown> {
   return {
     basePrice: process.env.PRICING_BASE_PRICE,
     primeBasePrice: process.env.PRICING_PRIME_BASE_PRICE,
@@ -37,7 +37,7 @@ export async function getServerPricingSettings(): Promise<PricingSettings> {
     return cachedSettings;
   }
 
-  const envFallback = resolvePricingSettings(getEnvPricingOverrides());
+  const envFallback = resolvePricingSettings(getEnvPricingOverrides() as Partial<PricingSettings>);
   if (now < dbRetryAfter) {
     cachedSettings = envFallback;
     cacheExpiresAt = now + CONFIG_CACHE_TTL_MS;
