@@ -31,6 +31,7 @@ Optional environment fallbacks:
 
 - `STREAM_ALLOWED_ORIGINS` (comma-separated origins, default `*` for public stream compatibility)
 - `STREAM_MAX_CONNECTIONS_PER_IP` (default `20`)
+- `TRUST_PROXY_HEADERS` (default `false`; set `true` only when behind a trusted reverse proxy)
 - `PUPPETEER_DISABLE_SANDBOX` (default `false`; set `true` only when container/runtime requires it)
 
 If sandbox is disabled, deploy with strict container isolation and minimal runtime privileges.

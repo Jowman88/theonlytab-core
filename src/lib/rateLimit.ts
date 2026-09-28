@@ -72,6 +72,8 @@ export async function enforceRateLimit(options: RateLimitOptions): Promise<RateL
   const client = await getDbPool().connect();
 
   try {
+    await client.query(`DELETE FROM api_rate_limits WHERE expires_at < NOW()`);
+
     const upsertResult = await client.query(
       `
       INSERT INTO api_rate_limits (bucket, identifier, window_start, request_count, expires_at)

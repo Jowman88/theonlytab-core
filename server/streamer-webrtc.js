@@ -20,6 +20,7 @@ const configuredOrigins = (process.env.STREAM_ALLOWED_ORIGINS || '*')
 const allowAllOrigins = configuredOrigins.length === 0 || configuredOrigins.includes('*');
 const maxConnectionsPerIp = Number.parseInt(process.env.STREAM_MAX_CONNECTIONS_PER_IP || '20', 10);
 const disableSandbox = process.env.PUPPETEER_DISABLE_SANDBOX === 'true';
+const trustProxyHeaders = process.env.TRUST_PROXY_HEADERS === 'true';
 const browserLaunchArgs = [
   '--disable-dev-shm-usage',
   '--disable-accelerated-2d-canvas',
@@ -58,7 +59,7 @@ function redactUrl(url) {
 
 function getRequestIp(req) {
   const forwarded = req.headers['x-forwarded-for'];
-  if (typeof forwarded === 'string' && forwarded.length > 0) {
+  if (trustProxyHeaders && typeof forwarded === 'string' && forwarded.length > 0) {
     return forwarded.split(',')[0].trim();
   }
   const ip = req.socket?.remoteAddress || req.connection?.remoteAddress || 'unknown';
@@ -226,19 +227,16 @@ async function initPuppeteer() {
     await page.setRequestInterception(true);
     page.on('request', async (request) => {
       const requestUrl = request.url();
-      const isNavigationRequest = request.isNavigationRequest() || request.resourceType() === 'document';
 
       if (!isHttpProtocol(requestUrl) || hasUnsafeLiteralDestination(requestUrl)) {
         await request.abort('blockedbyclient');
         return;
       }
 
-      if (isNavigationRequest) {
-        const allowed = await isNavigationAllowed(requestUrl);
-        if (!allowed) {
-          await request.abort('blockedbyclient');
-          return;
-        }
+      const allowed = await isNavigationAllowed(requestUrl);
+      if (!allowed) {
+        await request.abort('blockedbyclient');
+        return;
       }
 
       await request.continue();
