@@ -236,11 +236,13 @@ export function calculateStealPriceFromQuoteInputs({
 export function decideCheckoutFulfillment({
   existingSessionCreatedAt,
   currentActiveSlot,
+  currentRequiredPriceCents,
   quote,
   now = new Date(),
 }: {
   existingSessionCreatedAt?: string | Date | null;
   currentActiveSlot: ActiveSlotSnapshot | null;
+  currentRequiredPriceCents?: number | null;
   quote: CheckoutQuoteContext;
   now?: Date;
 }): FulfillmentDecision {
@@ -267,6 +269,15 @@ export function decideCheckoutFulfillment({
       };
     }
   } else if (currentActiveSlot && currentActiveSlot.currentBid > 0) {
+    if (!locked && currentRequiredPriceCents != null && quote.quotedStealPriceCents >= currentRequiredPriceCents) {
+      return {
+        action: 'fulfill',
+        currentActiveSlotId: currentActiveSlot.id,
+        quotedActiveSlotId: null,
+        isLocked: false,
+      };
+    }
+
     return {
       action: 'defer',
       reason: locked ? 'active_slot_changed_and_locked' : 'active_slot_missing_quote',

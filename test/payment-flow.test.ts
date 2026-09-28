@@ -120,6 +120,7 @@ test('stale checkout context without a quoted active slot is deferred when a new
       currentBid: 45,
       createdAt: new Date(now.getTime() - 3 * 60 * 1000).toISOString(),
     }),
+    currentRequiredPriceCents: 5600,
     quote,
     now,
   });
@@ -188,4 +189,26 @@ test('checkout route lock response stays a user-visible 400', async () => {
   assert.deepEqual(await response.json(), {
     error: LOCKED_CHECKOUT_ERROR_MESSAGE,
   });
+});
+
+test('stale base-price checkout still fulfills when it covers a newer unlocked slot', () => {
+  const quote = buildCheckoutQuoteContext({
+    activeSlot: null,
+    now,
+    pricingSettings: DEFAULT_PRICING_SETTINGS,
+    requiredStealPrice: 19,
+  });
+
+  const decision = decideCheckoutFulfillment({
+    currentActiveSlot: createActiveSlot({
+      id: 'slot-active-unlocked',
+      currentBid: 7,
+      createdAt: new Date(now.getTime() - 20 * 60 * 1000).toISOString(),
+    }),
+    currentRequiredPriceCents: 1900,
+    quote,
+    now,
+  });
+
+  assert.equal(decision.action, 'fulfill');
 });

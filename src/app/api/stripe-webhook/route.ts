@@ -127,7 +127,7 @@ export async function POST(req: Request) {
     await dbClient.query('BEGIN');
     transactionOpen = true;
     await dbClient.query(`SELECT pg_advisory_xact_lock(hashtext($1))`, [
-      `stripe_checkout_fulfillment:${validatedQuote.quotedActiveSlotId || 'no-active-slot'}`,
+      'stripe_checkout_active_slot_state',
     ]);
 
     const duplicateRes = await dbClient.query(
@@ -172,6 +172,7 @@ export async function POST(req: Request) {
     const decision = decideCheckoutFulfillment({
       existingSessionCreatedAt: duplicateRes.rows?.[0]?.created_at || null,
       currentActiveSlot,
+      currentRequiredPriceCents: currentExpectedPriceCents,
       quote: validatedQuote,
       now: new Date(),
     });
