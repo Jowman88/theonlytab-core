@@ -27,12 +27,12 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const [legalAgreed, setLegalAgreed] = useState(false);
 
   useEffect(() => {
-    const socket = io('wss://://onrender.com', {
-      path: '/socket.io/',
-      transports: ['websocket'],
-      secure: true,
-      rejectUnauthorized: false
-    });
+    const socket = io('https://theonlytab-server.onrender.com', {
+  path: '/socket.io/',
+  transports: ['websocket', 'polling'],
+  secure: true,
+  rejectUnauthorized: false
+});
 
     socket.on('v-frame', (base64: string) => {
       if (!canvasRef.current) return;
