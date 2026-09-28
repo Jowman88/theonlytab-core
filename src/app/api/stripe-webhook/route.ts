@@ -1,107 +1,118 @@
 import { NextResponse } from 'next/server';
-import { Client } from 'pg';
 import Stripe from 'stripe';
+import { getDbPool } from '../../../lib/db';
+import { validateTargetUrl } from '../../../lib/urlValidation';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2025-03-31.basil' as any });
-const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+  apiVersion: '2025-03-31.basil',
+});
+
+function redactUrl(url?: string | null) {
+  if (!url) return 'unknown';
+  try {
+    const parsed = new URL(url);
+    return `${parsed.protocol}//${parsed.hostname}${parsed.pathname}`;
+  } catch {
+    return 'redacted';
+  }
+}
 
 export async function POST(req: Request) {
   const body = await req.text();
-  const sig = req.headers.get('stripe-signature') || '';
-  
-  let jsonObject: any;
+  const sig = req.headers.get('stripe-signature');
+
+  if (!sig || !process.env.STRIPE_WEBHOOK_SECRET) {
+    return NextResponse.json({ error: 'Missing Stripe webhook signature' }, { status: 400 });
+  }
+
+  let event: Stripe.Event;
   try {
-    const verifiedEvent = stripe.webhooks.constructEvent(body, sig, endpointSecret);
-    jsonObject = verifiedEvent.data.object;
-  } catch (err: any) {
-    console.warn("Stripe signing verification bypassed. Reading raw body directly to secure stream connectivity.");
-    try {
-      const rawJson = JSON.parse(body);
-      jsonObject = rawJson.data.object;
-    } catch (parseErr) {
-      return NextResponse.json({ error: "Invalid JSON package" }, { status: 400 });
-    }
+    event = stripe.webhooks.constructEvent(
+      body,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
+  } catch (err) {
+    console.error('Invalid Stripe webhook signature:', err);
+    return NextResponse.json({ error: 'Invalid webhook signature' }, { status: 400 });
   }
 
-  const dbConfig = {
-    user: 'postgres.fvqeeriisoediuwbftvh',
-    host: 'aws-1-eu-west-1.pooler.supabase.com',
-    database: 'postgres',
-    password: process.env.DATABASE_PASSWORD,
-    port: 6543,
-    ssl: { rejectUnauthorized: false }
-  };
-
-  if (jsonObject) {
-    const meta = jsonObject.metadata;
-    
-    // 🛡️ UNBREAKABLE PRODUCTION FALLBACK MATRIX
-    let targetUrl = meta?.targeturl || meta?.targetUrl;
-    let displayName = meta?.displayname || meta?.displayName || 'Anonymous Takeover';
-    let rawBid = meta?.bidamount || meta?.bidAmount;
-
-    // 🚀 FIX: Instead of relying on loose regex text matching, expand the session directly 
-    // to get the immutable line item details if metadata was dropped.
-    try {
-      if (!targetUrl || !rawBid) {
-        const lineItems = await stripe.checkout.sessions.listLineItems(jsonObject.id);
-        if (lineItems.data && lineItems.data.length > 0) {
-          const item = lineItems.data[0];
-          // Pull target URL safely out of the structural description without regex dependencies
-          if (item.description && item.description.includes('viewport to:')) {
-            targetUrl = item.description.split('viewport to:')[1]?.trim();
-          }
-        }
-      }
-    } catch (stripeLineErr) {
-      console.warn("Could not expand session line items asynchronously:", stripeLineErr);
-    }
-
-    // Fallback 2: Calculate price tier dynamically from the actual dollar invoice currency total
-    if (!rawBid && jsonObject.amount_total) {
-      rawBid = (jsonObject.amount_total / 100).toFixed(2);
-    } else if (!rawBid) {
-      rawBid = '19.00';
-    }
-
-    const expiresAt = meta?.expiresat || meta?.expiresAt || new Date(Date.now() + 90 * 60 * 1000).toISOString();
-
-    // Secure fallback execution if everything else drops out
-    if (!targetUrl || targetUrl === 'https://theonlytab.io') {
-      console.warn("Webhook warning: targetUrl resolved to default. Attempting raw text fallback.");
-      // Absolute raw fallback string grabber
-      if (jsonObject.description && jsonObject.description.includes('to: ')) {
-        targetUrl = jsonObject.description.split('to: ')[1]?.trim();
-      }
-    }
-
-    const validNumericBid = parseFloat(rawBid);
-
-    // If the URL extraction is safe, commit the data to the cluster
-    if (targetUrl && targetUrl !== 'https://theonlytab.io') {
-      try {
-        const pgClient = new Client(dbConfig);
-        await pgClient.connect();
-        
-        // Close all currently active standing rooms
-        await pgClient.query('UPDATE slots SET is_frozen = TRUE WHERE is_frozen = FALSE');
-        
-        // Force database takeover insert using explicit parameter typing
-        await pgClient.query(
-          `INSERT INTO slots (current_url, display_name, current_bid, expires_at, is_frozen, created_at, purchase_price, steal_price) 
-           VALUES ($1, $2, $3, $4, FALSE, NOW(), $5, $6)`,
-          [targetUrl, displayName, validNumericBid, expiresAt, validNumericBid, validNumericBid]
-        );
-        
-        await pgClient.end();
-        console.log(`[SUCCESS] Webhook fully committed stage takeover to Supabase for: ${displayName} -> ${targetUrl}`);
-      } catch (dbErr: any) {
-        console.error("Database write failure:", dbErr.message);
-      }
-    } else {
-      console.error("Critical: Webhook could not map any user target URL from Stripe payload data.");
-    }
+  if (event.type !== 'checkout.session.completed') {
+    return NextResponse.json({ received: true });
   }
 
-  return NextResponse.json({ received: true });
+  const session = event.data.object as Stripe.Checkout.Session;
+  if (session.payment_status !== 'paid') {
+    return NextResponse.json({ received: true });
+  }
+
+  const targetUrl = session.metadata?.targeturl || session.metadata?.targetUrl;
+  const displayName =
+    session.metadata?.displayname || session.metadata?.displayName || 'Anonymous Takeover';
+  const rawBid =
+    session.metadata?.bidamount ||
+    session.metadata?.bidAmount ||
+    (session.amount_total != null ? (session.amount_total / 100).toFixed(2) : '19.00');
+
+  const expiresAt =
+    session.metadata?.expiresat ||
+    session.metadata?.expiresAt ||
+    new Date(Date.now() + 90 * 60 * 1000).toISOString();
+
+  if (!targetUrl || !validateTargetUrl(targetUrl).ok) {
+    console.warn(`Webhook rejected invalid target: ${redactUrl(targetUrl)}`);
+    return NextResponse.json({ error: 'Invalid target URL in Stripe session.' }, { status: 400 });
+  }
+
+  const validNumericBid = Number.parseFloat(String(rawBid || '0'));
+  if (!Number.isFinite(validNumericBid) || validNumericBid <= 0) {
+    return NextResponse.json({ error: 'Invalid bid amount in Stripe session.' }, { status: 400 });
+  }
+
+  const dbClient = await getDbPool().connect();
+
+  try {
+    await dbClient.query(`
+      ALTER TABLE IF EXISTS slots
+      ADD COLUMN IF NOT EXISTS report_count INTEGER NOT NULL DEFAULT 0;
+    `);
+
+    await dbClient.query(`
+      ALTER TABLE IF EXISTS slots
+      ADD COLUMN IF NOT EXISTS stripe_session_id TEXT UNIQUE;
+    `);
+
+    const insertResult = await dbClient.query(
+      `
+      INSERT INTO slots (
+        current_url,
+        display_name,
+        current_bid,
+        expires_at,
+        is_frozen,
+        created_at,
+        purchase_price,
+        steal_price,
+        stripe_session_id
+      )
+      VALUES ($1, $2, $3, $4, FALSE, NOW(), $5, $6, $7)
+      ON CONFLICT (stripe_session_id) DO NOTHING
+      RETURNING id
+      `,
+      [targetUrl, displayName, validNumericBid, expiresAt, validNumericBid, validNumericBid, session.id]
+    );
+
+    if (insertResult.rowCount === 0) {
+      return NextResponse.json({ received: true, duplicate: true });
+    }
+
+    console.log(`[SUCCESS] Webhook committed stage takeover for ${displayName} -> ${redactUrl(targetUrl)}`);
+
+    return NextResponse.json({ received: true });
+  } catch (error: any) {
+    console.error('Stripe webhook processing failed:', error);
+    return NextResponse.json({ error: error.message || 'Webhook processing failed' }, { status: 500 });
+  } finally {
+    dbClient.release();
+  }
 }
