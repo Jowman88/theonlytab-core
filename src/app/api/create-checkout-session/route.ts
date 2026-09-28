@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { buildLockedCheckoutResponse } from '../../../lib/checkoutResponses';
 import { getDbPool } from '../../../lib/db';
 import { hashIdentifier, logger, redactUrl } from '../../../lib/logger';
 import {
@@ -157,13 +158,11 @@ export async function POST(req: Request) {
 
       if (activeSlot?.currentBid && activeSlot.currentBid > 0) {
         if (isSlotLocked(activeSlot)) {
-          logger.warn('Checkout session rejected during slot lock window', {
-            route: 'create-checkout-session',
+          return buildLockedCheckoutResponse({
             clientIpBucket,
             activeSlotId: activeSlot.id,
             targetUrl: finalTargetUrl,
           });
-          return NextResponse.json({ error: 'FEED LOCKED: Protected for the first 12 minutes.' }, { status: 400 });
         }
 
         requiredStealPrice = calculateStealPrice(activeSlot.currentBid, new Date(), pricingSettings);

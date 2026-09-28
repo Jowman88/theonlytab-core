@@ -29,7 +29,6 @@ export interface FulfillmentDecision {
   action: 'duplicate' | 'fulfill' | 'defer';
   reason?:
     | 'existing_session'
-    | 'quoted_slot_locked'
     | 'active_slot_changed'
     | 'active_slot_changed_and_locked'
     | 'active_slot_missing_quote';
@@ -265,16 +264,6 @@ export function decideCheckoutFulfillment({
         currentActiveSlotId: currentActiveSlot.id,
         quotedActiveSlotId: quote.quotedActiveSlotId,
         isLocked: locked,
-      };
-    }
-
-    if (currentActiveSlot && currentActiveSlot.id === quote.quotedActiveSlotId && locked) {
-      return {
-        action: 'defer',
-        reason: 'quoted_slot_locked',
-        currentActiveSlotId: currentActiveSlot.id,
-        quotedActiveSlotId: quote.quotedActiveSlotId,
-        isLocked: true,
       };
     }
   } else if (currentActiveSlot && currentActiveSlot.currentBid > 0) {

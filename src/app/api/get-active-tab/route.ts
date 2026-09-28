@@ -19,20 +19,19 @@ export async function GET() {
     await client.query(`UPDATE slots SET is_frozen = TRUE WHERE is_frozen = FALSE AND expires_at <= NOW()`);
 
     const activeRes = await client.query(
-      `SELECT id, current_url as "currentUrl", display_name as "displayName", current_bid, expires_at as "expiresAt", created_at as "createdAt", COUNT(*) OVER() AS active_count
+      `SELECT id, current_url as "currentUrl", display_name as "displayName", current_bid, expires_at as "expiresAt", created_at as "createdAt"
        FROM slots
        WHERE is_frozen = FALSE AND expires_at > NOW()
        ORDER BY ${ACTIVE_SLOT_ORDER_BY_SQL}
-       LIMIT 1`
+       LIMIT 2`
     );
 
     if (activeRes.rows && activeRes.rows.length > 0) {
       const row = activeRes.rows[0];
-      const activeCount = Number.parseInt(String(row.active_count || '1'), 10);
-      if (activeCount > 1) {
+      if (activeRes.rows.length > 1) {
         logger.warn('Multiple active slots detected during active-tab lookup', {
           route: 'get-active-tab',
-          activeCount,
+          activeCount: activeRes.rows.length,
           activeSlotId: row.id,
         });
       }

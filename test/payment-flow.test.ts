@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { buildLockedCheckoutResponse, LOCKED_CHECKOUT_ERROR_MESSAGE } from '../src/lib/checkoutResponses';
 import {
   buildCheckoutMetadata,
   buildCheckoutQuoteContext,
@@ -174,4 +175,17 @@ test('lock timer enforcement only blocks paid slots inside the first 12 minutes'
 
   assert.ok(lockedSeconds > 0);
   assert.equal(unlockedSeconds, 0);
+});
+
+test('checkout route lock response stays a user-visible 400', async () => {
+  const response = buildLockedCheckoutResponse({
+    clientIpBucket: 'bucket-123',
+    activeSlotId: 'slot-active-1',
+    targetUrl: 'https://example.com/locked',
+  });
+
+  assert.equal(response.status, 400);
+  assert.deepEqual(await response.json(), {
+    error: LOCKED_CHECKOUT_ERROR_MESSAGE,
+  });
 });
