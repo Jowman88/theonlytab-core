@@ -580,7 +580,10 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
 
         <div className="relative flex min-h-0 flex-1 gap-4 lg:gap-5">
           {isFormOpen && (
-            <aside className="dashboard-slide-up fixed inset-x-3 bottom-3 top-24 z-40 overflow-hidden rounded-3xl border border-white/10 bg-[linear-gradient(180deg,_rgba(13,16,22,0.98),_rgba(7,9,13,0.98))] shadow-[0_30px_120px_rgba(0,0,0,0.55)] ring-1 ring-white/5 lg:static lg:inset-auto lg:z-10 lg:w-[25rem] lg:shrink-0">
+            <aside
+              id="steal-stage-panel"
+              className="dashboard-slide-up fixed inset-x-3 bottom-3 top-24 z-40 overflow-hidden rounded-3xl border border-white/10 bg-[linear-gradient(180deg,_rgba(13,16,22,0.98),_rgba(7,9,13,0.98))] shadow-[0_30px_120px_rgba(0,0,0,0.55)] ring-1 ring-white/5 lg:static lg:inset-auto lg:z-10 lg:w-[25rem] lg:shrink-0"
+            >
               <form onSubmit={handleAcquireTabSubmit} className="flex h-full flex-col">
                 <div className="flex items-center justify-between border-b border-white/10 px-5 py-4 sm:px-6">
                   <div>
@@ -890,6 +893,8 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                   type="button"
                   onClick={() => setIsFormOpen((current) => !current)}
                   ref={stealStageButtonRef}
+                  aria-controls="steal-stage-panel"
+                  aria-expanded={isFormOpen}
                   className="group shrink-0 inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-300/25 bg-[linear-gradient(135deg,_rgba(52,211,153,0.95),_rgba(6,182,212,0.88))] px-5 py-2.5 text-xs font-black uppercase tracking-[0.2em] text-slate-950 shadow-[0_0_30px_rgba(16,185,129,0.35)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_40px_rgba(16,185,129,0.5)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07080c]"
                 >
                   <Zap className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
