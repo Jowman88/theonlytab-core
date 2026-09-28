@@ -19,7 +19,9 @@ CREATE TABLE slots (
     is_frozen BOOLEAN NOT NULL DEFAULT FALSE,
     payment_intent_id VARCHAR(255) UNIQUE,
     purchase_price NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
-    steal_price NUMERIC(10, 2) NOT NULL DEFAULT 0.00
+    steal_price NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+    report_count INTEGER NOT NULL DEFAULT 0,
+    stripe_session_id TEXT UNIQUE
 );
 
 -- HISTORICAL AUDIT TRAIL FOR DETHRONED AND SLASHED CARDS
@@ -31,7 +33,7 @@ CREATE TABLE bid_history (
     duration_seconds INTEGER NOT NULL,
     dethroned_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     buyer_x_handle VARCHAR(255) NOT NULL DEFAULT 'anonymous',
-    was_slashed BOOLEAN NOT NULL DEFAULT FALSE
+    was_slashed BOOLEAN NOT NULL FALSE
 );
 
 -- UNIQUE TRUST-POOL ANTI-SPAM REPORT REGISTRY
@@ -57,7 +59,9 @@ INSERT INTO slots (
     expires_at,
     buyer_x_handle,
     purchase_price,
-    steal_price
+    steal_price,
+    report_count,
+    stripe_session_id
 )
 VALUES (
     'https://example.com',
@@ -69,5 +73,8 @@ VALUES (
     NOW() + INTERVAL '10 years',
     'theonlytab',
     0.00,
-    0.00
-);
+    0.00,
+    0,
+    NULL
+)
+ON CONFLICT DO NOTHING;
