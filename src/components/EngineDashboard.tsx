@@ -169,24 +169,24 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
             </div>
 
             <div>
-              <label className="text-[9px] text-neutral-500 font-bold uppercase tracking-wide block mb-1">Target Website URL *</label>
-              <input type="text" required placeholder="" value={targetUrl} onChange={e => setTargetUrl(e.target.value)} className="w-full bg-black border border-neutral-800 rounded p-2 text-xs outline-none" />
+              <label htmlFor="target-url-input" className="text-[9px] text-neutral-500 font-bold uppercase tracking-wide block mb-1">Target Website URL *</label>
+              <input id="target-url-input" type="text" required placeholder="" value={targetUrl} onChange={e => setTargetUrl(e.target.value)} className="w-full bg-black border border-neutral-800 rounded p-2 text-xs outline-none" />
             </div>
             <div>
-              <label className="text-[9px] text-neutral-500 font-bold uppercase tracking-wide block mb-1">Display Name</label>
-              <input type="text" placeholder="" value={displayName} onChange={e => setDisplayName(e.target.value)} className="w-full bg-black border border-neutral-800 rounded p-2 text-xs outline-none" />
+              <label htmlFor="display-name-input" className="text-[9px] text-neutral-500 font-bold uppercase tracking-wide block mb-1">Display Name</label>
+              <input id="display-name-input" type="text" placeholder="" value={displayName} onChange={e => setDisplayName(e.target.value)} className="w-full bg-black border border-neutral-800 rounded p-2 text-xs outline-none" />
             </div>
             <div>
-              <label className="text-[9px] text-neutral-500 font-bold uppercase tracking-wide block mb-1">Overlay Label (Max 15 Chars)</label>
-              <input type="text" maxLength={15} placeholder="" value={overlayLabel} onChange={e => setOverlayLabel(e.target.value)} className="w-full bg-black border border-neutral-800 rounded p-2 text-xs outline-none" />
+              <label htmlFor="overlay-label-input" className="text-[9px] text-neutral-500 font-bold uppercase tracking-wide block mb-1">Overlay Label (Max 15 Chars)</label>
+              <input id="overlay-label-input" type="text" maxLength={15} placeholder="" value={overlayLabel} onChange={e => setOverlayLabel(e.target.value)} className="w-full bg-black border border-neutral-800 rounded p-2 text-xs outline-none" />
             </div>
             <div>
-              <label className="text-[9px] text-neutral-500 font-bold uppercase tracking-wide block mb-1">Optional Start Path / Hash</label>
-              <input type="text" placeholder="" value={startPath} onChange={e => setStartPath(e.target.value)} className="w-full bg-black border border-neutral-800 rounded p-2 text-xs outline-none" />
+              <label htmlFor="start-path-input" className="text-[9px] text-neutral-500 font-bold uppercase tracking-wide block mb-1">Optional Start Path / Hash</label>
+              <input id="start-path-input" type="text" placeholder="" value={startPath} onChange={e => setStartPath(e.target.value)} className="w-full bg-black border border-neutral-800 rounded p-2 text-xs outline-none" />
             </div>
 
-            <label className="flex items-start gap-2 text-[9px] text-neutral-400 leading-normal cursor-pointer select-none mt-1">
-              <input type="checkbox" required checked={legalAgreed} onChange={(e) => setLegalAgreed(e.target.checked)} className="mt-0.5 accent-emerald-500" />
+            <label htmlFor="legal-agreement-checkbox" className="flex items-start gap-2 text-[9px] text-neutral-400 leading-normal cursor-pointer select-none mt-1">
+              <input id="legal-agreement-checkbox" type="checkbox" required checked={legalAgreed} onChange={(e) => setLegalAgreed(e.target.checked)} className="mt-0.5 accent-emerald-500" />
               <span>Accept Non-Refundable Takeover Stage Rules</span>
             </label>
 
