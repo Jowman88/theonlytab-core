@@ -1,6 +1,15 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { getDbPool } from '../../../lib/db';
+import { hashIdentifier, logger, redactUrl } from '../../../lib/logger';
+import {
+  ACTIVE_SLOT_ORDER_BY_SQL,
+  buildCheckoutMetadata,
+  buildCheckoutQuoteContext,
+  isSlotLocked,
+  normalizeBidAmount,
+  TAKEOVER_DURATION_MINUTES,
+} from '../../../lib/paidTakeover';
 import { buildTargetUrl, validateTargetUrl } from '../../../lib/urlValidation';
 import { checkUrlWithWebRisk } from '../../../lib/webRisk';
 import { calculateStealPrice, getBasePrice } from '../../../lib/pricing';
@@ -16,7 +25,7 @@ function getStripeClient() {
   }
 
   return new Stripe(secretKey, {
-    apiVersion: '2025-03-31.basil',
+    apiVersion: '2025-03-31.basil' as Stripe.LatestApiVersion,
   });
 }
 
@@ -38,6 +47,7 @@ function containsProfanity(text: string): boolean {
 export async function POST(req: Request) {
   try {
     const clientIp = getClientIpAddress(req);
+    const clientIpBucket = hashIdentifier(clientIp);
     const rateLimit = await enforceRateLimit({
       bucket: 'checkout-session',
       identifier: clientIp,
@@ -46,6 +56,11 @@ export async function POST(req: Request) {
     });
 
     if (!rateLimit.allowed) {
+      logger.warn('Checkout session rejected by rate limit', {
+        route: 'create-checkout-session',
+        clientIpBucket,
+        retryAfterSeconds: rateLimit.retryAfterSeconds,
+      });
       return NextResponse.json(
         { error: 'Too many checkout attempts. Please wait and try again.' },
         { status: 429, headers: { 'Retry-After': String(rateLimit.retryAfterSeconds) } }
@@ -56,15 +71,30 @@ export async function POST(req: Request) {
     const { targetUrl, displayName, overlayLabel, startPath } = body;
 
     if (!targetUrl || typeof targetUrl !== 'string') {
+      logger.warn('Checkout session rejected for missing target URL', {
+        route: 'create-checkout-session',
+        clientIpBucket,
+      });
       return NextResponse.json({ error: 'TARGET URL REQUIRED: Please provide a website URL.' }, { status: 400 });
     }
 
     const validation = validateTargetUrl(targetUrl);
     if (!validation.ok || !validation.normalizedUrl) {
+      logger.warn('Checkout session rejected for invalid target URL', {
+        route: 'create-checkout-session',
+        clientIpBucket,
+        reason: validation.message || 'invalid_target_url',
+        targetUrl,
+      });
       return NextResponse.json({ error: validation.message || 'TARGET URL INVALID: Please provide a valid public website URL.' }, { status: 400 });
     }
 
     if (!(await checkUrlWithWebRisk(validation.normalizedUrl))) {
+      logger.warn('Checkout session rejected by WebRisk', {
+        route: 'create-checkout-session',
+        clientIpBucket,
+        targetUrl: validation.normalizedUrl,
+      });
       return NextResponse.json({ error: 'URL refused by the safety gate.' }, { status: 400 });
     }
 
@@ -75,10 +105,21 @@ export async function POST(req: Request) {
     try {
       finalTargetUrl = buildTargetUrl(validation.normalizedUrl, startPath);
     } catch (err: any) {
+      logger.warn('Checkout session rejected for invalid start path', {
+        route: 'create-checkout-session',
+        clientIpBucket,
+        targetUrl: validation.normalizedUrl,
+        reason: err?.message || 'invalid_start_path',
+      });
       return NextResponse.json({ error: err.message || 'Invalid path supplied.' }, { status: 400 });
     }
 
     if (containsProfanity(overlayLabelValue) || containsProfanity(displayNameValue) || containsProfanity(finalTargetUrl)) {
+      logger.warn('Checkout session rejected for profanity', {
+        route: 'create-checkout-session',
+        clientIpBucket,
+        targetUrl: finalTargetUrl,
+      });
       return NextResponse.json(
         { error: 'TEXT REFUSED: Inappropriate language detected.' },
         { status: 400 }
@@ -86,6 +127,12 @@ export async function POST(req: Request) {
     }
 
     if (displayNameValue.length > 80 || overlayLabelValue.length > 15) {
+      logger.warn('Checkout session rejected for oversized display metadata', {
+        route: 'create-checkout-session',
+        clientIpBucket,
+        displayNameLength: displayNameValue.length,
+        overlayLabelLength: overlayLabelValue.length,
+      });
       return NextResponse.json({ error: 'DISPLAY NAME OR OVERLAY LABEL IS TOO LONG.' }, { status: 400 });
     }
 
@@ -95,33 +142,50 @@ export async function POST(req: Request) {
 
     try {
       const activeRes = await client.query(
-        `SELECT id, current_bid, created_at FROM slots WHERE is_frozen = FALSE AND expires_at > NOW() LIMIT 1`
+        `SELECT id, current_bid, created_at FROM slots WHERE is_frozen = FALSE AND expires_at > NOW() ORDER BY ${ACTIVE_SLOT_ORDER_BY_SQL} LIMIT 1`
       );
+
+      const activeSlot = activeRes.rows?.[0]
+        ? {
+            id: String(activeRes.rows[0].id),
+            currentBid: normalizeBidAmount(activeRes.rows[0].current_bid),
+            createdAt: activeRes.rows[0].created_at,
+          }
+        : null;
 
       let requiredStealPrice = getBasePrice(new Date(), pricingSettings);
 
-      if (activeRes.rows && activeRes.rows.length > 0) {
-        const activeSlot = activeRes.rows[0];
-        const currentPaid = Number.parseFloat(activeSlot.current_bid || '0');
-
-        if (currentPaid > 0 && activeSlot.created_at) {
-          const createdAt = new Date(activeSlot.created_at).getTime();
-          if (!Number.isNaN(createdAt)) {
-            const minutesOnStage = (Date.now() - createdAt) / (1000 * 60);
-            if (minutesOnStage < 12) {
-              return NextResponse.json({ error: 'FEED LOCKED: Protected for the first 12 minutes.' }, { status: 400 });
-            }
-          }
-
-          requiredStealPrice = calculateStealPrice(currentPaid, new Date(), pricingSettings);
+      if (activeSlot?.currentBid && activeSlot.currentBid > 0) {
+        if (isSlotLocked(activeSlot)) {
+          logger.warn('Checkout session rejected during slot lock window', {
+            route: 'create-checkout-session',
+            clientIpBucket,
+            activeSlotId: activeSlot.id,
+            targetUrl: finalTargetUrl,
+          });
+          return NextResponse.json({ error: 'FEED LOCKED: Protected for the first 12 minutes.' }, { status: 400 });
         }
+
+        requiredStealPrice = calculateStealPrice(activeSlot.currentBid, new Date(), pricingSettings);
       }
 
       if (!Number.isFinite(requiredStealPrice) || requiredStealPrice <= 0) {
+        logger.error('Checkout session could not determine a valid price', {
+          route: 'create-checkout-session',
+          clientIpBucket,
+          activeSlotId: activeSlot?.id || null,
+        });
         return NextResponse.json({ error: 'Unable to determine valid checkout price.' }, { status: 500 });
       }
 
       const requiredStealPriceCents = Math.round(requiredStealPrice * 100);
+      const quote = buildCheckoutQuoteContext({
+        activeSlot,
+        now: new Date(),
+        pricingSettings,
+        requiredStealPrice,
+      });
+      const expiresAt = new Date(Date.now() + TAKEOVER_DURATION_MINUTES * 60 * 1000).toISOString();
 
       const session = await stripe.checkout.sessions.create({
         line_items: [{
@@ -139,15 +203,22 @@ export async function POST(req: Request) {
         mode: 'payment',
         success_url: 'https://theonlytab.io',
         cancel_url: 'https://theonlytab.io',
-        metadata: {
-          targeturl: finalTargetUrl,
-          displayname: displayNameValue,
-          overlaylabel: overlayLabelValue,
-          bidamount: requiredStealPrice.toFixed(2),
-          bidamountcents: String(requiredStealPriceCents),
-          currency: 'usd',
-          expiresat: new Date(Date.now() + 90 * 60 * 1000).toISOString()
-        },
+        metadata: buildCheckoutMetadata({
+          targetUrl: finalTargetUrl,
+          displayName: displayNameValue,
+          overlayLabel: overlayLabelValue,
+          expiresAt,
+          quote,
+        }),
+      });
+
+      logger.info('Stripe checkout session created', {
+        route: 'create-checkout-session',
+        stripeSessionId: session.id,
+        clientIpBucket,
+        activeSlotId: activeSlot?.id || null,
+        bidAmount: requiredStealPrice.toFixed(2),
+        targetUrl: redactUrl(finalTargetUrl),
       });
 
       return NextResponse.json({ url: session.url });
@@ -155,7 +226,10 @@ export async function POST(req: Request) {
       client.release();
     }
   } catch (err: any) {
-    console.error('Checkout session error:', err);
+    logger.error('Checkout session creation failed', {
+      route: 'create-checkout-session',
+      error: err,
+    });
     return NextResponse.json({ error: `SERVER ERROR: ${err.message}` }, { status: 500 });
   }
 }

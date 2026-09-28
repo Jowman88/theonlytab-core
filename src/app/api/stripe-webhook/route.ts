@@ -1,27 +1,32 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { getDbPool } from '../../../lib/db';
+import { logger } from '../../../lib/logger';
+import {
+  ACTIVE_SLOT_ORDER_BY_SQL,
+  calculateQuotedStealPrice,
+  decideCheckoutFulfillment,
+  normalizeBidAmount,
+  parseCheckoutQuoteContext,
+  TAKEOVER_DURATION_MINUTES,
+  validateStripeCheckoutQuote,
+} from '../../../lib/paidTakeover';
+import { calculateStealPrice, getBasePrice } from '../../../lib/pricing';
+import { getServerPricingSettings } from '../../../lib/pricingConfig';
 import { validateTargetUrl } from '../../../lib/urlValidation';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-03-31.basil',
+  apiVersion: '2025-03-31.basil' as Stripe.LatestApiVersion,
 });
-
-function redactUrl(url?: string | null) {
-  if (!url) return 'unknown';
-  try {
-    const parsed = new URL(url);
-    return `${parsed.protocol}//${parsed.hostname}`;
-  } catch {
-    return 'redacted';
-  }
-}
 
 export async function POST(req: Request) {
   const body = await req.text();
   const sig = req.headers.get('stripe-signature');
 
   if (!sig || !process.env.STRIPE_WEBHOOK_SECRET) {
+    logger.warn('Stripe webhook rejected for missing signature', {
+      route: 'stripe-webhook',
+    });
     return NextResponse.json({ error: 'Missing Stripe webhook signature' }, { status: 400 });
   }
 
@@ -33,9 +38,18 @@ export async function POST(req: Request) {
       process.env.STRIPE_WEBHOOK_SECRET
     );
   } catch (err) {
-    console.error('Invalid Stripe webhook signature:', err);
+    logger.warn('Stripe webhook signature validation failed', {
+      route: 'stripe-webhook',
+      error: err,
+    });
     return NextResponse.json({ error: 'Invalid webhook signature' }, { status: 400 });
   }
+
+  logger.debug('Stripe webhook signature validated', {
+    route: 'stripe-webhook',
+    eventType: event.type,
+    stripeEventId: event.id,
+  });
 
   if (event.type !== 'checkout.session.completed') {
     return NextResponse.json({ received: true });
@@ -54,33 +68,151 @@ export async function POST(req: Request) {
   const displayName =
     session.metadata?.displayname || session.metadata?.displayName || 'Anonymous Takeover';
   const rawBid = (session.amount_total / 100).toFixed(2);
-  const expectedBidCents = Number.parseInt(
-    String(session.metadata?.bidamountcents || session.metadata?.bidAmountCents || ''),
-    10
-  );
+  const quote = parseCheckoutQuoteContext(session.metadata || undefined);
 
   const expiresAt =
     session.metadata?.expiresat ||
     session.metadata?.expiresAt ||
-    new Date(Date.now() + 90 * 60 * 1000).toISOString();
+    new Date(Date.now() + TAKEOVER_DURATION_MINUTES * 60 * 1000).toISOString();
 
   if (!targetUrl || !validateTargetUrl(targetUrl).ok) {
-    console.warn(`Webhook rejected invalid target: ${redactUrl(targetUrl)}`);
+    logger.warn('Stripe webhook rejected invalid target URL', {
+      route: 'stripe-webhook',
+      stripeSessionId: session.id,
+      targetUrl,
+    });
     return NextResponse.json({ error: 'Invalid target URL in Stripe session.' }, { status: 400 });
   }
 
-  if (Number.isFinite(expectedBidCents) && expectedBidCents > 0 && expectedBidCents !== session.amount_total) {
-    return NextResponse.json({ error: 'Stripe amount did not match expected price.' }, { status: 400 });
+  const quoteValidationError = validateStripeCheckoutQuote({
+    sessionAmountTotal: session.amount_total,
+    sessionCurrency: session.currency,
+    quote,
+  });
+  if (quoteValidationError) {
+    logger.warn('Stripe webhook rejected invalid quoted checkout context', {
+      route: 'stripe-webhook',
+      stripeSessionId: session.id,
+      reason: quoteValidationError,
+      currency: session.currency,
+      amountTotal: session.amount_total,
+    });
+    return NextResponse.json({ error: quoteValidationError }, { status: 400 });
+  }
+
+  const validatedQuote = quote!;
+
+  if (calculateQuotedStealPrice(validatedQuote) !== validatedQuote.quotedStealPriceCents) {
+    logger.warn('Stripe webhook rejected inconsistent quote pricing metadata', {
+      route: 'stripe-webhook',
+      stripeSessionId: session.id,
+      quotedPriceCents: validatedQuote.quotedStealPriceCents,
+    });
+    return NextResponse.json({ error: 'Quoted checkout metadata was inconsistent.' }, { status: 400 });
   }
 
   const validNumericBid = Number.parseFloat(String(rawBid || '0'));
   if (!Number.isFinite(validNumericBid) || validNumericBid <= 0) {
+    logger.warn('Stripe webhook rejected invalid bid amount', {
+      route: 'stripe-webhook',
+      stripeSessionId: session.id,
+      amountTotal: session.amount_total,
+    });
     return NextResponse.json({ error: 'Invalid bid amount in Stripe session.' }, { status: 400 });
   }
 
   const dbClient = await getDbPool().connect();
+  let transactionOpen = false;
 
   try {
+    await dbClient.query('BEGIN');
+    transactionOpen = true;
+    await dbClient.query(`SELECT pg_advisory_xact_lock(hashtext($1))`, ['stripe_checkout_fulfillment']);
+
+    const duplicateRes = await dbClient.query(
+      `
+      SELECT id, created_at
+      FROM slots
+      WHERE stripe_session_id = $1
+      LIMIT 1
+      `,
+      [session.id]
+    );
+
+    const pricingSettings = await getServerPricingSettings();
+    const activeRes = await dbClient.query(
+      `
+      SELECT id, current_url, display_name, current_bid, created_at, expires_at
+      FROM slots
+      WHERE is_frozen = FALSE AND expires_at > NOW()
+      ORDER BY ${ACTIVE_SLOT_ORDER_BY_SQL}
+      LIMIT 1
+      FOR UPDATE
+      `
+    );
+
+    const currentActiveSlot = activeRes.rows?.[0]
+      ? {
+        id: String(activeRes.rows[0].id),
+        currentBid: normalizeBidAmount(activeRes.rows[0].current_bid),
+        createdAt: activeRes.rows[0].created_at,
+        expiresAt: activeRes.rows[0].expires_at,
+        currentUrl: activeRes.rows[0].current_url,
+        displayName: activeRes.rows[0].display_name,
+      }
+      : null;
+
+    const currentExpectedPriceCents = currentActiveSlot?.currentBid && currentActiveSlot.currentBid > 0
+      ? Math.round(calculateStealPrice(currentActiveSlot.currentBid, new Date(), pricingSettings) * 100)
+      : Math.round(getBasePrice(new Date(), pricingSettings) * 100);
+
+    const decision = decideCheckoutFulfillment({
+      existingSessionCreatedAt: duplicateRes.rows?.[0]?.created_at || null,
+      currentActiveSlot,
+      quote: validatedQuote,
+      now: new Date(),
+    });
+
+    if (decision.action === 'duplicate') {
+      await dbClient.query('COMMIT');
+      transactionOpen = false;
+      logger.info('Duplicate Stripe webhook ignored', {
+        route: 'stripe-webhook',
+        stripeSessionId: session.id,
+        firstSeenAt: decision.firstSeenAt,
+        activeSlotId: decision.currentActiveSlotId,
+      });
+      return NextResponse.json({ received: true, duplicate: true });
+    }
+
+    if (decision.action === 'defer') {
+      await dbClient.query('COMMIT');
+      transactionOpen = false;
+      logger.warn('Paid checkout deferred for manual reconciliation', {
+      route: 'stripe-webhook',
+      stripeSessionId: session.id,
+      reason: decision.reason,
+      activeSlotId: decision.currentActiveSlotId,
+      quotedActiveSlotId: decision.quotedActiveSlotId,
+      quotedPriceCents: validatedQuote.quotedStealPriceCents,
+      actualPriceCents: currentExpectedPriceCents,
+      targetUrl,
+      });
+      return NextResponse.json({ received: true, reconcile: true, reason: decision.reason }, { status: 202 });
+    }
+
+    if (currentActiveSlot?.id) {
+      await dbClient.query(
+      `
+      UPDATE slots
+      SET is_frozen = TRUE,
+          expires_at = LEAST(expires_at, NOW())
+      WHERE id = $1
+      `,
+      [currentActiveSlot.id]
+      );
+    }
+
     const insertResult = await dbClient.query(
       `
       INSERT INTO slots (
@@ -102,15 +234,47 @@ export async function POST(req: Request) {
     );
 
     if (insertResult.rowCount === 0) {
-      console.log(`[INFO] Duplicate webhook session ignored: ${session.id}`);
+      await dbClient.query('COMMIT');
+      transactionOpen = false;
+      logger.info('Duplicate Stripe webhook ignored after insert race', {
+        route: 'stripe-webhook',
+        stripeSessionId: session.id,
+      });
       return NextResponse.json({ received: true, duplicate: true });
     }
 
-    console.log(`[SUCCESS] Webhook committed stage takeover for ${displayName} -> ${redactUrl(targetUrl)}`);
+    await dbClient.query('COMMIT');
+    transactionOpen = false;
+    logger.info('Stripe webhook committed stage takeover', {
+      route: 'stripe-webhook',
+      stripeSessionId: session.id,
+      activeSlotId: insertResult.rows[0].id,
+      replacedSlotId: currentActiveSlot?.id || null,
+      bidAmount: validNumericBid.toFixed(2),
+      targetUrl,
+    });
 
     return NextResponse.json({ received: true });
   } catch (error: any) {
-    console.error('Stripe webhook processing failed:', error);
+    if (transactionOpen) {
+      try {
+        await dbClient.query('ROLLBACK');
+      } catch (rollbackError) {
+        logger.error('Stripe webhook rollback failed', {
+        route: 'stripe-webhook',
+        stripeSessionId: session.id,
+        error: rollbackError,
+        recoveryAction: 'manual_reconciliation_required',
+        });
+      }
+    }
+
+    logger.error('Stripe webhook processing failed', {
+      route: 'stripe-webhook',
+      stripeSessionId: session.id,
+      error,
+      recoveryAction: 'manual_reconciliation_required',
+    });
     return NextResponse.json({ error: error.message || 'Webhook processing failed' }, { status: 500 });
   } finally {
     dbClient.release();

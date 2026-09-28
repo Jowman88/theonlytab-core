@@ -6,6 +6,7 @@ import http from 'http';
 import puppeteer from 'puppeteer';
 import { lookup as dnsLookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
+import { logger, redactUrl } from './logger.js';
 
 const app = express();
 const server = http.createServer(app);
@@ -30,7 +31,9 @@ const browserLaunchArgs = [
 
 if (disableSandbox) {
   browserLaunchArgs.push('--no-sandbox', '--disable-setuid-sandbox');
-  console.warn('PUPPETEER_DISABLE_SANDBOX is enabled. Use only in containers that require it.');
+  logger.warn('PUPPETEER_DISABLE_SANDBOX is enabled', {
+    route: 'streamer-bootstrap',
+  });
 }
 
 const socketCountByIp = new Map();
@@ -46,16 +49,6 @@ const blockedIpLiterals = new Set([
   '169.254.170.2',
   '100.100.100.200',
 ]);
-
-function redactUrl(url) {
-  if (!url) return 'unknown';
-  try {
-    const parsed = new URL(url);
-    return `${parsed.protocol}//${parsed.hostname}`;
-  } catch {
-    return 'redacted';
-  }
-}
 
 function getRequestIp(req) {
   const forwarded = req.headers['x-forwarded-for'];
@@ -216,7 +209,9 @@ async function initPuppeteer() {
   try {
     if (browser && page) return;
 
-    console.log('Launching headless browser...');
+    logger.info('Launching headless browser', {
+      route: 'streamer-bootstrap',
+    });
 
     browser = await puppeteer.launch({
       headless: 'new',
@@ -245,9 +240,14 @@ async function initPuppeteer() {
       await request.continue();
     });
 
-    console.log('Cloud browser successfully initialized.');
+    logger.info('Cloud browser initialized', {
+      route: 'streamer-bootstrap',
+    });
   } catch (err) {
-    console.error('Fatal Error initializing Puppeteer runtime layout:', err.message);
+    logger.error('Fatal error initializing Puppeteer runtime layout', {
+      route: 'streamer-bootstrap',
+      error: err,
+    });
   }
 }
 
@@ -255,15 +255,28 @@ async function navigateSafely(targetUrl) {
   if (!page) return false;
   const allowed = await isNavigationAllowed(targetUrl);
   if (!allowed) {
-    console.warn(`Blocked unsafe stream target: ${redactUrl(targetUrl)}`);
+    logger.warn('Blocked unsafe stream target', {
+      route: 'stream-navigation',
+      targetUrl,
+      reason: 'navigation_policy_blocked',
+    });
     return false;
   }
 
   try {
     await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
+    logger.info('Stream navigation succeeded', {
+      route: 'stream-navigation',
+      targetUrl,
+    });
     return true;
-  } catch {
-    console.warn(`Stream navigation failed: ${redactUrl(targetUrl)}`);
+  } catch (error) {
+    logger.warn('Stream navigation failed', {
+      route: 'stream-navigation',
+      targetUrl,
+      reason: 'page_goto_failed',
+      error,
+    });
     return false;
   }
 }
@@ -272,7 +285,10 @@ async function syncSlotToBrowser() {
   const dbConnectionString = process.env.DATABASE_URL;
 
   if (!dbConnectionString) {
-    console.warn('DATABASE_URL is not set; using idle fallback target.');
+    logger.warn('DATABASE_URL is not set; using idle fallback target', {
+      route: 'stream-sync',
+      fallbackUrl: idleUrl,
+    });
     return;
   }
 
@@ -285,10 +301,10 @@ async function syncSlotToBrowser() {
     await pgClient.connect();
 
     const res = await pgClient.query(`
-      SELECT current_url, display_name
+      SELECT id, current_url, display_name
       FROM slots
       WHERE is_frozen = FALSE AND expires_at > NOW()
-      ORDER BY expires_at DESC
+      ORDER BY created_at DESC, id DESC
       LIMIT 1
     `);
 
@@ -296,16 +312,23 @@ async function syncSlotToBrowser() {
 
     let targetUrl = idleUrl;
     let displayLabel = 'SYSTEM IDLE';
+    let slotId = 'house-default-id';
 
     if (res.rows && res.rows.length > 0) {
       const row = res.rows[0];
+      slotId = row.id || slotId;
       targetUrl = row.current_url || idleUrl;
       displayLabel = row.display_name || 'LIVE FEED';
     }
 
     if (!page || targetUrl === currentUrlInStream) return;
 
-    console.log(`Stream target shifted. Steering browser to: ${redactUrl(targetUrl)}`);
+    logger.info('Stream target changed', {
+      route: 'stream-sync',
+      slotId,
+      displayName: displayLabel,
+      targetUrl,
+    });
 
     let navigatedUrl = '';
     if (await navigateSafely(targetUrl)) {
@@ -313,7 +336,19 @@ async function syncSlotToBrowser() {
     } else if (targetUrl !== idleUrl && await navigateSafely(idleUrl)) {
       navigatedUrl = idleUrl;
       displayLabel = 'SYSTEM IDLE';
+      logger.warn('Stream navigation fell back to idle target', {
+        route: 'stream-sync',
+        slotId,
+        targetUrl,
+        fallbackUrl: idleUrl,
+      });
     } else {
+      logger.error('Stream navigation failed without available fallback', {
+        route: 'stream-sync',
+        slotId,
+        targetUrl,
+        fallbackUrl: idleUrl,
+      });
       return;
     }
 
@@ -348,7 +383,11 @@ async function syncSlotToBrowser() {
       document.body.appendChild(badge);
     }, displayLabel).catch(() => {});
   } catch (dbErr) {
-    console.error('Database sync loop error:', dbErr.message);
+    logger.error('Database sync loop failed', {
+      route: 'stream-sync',
+      error: dbErr,
+      fallbackBehavior: 'keep_current_stream_target',
+    });
   }
 }
 
@@ -381,7 +420,10 @@ io.on('connection', (socket) => {
   const currentCount = Number(socketCountByIp.get(ip) || 0);
   socketCountByIp.set(ip, currentCount + 1);
 
-  console.log(`Client connected to stream endpoint (${ip})`);
+  logger.info('Client connected to stream endpoint', {
+    route: 'stream-socket',
+    clientIp: ip,
+  });
 
   socket.on('disconnect', () => {
     const existing = Number(socketCountByIp.get(ip) || 1);
@@ -391,11 +433,17 @@ io.on('connection', (socket) => {
     } else {
       socketCountByIp.set(ip, next);
     }
-    console.log(`Client disconnected from stream endpoint (${ip})`);
+    logger.info('Client disconnected from stream endpoint', {
+      route: 'stream-socket',
+      clientIp: ip,
+    });
   });
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server fully bound and locked on port ${PORT}`);
+  logger.info('Server bound to port', {
+    route: 'streamer-bootstrap',
+    port: PORT,
+  });
   startStreamingCore();
 });
