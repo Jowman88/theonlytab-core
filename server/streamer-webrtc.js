@@ -112,7 +112,8 @@ function isPrivateOrUnsafeIpAddress(value) {
   return false;
 }
 
-async function resolvePublicDestination(hostname) {
+async function resolvePublicDestination(hostname, options = {}) {
+  const { forceFresh = false } = options;
   const normalizedHost = hostname.toLowerCase();
   if (blockedHostnames.has(normalizedHost) || normalizedHost.endsWith('.localhost') || normalizedHost.endsWith('.local')) {
     return false;
@@ -123,14 +124,14 @@ async function resolvePublicDestination(hostname) {
 
   const cacheKey = normalizedHost;
   const cached = hostResolutionCache.get(cacheKey);
-  if (cached && cached.expiresAt > Date.now()) {
+  if (!forceFresh && cached && cached.expiresAt > Date.now()) {
     return cached.allowed;
   }
 
   try {
     const addresses = await dnsLookup(normalizedHost, { all: true, verbatim: true });
     const allowed = addresses.length > 0 && addresses.every((entry) => !isPrivateOrUnsafeIpAddress(entry.address));
-    hostResolutionCache.set(cacheKey, { allowed, expiresAt: Date.now() + (allowed ? 5_000 : 15_000) });
+    hostResolutionCache.set(cacheKey, { allowed, expiresAt: Date.now() + (allowed ? 30_000 : 15_000) });
     return allowed;
   } catch (error) {
     hostResolutionCache.set(cacheKey, { allowed: false, expiresAt: Date.now() + 15_000 });
@@ -161,11 +162,12 @@ function hasUnsafeLiteralDestination(rawUrl) {
   }
 }
 
-async function isNavigationAllowed(rawUrl) {
+async function isNavigationAllowed(rawUrl, options = {}) {
+  const { forceFresh = false } = options;
   if (!isHttpProtocol(rawUrl) || hasUnsafeLiteralDestination(rawUrl)) return false;
   try {
     const parsed = new URL(rawUrl);
-    return resolvePublicDestination(parsed.hostname);
+    return resolvePublicDestination(parsed.hostname, { forceFresh });
   } catch {
     return false;
   }
@@ -233,7 +235,8 @@ async function initPuppeteer() {
         return;
       }
 
-      const allowed = await isNavigationAllowed(requestUrl);
+      const isNavigationRequest = request.isNavigationRequest() || request.resourceType() === 'document';
+      const allowed = await isNavigationAllowed(requestUrl, { forceFresh: isNavigationRequest });
       if (!allowed) {
         await request.abort('blockedbyclient');
         return;

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDbPool } from '../../../lib/db';
-import { calculateStealPrice, getBasePrice } from '../../../lib/pricing';
+import { calculateStealPrice, getBasePrice, PricingSettings } from '../../../lib/pricing';
 import { getServerPricingSettings } from '../../../lib/pricingConfig';
 
 export const dynamic = 'force-dynamic';
@@ -9,7 +9,7 @@ const HOUSE_DEFAULT_URL = 'https://theonlytab.io/house-default';
 
 export async function GET() {
   const client = await getDbPool().connect();
-  let pricingSettings: any;
+  let pricingSettings: PricingSettings | undefined;
 
   try {
     pricingSettings = await getServerPricingSettings();

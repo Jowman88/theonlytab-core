@@ -2,9 +2,11 @@ import { getDbPool } from './db';
 import { DEFAULT_PRICING_SETTINGS, PricingSettings, resolvePricingSettings } from './pricing';
 
 const CONFIG_CACHE_TTL_MS = 60_000;
+const DB_RETRY_BACKOFF_MS = 5 * 60_000;
 
 let cachedSettings: PricingSettings | null = null;
 let cacheExpiresAt = 0;
+let dbRetryAfter = 0;
 
 function parseJsonEnv(value?: string): unknown {
   if (!value) return undefined;
@@ -36,6 +38,12 @@ export async function getServerPricingSettings(): Promise<PricingSettings> {
   }
 
   const envFallback = resolvePricingSettings(getEnvPricingOverrides());
+  if (now < dbRetryAfter) {
+    cachedSettings = envFallback;
+    cacheExpiresAt = now + CONFIG_CACHE_TTL_MS;
+    return cachedSettings;
+  }
+
   const client = await getDbPool().connect();
 
   try {
@@ -68,12 +76,14 @@ export async function getServerPricingSettings(): Promise<PricingSettings> {
       stealFlatIncrease: row.steal_flat_increase ?? envFallback.stealFlatIncrease,
       primeWindows: row.prime_windows_json ?? envFallback.primeWindows,
     });
+    dbRetryAfter = 0;
     cacheExpiresAt = now + CONFIG_CACHE_TTL_MS;
     return cachedSettings;
   } catch (error: any) {
     if (!isMissingTableError(error)) {
       console.warn('Pricing config fallback engaged:', error?.message || error);
     }
+    dbRetryAfter = now + DB_RETRY_BACKOFF_MS;
     cachedSettings = envFallback;
     cacheExpiresAt = now + CONFIG_CACHE_TTL_MS;
     return cachedSettings;

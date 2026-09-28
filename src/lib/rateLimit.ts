@@ -72,7 +72,9 @@ export async function enforceRateLimit(options: RateLimitOptions): Promise<RateL
   const client = await getDbPool().connect();
 
   try {
-    await client.query(`DELETE FROM api_rate_limits WHERE expires_at < NOW()`);
+    if (Math.random() < 0.05) {
+      await client.query(`DELETE FROM api_rate_limits WHERE expires_at < NOW()`);
+    }
 
     const upsertResult = await client.query(
       `
