@@ -293,17 +293,18 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
     }
 
     resetIdleTimer();
+    const listenerOptions: AddEventListenerOptions = { capture: true, passive: true };
 
     if (!isTouchDevice) {
-      streamFrame.addEventListener('mousemove', resetIdleTimer);
+      streamFrame.addEventListener('mousemove', resetIdleTimer, listenerOptions);
     }
-    streamFrame.addEventListener('touchstart', resetIdleTimer);
+    streamFrame.addEventListener('touchstart', resetIdleTimer, listenerOptions);
 
     return () => {
       if (!isTouchDevice) {
-        streamFrame.removeEventListener('mousemove', resetIdleTimer);
+        streamFrame.removeEventListener('mousemove', resetIdleTimer, true);
       }
-      streamFrame.removeEventListener('touchstart', resetIdleTimer);
+      streamFrame.removeEventListener('touchstart', resetIdleTimer, true);
       clearIdleTimeout();
     };
   }, [isFullscreen, isTouchDevice, resetIdleTimer]);
