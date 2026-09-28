@@ -13,10 +13,13 @@ CREATE TABLE slots (
     current_bid NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
     seconds_purchased INTEGER NOT NULL DEFAULT 0,
     started_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     buyer_x_handle VARCHAR(255) NOT NULL DEFAULT 'anonymous',
     is_frozen BOOLEAN NOT NULL DEFAULT FALSE,
-    payment_intent_id VARCHAR(255) UNIQUE
+    payment_intent_id VARCHAR(255) UNIQUE,
+    purchase_price NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+    steal_price NUMERIC(10, 2) NOT NULL DEFAULT 0.00
 );
 
 -- HISTORICAL AUDIT TRAIL FOR DETHRONED AND SLASHED CARDS
@@ -44,5 +47,27 @@ CREATE TABLE system_reports (
 CREATE INDEX IF NOT EXISTS idx_slots_time_decay ON slots (is_frozen, expires_at DESC);
 
 -- SEED INITIAL BASELINE DEPLOYMENT RECORD
-INSERT INTO slots (current_url, display_name, current_bid, seconds_purchased, started_at, expires_at, buyer_x_handle)
-VALUES ('https://example.com', 'The Baseline Center Stage Available', 0.00, 315360000, NOW(), NOW() + INTERVAL '10 years', 'theonlytab');
+INSERT INTO slots (
+    current_url,
+    display_name,
+    current_bid,
+    seconds_purchased,
+    started_at,
+    created_at,
+    expires_at,
+    buyer_x_handle,
+    purchase_price,
+    steal_price
+)
+VALUES (
+    'https://example.com',
+    'The Baseline Center Stage Available',
+    0.00,
+    315360000,
+    NOW(),
+    NOW(),
+    NOW() + INTERVAL '10 years',
+    'theonlytab',
+    0.00,
+    0.00
+);
