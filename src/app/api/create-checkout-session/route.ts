@@ -3,6 +3,7 @@ import Stripe from 'stripe';
 import { getDbPool } from '../../../lib/db';
 import { buildTargetUrl, validateTargetUrl } from '../../../lib/urlValidation';
 import { checkUrlWithWebRisk } from '../../../lib/webRisk';
+import { calculateStealPrice, getBasePrice } from '../../../lib/pricing';
 
 export const dynamic = 'force-dynamic';
 
@@ -79,11 +80,11 @@ export async function POST(req: Request) {
         `SELECT id, current_bid, created_at FROM slots WHERE is_frozen = FALSE AND expires_at > NOW() LIMIT 1`
       );
 
-      let requiredStealPrice = 19.0;
+      let requiredStealPrice = getBasePrice(new Date());
 
       if (activeRes.rows && activeRes.rows.length > 0) {
         const activeSlot = activeRes.rows[0];
-        const currentPaid = parseFloat(activeSlot.current_bid || '0');
+        const currentPaid = Number.parseFloat(activeSlot.current_bid || '0');
 
         if (currentPaid > 0 && activeSlot.created_at) {
           const createdAt = new Date(activeSlot.created_at).getTime();
@@ -93,13 +94,10 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'FEED LOCKED: Protected for the first 12 minutes.' }, { status: 400 });
           }
 
-          const percentageIncrease = currentPaid * 1.25;
-          const flatIncrease = currentPaid + 10.0;
-          requiredStealPrice = Math.max(percentageIncrease, flatIncrease);
+          requiredStealPrice = calculateStealPrice(currentPaid, new Date());
         }
       }
 
-      // FIX: De overtollige code-overlapping is hieronder volledig weggesneden en sluitend gemaakt!
       const session = await stripe.checkout.sessions.create({
         line_items: [{
           price_data: {
