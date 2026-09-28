@@ -88,10 +88,12 @@ export async function POST(req: Request) {
 
         if (currentPaid > 0 && activeSlot.created_at) {
           const createdAt = new Date(activeSlot.created_at).getTime();
-          const minutesOnStage = (Date.now() - createdAt) / (1000 * 60);
+          if (!Number.isNaN(createdAt)) {
+            const minutesOnStage = (Date.now() - createdAt) / (1000 * 60);
 
-          if (!Number.isNaN(minutesOnStage) && minutesOnStage < 12) {
-            return NextResponse.json({ error: 'FEED LOCKED: Protected for the first 12 minutes.' }, { status: 400 });
+            if (!Number.isNaN(minutesOnStage) && minutesOnStage < 12) {
+              return NextResponse.json({ error: 'FEED LOCKED: Protected for the first 12 minutes.' }, { status: 400 });
+            }
           }
 
           requiredStealPrice = calculateStealPrice(currentPaid, new Date());
