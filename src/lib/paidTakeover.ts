@@ -1,4 +1,4 @@
-import { calculateStealPrice, getBasePrice, PricingSettings } from './pricing';
+import { getBasePrice, PricingSettings } from './pricing';
 
 export const TAKEOVER_LOCK_WINDOW_MINUTES = 12;
 export const TAKEOVER_DURATION_MINUTES = 90;
@@ -207,13 +207,30 @@ export function calculateQuotedStealPrice({
   const quotedMultiplier = stealMultiplierBasisPoints / 10_000;
 
   return toAmountCents(
-    calculateStealPrice(quotedBid, new Date(), {
-      basePrice: quotedBasePrice,
-      primeBasePrice: quotedBasePrice,
-      stealFlatIncrease: quotedFlatIncrease,
-      stealMultiplier: quotedMultiplier,
-      primeWindows: [],
-    })
+    Math.max(
+      quotedBid * quotedMultiplier,
+      quotedBid + quotedFlatIncrease,
+      quotedBasePrice
+    )
+  );
+}
+
+export function calculateStealPriceFromQuoteInputs({
+  currentBidCents,
+  quote,
+}: {
+  currentBidCents: number;
+  quote: Pick<
+    CheckoutQuoteContext,
+    'quotedBasePriceCents' | 'stealFlatIncreaseCents' | 'stealMultiplierBasisPoints'
+  >;
+}) {
+  return toAmountCents(
+    Math.max(
+      currentBidCents / 100 * (quote.stealMultiplierBasisPoints / 10_000),
+      currentBidCents / 100 + quote.stealFlatIncreaseCents / 100,
+      quote.quotedBasePriceCents / 100
+    )
   );
 }
 

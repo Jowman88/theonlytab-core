@@ -5,14 +5,13 @@ import { logger } from '../../../lib/logger';
 import {
   ACTIVE_SLOT_ORDER_BY_SQL,
   calculateQuotedStealPrice,
+  calculateStealPriceFromQuoteInputs,
   decideCheckoutFulfillment,
   normalizeBidAmount,
   parseCheckoutQuoteContext,
   TAKEOVER_DURATION_MINUTES,
   validateStripeCheckoutQuote,
 } from '../../../lib/paidTakeover';
-import { calculateStealPrice, getBasePrice } from '../../../lib/pricing';
-import { getServerPricingSettings } from '../../../lib/pricingConfig';
 import { validateTargetUrl } from '../../../lib/urlValidation';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
@@ -127,7 +126,9 @@ export async function POST(req: Request) {
   try {
     await dbClient.query('BEGIN');
     transactionOpen = true;
-    await dbClient.query(`SELECT pg_advisory_xact_lock(hashtext($1))`, ['stripe_checkout_fulfillment']);
+    await dbClient.query(`SELECT pg_advisory_xact_lock(hashtext($1))`, [
+      `stripe_checkout_fulfillment:${validatedQuote.quotedActiveSlotId || 'no-active-slot'}`,
+    ]);
 
     const duplicateRes = await dbClient.query(
       `
@@ -139,7 +140,6 @@ export async function POST(req: Request) {
       [session.id]
     );
 
-    const pricingSettings = await getServerPricingSettings();
     const activeRes = await dbClient.query(
       `
       SELECT id, current_url, display_name, current_bid, created_at, expires_at
@@ -162,9 +162,12 @@ export async function POST(req: Request) {
       }
       : null;
 
-    const currentExpectedPriceCents = currentActiveSlot?.currentBid && currentActiveSlot.currentBid > 0
-      ? Math.round(calculateStealPrice(currentActiveSlot.currentBid, new Date(), pricingSettings) * 100)
-      : Math.round(getBasePrice(new Date(), pricingSettings) * 100);
+    const currentExpectedPriceCents = currentActiveSlot
+      ? calculateStealPriceFromQuoteInputs({
+          currentBidCents: Math.round(currentActiveSlot.currentBid * 100),
+          quote: validatedQuote,
+        })
+      : validatedQuote.quotedBasePriceCents;
 
     const decision = decideCheckoutFulfillment({
       existingSessionCreatedAt: duplicateRes.rows?.[0]?.created_at || null,
