@@ -48,8 +48,7 @@ export async function getServerPricingSettings(): Promise<PricingSettings> {
         steal_flat_increase,
         prime_windows_json
       FROM pricing_config
-      ORDER BY id ASC
-      LIMIT 1
+      WHERE id = 1
       `
     );
 

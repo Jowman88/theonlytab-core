@@ -129,7 +129,7 @@ async function resolvePublicDestination(hostname) {
   try {
     const addresses = await dnsLookup(normalizedHost, { all: true, verbatim: true });
     const allowed = addresses.length > 0 && addresses.every((entry) => !isPrivateOrUnsafeIpAddress(entry.address));
-    hostResolutionCache.set(cacheKey, { allowed, expiresAt: Date.now() + 60_000 });
+    hostResolutionCache.set(cacheKey, { allowed, expiresAt: Date.now() + (allowed ? 0 : 15_000) });
     return allowed;
   } catch (error) {
     hostResolutionCache.set(cacheKey, { allowed: false, expiresAt: Date.now() + 15_000 });
@@ -137,10 +137,33 @@ async function resolvePublicDestination(hostname) {
   }
 }
 
-async function isNavigationAllowed(rawUrl) {
+function isHttpProtocol(rawUrl) {
   try {
     const parsed = new URL(rawUrl);
-    if (!['http:', 'https:'].includes(parsed.protocol)) return false;
+    return ['http:', 'https:'].includes(parsed.protocol);
+  } catch {
+    return false;
+  }
+}
+
+function hasUnsafeLiteralDestination(rawUrl) {
+  try {
+    const parsed = new URL(rawUrl);
+    if (!['http:', 'https:'].includes(parsed.protocol)) return true;
+    const hostname = parsed.hostname.toLowerCase();
+    if (blockedHostnames.has(hostname) || hostname.endsWith('.localhost') || hostname.endsWith('.local')) {
+      return true;
+    }
+    return isPrivateOrUnsafeIpAddress(hostname);
+  } catch {
+    return true;
+  }
+}
+
+async function isNavigationAllowed(rawUrl) {
+  if (!isHttpProtocol(rawUrl) || hasUnsafeLiteralDestination(rawUrl)) return false;
+  try {
+    const parsed = new URL(rawUrl);
     return resolvePublicDestination(parsed.hostname);
   } catch {
     return false;
@@ -203,11 +226,21 @@ async function initPuppeteer() {
     await page.setRequestInterception(true);
     page.on('request', async (request) => {
       const requestUrl = request.url();
-      const allowed = await isNavigationAllowed(requestUrl);
-      if (!allowed) {
+      const isNavigationRequest = request.isNavigationRequest() || request.resourceType() === 'document';
+
+      if (!isHttpProtocol(requestUrl) || hasUnsafeLiteralDestination(requestUrl)) {
         await request.abort('blockedbyclient');
         return;
       }
+
+      if (isNavigationRequest) {
+        const allowed = await isNavigationAllowed(requestUrl);
+        if (!allowed) {
+          await request.abort('blockedbyclient');
+          return;
+        }
+      }
+
       await request.continue();
     });
 
