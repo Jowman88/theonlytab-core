@@ -90,8 +90,7 @@ export async function POST(req: Request) {
           const createdAt = new Date(activeSlot.created_at).getTime();
           if (!Number.isNaN(createdAt)) {
             const minutesOnStage = (Date.now() - createdAt) / (1000 * 60);
-
-            if (!Number.isNaN(minutesOnStage) && minutesOnStage < 12) {
+            if (minutesOnStage < 12) {
               return NextResponse.json({ error: 'FEED LOCKED: Protected for the first 12 minutes.' }, { status: 400 });
             }
           }

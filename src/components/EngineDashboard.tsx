@@ -114,7 +114,10 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   useEffect(() => {
     const timer = setInterval(() => {
       setLockTimer(prev => Math.max(0, prev - 1));
-      setStageTimer(prev => (slot?.current_bid && Number.parseFloat(slot.current_bid) > 0 ? prev + 1 : 0));
+      setStageTimer(prev => {
+        const currentBid = Number.parseFloat(slot?.current_bid || '0');
+        return currentBid > 0 ? prev + 1 : 0;
+      });
     }, 1000);
     return () => clearInterval(timer);
   }, [slot]);
