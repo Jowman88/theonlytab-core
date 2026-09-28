@@ -72,3 +72,12 @@
     transform: translate3d(-50%, 0, 0);
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-fade-in,
+  .dashboard-slide-up,
+  .dashboard-pulse-alert,
+  .dashboard-marquee-track {
+    animation: none !important;
+  }
+}

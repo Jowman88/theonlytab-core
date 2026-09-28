@@ -252,6 +252,11 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       return false;
     }
 
+    if (!validatedFields.displayName) {
+      setFormError('Display name must be at least 2 characters or left blank.');
+      return false;
+    }
+
     if (!legalAgreed) {
       setFormError('You must accept the takeover rules before continuing.');
       return false;
