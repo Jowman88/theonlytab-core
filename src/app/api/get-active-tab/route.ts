@@ -3,6 +3,8 @@ import { getDbPool } from '../../../lib/db';
 
 export const dynamic = 'force-dynamic';
 
+const HOUSE_DEFAULT_URL = 'https://theonlytab.io/house-default';
+
 export async function GET() {
   const client = await getDbPool().connect();
 
@@ -42,7 +44,7 @@ export async function GET() {
     return NextResponse.json({
       data: {
         id: 'house-default-id',
-        currentUrl: 'https://theonlytab.io',
+        currentUrl: HOUSE_DEFAULT_URL,
         displayName: 'The Only Tab HQ',
         current_bid: '0.00',
         stealPrice: '19.00',
@@ -58,7 +60,7 @@ export async function GET() {
         error: err?.message || 'Unable to load active tab',
         data: {
           id: 'house-default-id',
-          currentUrl: 'https://theonlytab.io',
+          currentUrl: HOUSE_DEFAULT_URL,
           displayName: 'The Only Tab HQ',
           current_bid: '0.00',
           stealPrice: '19.00',
