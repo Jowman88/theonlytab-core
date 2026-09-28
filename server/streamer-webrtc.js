@@ -23,7 +23,7 @@ app.get('/', (req, res) => {
 let browser = null;
 let page = null;
 let currentUrlInStream = '';
-const idleUrl = 'https://theonlytab.io';
+const idleUrl = 'https://theonlytab.io/house-default';
 
 async function initPuppeteer() {
   try {
