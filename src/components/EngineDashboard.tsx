@@ -8,6 +8,7 @@ import {
   Copy,
   ExternalLink,
   Loader2,
+  Maximize2,
   ShieldCheck,
   Sparkles,
   Wifi,
@@ -66,6 +67,7 @@ const isValidTargetUrl = (value: string) => {
 
 export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: string }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const streamFrameRef = useRef<HTMLDivElement | null>(null);
   const stealStageButtonRef = useRef<HTMLButtonElement | null>(null);
   const embedDialogRef = useRef<HTMLDivElement | null>(null);
   const confirmDialogRef = useRef<HTMLDivElement | null>(null);
@@ -90,6 +92,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const [touchedFields, setTouchedFields] = useState<Record<FieldName, boolean>>(initialTouchedState);
   const [statusNotice, setStatusNotice] = useState<Notice>(null);
   const [copyFeedback, setCopyFeedback] = useState('Copy code');
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const normalizedTargetUrl = targetUrl.trim().startsWith('http') ? targetUrl.trim() : `https://${targetUrl.trim()}`;
   const validatedFields = {
@@ -236,6 +239,15 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   }, [statusNotice]);
 
   useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(Boolean(streamFrameRef.current?.contains(document.fullscreenElement)));
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  useEffect(() => {
     if (!isEmbedOpen && !isConfirmOpen) {
       if (lastFocusedElementRef.current) {
         lastFocusedElementRef.current.focus();
@@ -280,6 +292,22 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const resetFormFeedback = () => {
     setFormError('');
     setStatusNotice(null);
+  };
+
+  const toggleFullscreen = async () => {
+    if (!streamFrameRef.current) return;
+
+    try {
+      if (streamFrameRef.current.contains(document.fullscreenElement)) {
+        await document.exitFullscreen();
+        return;
+      }
+
+      await streamFrameRef.current.requestFullscreen();
+    } catch (error) {
+      console.error('Fullscreen request failed:', error);
+      setStatusNotice({ type: 'error', message: 'Fullscreen mode is unavailable in this browser right now.' });
+    }
   };
 
   const validateFormBeforeCheckout = () => {
@@ -409,6 +437,9 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   }[socketStatus];
 
   const ConnectionIcon = connectionStatusMeta.Icon;
+  const stageUrl = stripProtocol(slot?.currentUrl) || 'SYSTEM_IDLE';
+  const currentStake = slot?.current_bid || '0.00';
+  const stageOwner = slot?.displayName || 'SYSTEM IDLE';
 
   return (
     <div className="fixed inset-0 h-screen w-screen overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.15),_transparent_30%),radial-gradient(circle_at_right,_rgba(251,191,36,0.08),_transparent_28%),linear-gradient(180deg,_#08090d_0%,_#050507_100%)] px-3 py-3 text-neutral-100 sm:px-4 sm:py-4 lg:px-6 lg:py-5">
@@ -443,9 +474,9 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       )}
 
       <div className="relative z-10 flex h-full flex-col gap-4 lg:gap-5">
-        <header className="rounded-3xl border border-white/10 bg-[linear-gradient(135deg,_rgba(18,22,29,0.95),_rgba(9,11,16,0.92))] px-4 py-4 shadow-[0_25px_80px_rgba(0,0,0,0.35)] ring-1 ring-white/5 sm:px-5 sm:py-5 lg:px-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="space-y-2">
+        <header className="rounded-3xl border border-white/10 bg-[linear-gradient(135deg,_rgba(18,22,29,0.95),_rgba(9,11,16,0.92))] px-4 py-4 shadow-[0_25px_80px_rgba(0,0,0,0.35)] ring-1 ring-white/5 sm:px-5 lg:px-6">
+          <div className="flex items-center justify-between gap-4">
+            <div>
               <div className="flex flex-wrap items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.32em] text-emerald-300/85">
                 <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1">
                   <Sparkles className="h-3.5 w-3.5" />
@@ -453,24 +484,9 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                 </span>
                 <span className="text-white/40">THE ONLY TAB</span>
               </div>
-              <div>
-                <h1 className="text-2xl font-black tracking-tight text-white sm:text-3xl">Own the stage with better visibility and faster feedback.</h1>
-                <p className="mt-2 max-w-3xl text-sm leading-6 text-neutral-300 sm:text-base">
-                  Monitor the live stream, confirm your takeover details, and launch a secure checkout without losing sight of the board.
-                </p>
-              </div>
             </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <div
-                className={`inline-flex items-center gap-2 self-start rounded-full border px-4 py-2 text-sm font-semibold ${connectionStatusMeta.badge}`}
-                aria-label={`Stream connection status: ${connectionStatusMeta.label}`}
-              >
-                <span className={`h-2.5 w-2.5 rounded-full ${connectionStatusMeta.accent} ${socketStatus !== 'disconnected' ? 'animate-pulse' : ''}`} />
-                <ConnectionIcon className="h-4 w-4" />
-                {connectionStatusMeta.label}
-              </div>
-
+            <div className="flex items-center">
               <button
                 type="button"
                 onClick={() => setIsFormOpen((current) => !current)}
@@ -676,44 +692,61 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
           )}
 
           <section className="flex min-h-0 flex-1 flex-col gap-4 lg:gap-5">
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-4 shadow-[0_16px_50px_rgba(0,0,0,0.25)] ring-1 ring-white/5 sm:p-5">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-neutral-400">Now on stage</p>
-                <p className="mt-3 text-base font-bold leading-7 text-white sm:text-lg">{stripProtocol(slot?.currentUrl) || 'SYSTEM_IDLE'}</p>
-              </div>
-
-              <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-4 shadow-[0_16px_50px_rgba(0,0,0,0.25)] ring-1 ring-white/5 sm:p-5">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-neutral-400">Current stake</p>
-                <div className="mt-3 flex items-end justify-between gap-3">
-                  <span className="text-2xl font-black text-white sm:text-3xl">\${slot?.current_bid || '0.00'}</span>
-                  <span className="rounded-full border border-amber-400/20 bg-amber-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-amber-200">Next \${stealPrice}</span>
-                </div>
-              </div>
-
-              <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-4 shadow-[0_16px_50px_rgba(0,0,0,0.25)] ring-1 ring-white/5 sm:p-5">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-neutral-400">Connection</p>
-                <div
-                  className={`mt-3 inline-flex items-center gap-3 rounded-full border px-3 py-2 text-sm font-semibold ${connectionStatusMeta.badge}`}
-                  aria-label={`Canvas connection is currently ${connectionStatusMeta.label}`}
-                >
-                  <span className={`h-2.5 w-2.5 rounded-full ${connectionStatusMeta.accent} ${socketStatus !== 'disconnected' ? 'animate-pulse' : ''}`} />
-                  {connectionStatusMeta.label}
-                </div>
-              </div>
-
-              <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-4 shadow-[0_16px_50px_rgba(0,0,0,0.25)] ring-1 ring-white/5 sm:p-5">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-neutral-400">Lock timer</p>
-                <div className={`mt-3 inline-flex items-center gap-3 text-lg font-black sm:text-2xl ${isLocked ? 'text-rose-300 dashboard-pulse-alert' : 'text-emerald-300'}`}>
-                  <Clock3 className="h-5 w-5 sm:h-6 sm:w-6" />
-                  <span>{isLocked ? formatClock(lockTimer) : 'OPEN'}</span>
-                </div>
-              </div>
+            <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] font-medium text-neutral-300 shadow-[0_16px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/5 sm:gap-3 sm:px-4">
+              <span className="truncate">
+                <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Stage</span>{' '}
+                <span className="text-white">{stageUrl}</span>
+              </span>
+              <span className="text-white/20">|</span>
+              <span>
+                <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Stake</span>{' '}
+                <span className="text-white">${currentStake}</span>
+              </span>
+              <span className="text-white/20">|</span>
+              <span>
+                <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Next</span>{' '}
+                <span className="text-amber-200">${stealPrice}</span>
+              </span>
+              <span className="text-white/20">|</span>
+              <span className="inline-flex items-center gap-1.5">
+                <Clock3 className={`h-3.5 w-3.5 ${isLocked ? 'text-rose-300' : 'text-emerald-300'}`} />
+                <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Lock</span>{' '}
+                <span className={isLocked ? 'text-rose-200' : 'text-emerald-200'}>{isLocked ? formatClock(lockTimer) : 'OPEN'}</span>
+              </span>
+              <span className="text-white/20">|</span>
+              <span
+                className="inline-flex items-center gap-1.5"
+                aria-label={`Canvas connection is currently ${connectionStatusMeta.label}`}
+              >
+                <span className={`h-2 w-2 rounded-full ${connectionStatusMeta.accent} ${socketStatus !== 'disconnected' ? 'animate-pulse' : ''}`} />
+                <ConnectionIcon className="h-3.5 w-3.5" />
+                <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Link</span>{' '}
+                <span className="text-white">{connectionStatusMeta.label}</span>
+              </span>
             </div>
 
-            <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(0,1fr)_17rem] lg:gap-5">
-              <div className="relative flex min-h-[320px] flex-1 overflow-hidden rounded-[1.75rem] border border-white/10 bg-[linear-gradient(180deg,_rgba(15,18,25,0.98),_rgba(8,9,13,0.98))] p-3 shadow-[0_30px_100px_rgba(0,0,0,0.45)] ring-1 ring-white/5 sm:min-h-[380px] sm:p-4">
+            <div className="flex min-h-0 flex-1 flex-col gap-3 sm:gap-4">
+              <div
+                ref={streamFrameRef}
+                className={`relative flex min-h-[500px] flex-1 overflow-hidden border border-white/10 bg-[linear-gradient(180deg,_rgba(15,18,25,0.98),_rgba(8,9,13,0.98))] shadow-[0_30px_100px_rgba(0,0,0,0.45)] ring-1 ring-white/5 ${isFullscreen ? 'rounded-none p-0' : 'rounded-[1.75rem] p-3 sm:p-4'}`}
+              >
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.06),_transparent_28%)]" aria-hidden="true" />
-                <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-[1.35rem] border border-white/10 bg-[#040507] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.03),0_20px_70px_rgba(0,0,0,0.55)]">
+                <button
+                  type="button"
+                  onClick={toggleFullscreen}
+                  className="absolute right-4 top-4 z-10 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/45 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white/90 backdrop-blur transition hover:border-white/25 hover:bg-black/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+                  aria-label={isFullscreen ? 'Exit fullscreen stream' : 'Enter fullscreen stream'}
+                  aria-pressed={isFullscreen}
+                >
+                  <Maximize2 className="h-4 w-4" />
+                  <span>{isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}</span>
+                </button>
+                {isFullscreen && (
+                  <div className="pointer-events-none absolute bottom-4 left-1/2 z-10 -translate-x-1/2 rounded-full border border-white/10 bg-black/45 px-3 py-1.5 text-[11px] font-medium text-white/80 backdrop-blur">
+                    Press Esc or tap Exit fullscreen
+                  </div>
+                )}
+                <div className={`relative flex h-full w-full items-center justify-center overflow-hidden border border-white/10 bg-[#040507] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.03),0_20px_70px_rgba(0,0,0,0.55)] ${isFullscreen ? 'rounded-none' : 'rounded-[1.35rem]'}`}>
                   <canvas ref={canvasRef} className={`h-full w-full object-contain transition duration-500 ${!hasFrames ? 'opacity-0' : 'opacity-100'}`} />
 
                   {!hasFrames && socketStatus !== 'disconnected' && (
@@ -754,17 +787,15 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                 </div>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
-                <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 shadow-[0_16px_50px_rgba(0,0,0,0.25)] ring-1 ring-white/5">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-neutral-400">Stage owner</p>
-                  <p className="mt-3 text-xl font-black text-white">{slot?.displayName || 'SYSTEM IDLE'}</p>
-                  <p className="mt-2 text-sm leading-6 text-neutral-400">Who currently controls the screen and how long they have held it.</p>
+              <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm shadow-[0_16px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/5">
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-500">Stage owner</p>
+                  <p className="truncate text-sm font-semibold text-white sm:text-base">{stageOwner}</p>
                 </div>
-
-                <div className="rounded-3xl border border-white/10 bg-[linear-gradient(180deg,_rgba(16,185,129,0.08),_rgba(255,255,255,0.02))] p-5 shadow-[0_16px_50px_rgba(0,0,0,0.25)] ring-1 ring-white/5">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-200/75">Time on stage</p>
-                  <p className="mt-3 text-3xl font-black text-white">{formatClock(stageTimer)}</p>
-                  <p className="mt-2 text-sm leading-6 text-neutral-300">Live counter for the current winning session.</p>
+                <span className="hidden text-white/20 sm:inline">|</span>
+                <div className="min-w-[9rem]">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-500">Time on stage</p>
+                  <p className="text-sm font-semibold text-emerald-200 sm:text-base">{formatClock(stageTimer)}</p>
                 </div>
               </div>
             </div>
