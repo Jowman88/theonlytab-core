@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
@@ -664,7 +665,14 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                     <span className="space-y-1">
                       <span className="block text-sm font-semibold text-white">Accept the non-refundable takeover rules</span>
                       <span className="block text-xs leading-5 text-neutral-400">
-                        This confirms you understand the takeover fee is final once checkout starts and that the selected destination must comply with your platform rules.
+                        This confirms you understand the takeover fee is final once checkout starts and that the selected destination must comply with the{' '}
+                        <Link
+                          href="/platform-rules"
+                          className="font-semibold text-emerald-300 underline decoration-emerald-300/60 underline-offset-2 transition hover:text-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#090b10]"
+                        >
+                          platform rules
+                        </Link>
+                        .
                       </span>
                     </span>
                   </label>
