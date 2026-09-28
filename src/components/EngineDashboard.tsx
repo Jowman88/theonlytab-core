@@ -27,28 +27,33 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const [legalAgreed, setLegalAgreed] = useState(false);
 
   useEffect(() => {
-    const socket = io('https://theonlytab-server.onrender.com', {
-  path: '/socket.io/',
-  transports: ['websocket', 'polling'],
-  secure: true,
-  rejectUnauthorized: false
-});
+  const socket = io('https://theonlytab-server.onrender.com', {
+    path: '/socket.io/',
+    transports: ['polling', 'websocket'],  // polling first as fallback
+    secure: true,
+    rejectUnauthorized: false,
+    reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    reconnectionAttempts: 10
+  });
 
-    socket.on('v-frame', (base64: string) => {
-      if (!canvasRef.current) return;
-      const ctx = canvasRef.current.getContext('2d');
-      if (!ctx) return;
-      const img = new Image();
-      img.onload = () => {
-        setHasFrames(true);
-        canvasRef.current!.width = img.width;
-        canvasRef.current!.height = img.height;
-        ctx.drawImage(img, 0, 0);
-      };
-      img.src = `data:image/jpeg;base64,${base64}`;
-    });
-    return () => { socket.disconnect(); };
-  }, []);
+  socket.on('connect', () => {
+    console.log('Connected to stream server');
+  });
+
+  socket.on('v-frame', (frameData) => {
+    // Handle frame display here
+  });
+
+  socket.on('connect_error', (error) => {
+    console.error('Connection error:', error);
+  });
+
+  return () => {
+    socket.disconnect();
+  };
+}, []);
 
   useEffect(() => {
     // 🛡️ REVENGE LOOP HOOK: Automatically sliding open the embed configurations ONLY for verified checkout redirect links
