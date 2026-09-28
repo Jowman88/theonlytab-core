@@ -567,32 +567,16 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
         />
       )}
 
-      <div className="relative z-10 flex h-full flex-col gap-4 lg:gap-5">
-        <header className="rounded-3xl border border-white/10 bg-[linear-gradient(135deg,_rgba(18,22,29,0.95),_rgba(9,11,16,0.92))] px-4 py-4 shadow-[0_25px_80px_rgba(0,0,0,0.35)] ring-1 ring-white/5 sm:px-5 lg:px-6">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <div className="flex flex-wrap items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.32em] text-emerald-300/85">
-                <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1">
-                  <Sparkles className="h-3.5 w-3.5" />
-                  Live takeover control room
-                </span>
-                <span className="text-white/40">THE ONLY TAB</span>
-              </div>
-            </div>
+      <Link
+        href="/"
+        aria-label="Return to The Only Tab dashboard"
+        className="group absolute left-4 top-4 z-20 hidden items-center gap-2 rounded-full px-2 py-1 text-[10px] font-black uppercase tracking-[0.28em] text-white/45 transition hover:text-emerald-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 sm:flex"
+      >
+        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.8)] transition duration-200 group-hover:shadow-[0_0_16px_rgba(52,211,153,0.95)]" />
+        <span>THE ONLY TAB</span>
+      </Link>
 
-            <div className="flex items-center">
-              <button
-                type="button"
-                onClick={() => setIsFormOpen((current) => !current)}
-                ref={stealStageButtonRef}
-                className="group inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-300/25 bg-[linear-gradient(135deg,_rgba(52,211,153,0.95),_rgba(6,182,212,0.88))] px-5 py-3 text-sm font-black uppercase tracking-[0.22em] text-slate-950 shadow-[0_0_30px_rgba(16,185,129,0.35)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_40px_rgba(16,185,129,0.5)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07080c] sm:px-6 sm:py-3.5 sm:text-base"
-              >
-                <Zap className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
-                STEAL STAGE
-              </button>
-            </div>
-          </div>
-        </header>
+      <div className="relative z-10 flex h-full flex-col gap-4 lg:gap-5">
 
         <div className="relative flex min-h-0 flex-1 gap-4 lg:gap-5">
           {isFormOpen && (
@@ -894,7 +878,17 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                   <p className="truncate text-sm font-semibold text-white sm:text-base">{stageOwner}</p>
                 </div>
                 <span className="hidden text-white/20 sm:inline">|</span>
-                <div className="min-w-[9rem]">
+                <button
+                  type="button"
+                  onClick={() => setIsFormOpen((current) => !current)}
+                  ref={stealStageButtonRef}
+                  className="group shrink-0 inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-300/25 bg-[linear-gradient(135deg,_rgba(52,211,153,0.95),_rgba(6,182,212,0.88))] px-5 py-2.5 text-xs font-black uppercase tracking-[0.2em] text-slate-950 shadow-[0_0_30px_rgba(16,185,129,0.35)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_40px_rgba(16,185,129,0.5)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07080c]"
+                >
+                  <Zap className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+                  STEAL STAGE
+                </button>
+                <span className="hidden text-white/20 sm:inline">|</span>
+                <div className="min-w-0 sm:min-w-[9rem]">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-500">Time on stage</p>
                   <p className="text-sm font-semibold text-emerald-200 sm:text-base">{formatClock(stageTimer)}</p>
                 </div>
