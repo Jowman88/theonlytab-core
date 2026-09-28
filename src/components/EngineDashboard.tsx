@@ -778,6 +778,14 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
 
           <section className="flex min-h-0 flex-1 flex-col gap-4 lg:gap-5">
             <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] font-medium text-neutral-300 shadow-[0_16px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/5 sm:gap-3 sm:px-4">
+              <Link
+                href="/"
+                aria-label="Return to The Only Tab dashboard"
+                className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-white/55 transition hover:text-emerald-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 sm:hidden"
+              >
+                Home
+              </Link>
+              <span className="text-white/20 sm:hidden">|</span>
               <span className="truncate">
                 <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Stage</span>{' '}
                 <span className="text-white">{stageUrl}</span>
