@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDbPool } from '../../../lib/db';
+import { calculateStealPrice, getBasePrice } from '../../../lib/pricing';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,10 +22,8 @@ export async function GET() {
 
     if (activeRes.rows && activeRes.rows.length > 0) {
       const row = activeRes.rows[0];
-      const currentPaid = parseFloat(row.current_bid);
-      const percentageIncrease = currentPaid * 1.25;
-      const flatIncrease = currentPaid + 10.0;
-      const nextStealPrice = Math.max(percentageIncrease, flatIncrease);
+      const currentPaid = Number.parseFloat(row.current_bid || '0');
+      const nextStealPrice = calculateStealPrice(currentPaid, new Date());
 
       const secondsOnStage = Math.floor((Date.now() - new Date(row.createdAt).getTime()) / 1000);
       const secondsLeftInLock = Math.max(0, (12 * 60) - secondsOnStage);
@@ -47,7 +46,7 @@ export async function GET() {
         currentUrl: HOUSE_DEFAULT_URL,
         displayName: 'The Only Tab HQ',
         current_bid: '0.00',
-        stealPrice: '19.00',
+        stealPrice: getBasePrice(new Date()).toFixed(2),
         secondsOnStage: 0,
         secondsLeftInLock: 0,
         isLocked: false,
@@ -63,7 +62,7 @@ export async function GET() {
           currentUrl: HOUSE_DEFAULT_URL,
           displayName: 'The Only Tab HQ',
           current_bid: '0.00',
-          stealPrice: '19.00',
+          stealPrice: getBasePrice(new Date()).toFixed(2),
           secondsOnStage: 0,
           secondsLeftInLock: 0,
           isLocked: false,
