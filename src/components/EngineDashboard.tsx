@@ -179,19 +179,8 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       query.removeListener(listener);
     };
 
-    let resizeObserver: ResizeObserver | null = null;
-    if (typeof ResizeObserver !== 'undefined') {
-      resizeObserver = new ResizeObserver(() => {
-        updateInset();
-      });
-
-      resizeObserver.observe(brandMark);
-    }
-
-    addMediaQueryListener(desktopBreakpoint, updateInset);
-
     let resizeFrame: number | null = null;
-    const handleResize = () => {
+    const scheduleInsetUpdate = () => {
       if (resizeFrame !== null) return;
 
       resizeFrame = window.requestAnimationFrame(() => {
@@ -200,15 +189,23 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       });
     };
 
-    window.addEventListener('resize', handleResize);
+    let resizeObserver: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(scheduleInsetUpdate);
+
+      resizeObserver.observe(brandMark);
+    }
+
+    addMediaQueryListener(desktopBreakpoint, scheduleInsetUpdate);
+    window.addEventListener('resize', scheduleInsetUpdate);
 
     return () => {
       if (resizeFrame !== null) {
         window.cancelAnimationFrame(resizeFrame);
       }
-      removeMediaQueryListener(desktopBreakpoint, updateInset);
+      removeMediaQueryListener(desktopBreakpoint, scheduleInsetUpdate);
       resizeObserver?.disconnect();
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('resize', scheduleInsetUpdate);
     };
   }, []);
 
