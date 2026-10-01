@@ -59,14 +59,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ received: true });
   }
 
-  if (session.currency !== 'usd' || session.amount_total == null || session.amount_total <= 0) {
+  if (session.amount_total == null || session.amount_total <= 0) {
     return NextResponse.json({ error: 'Invalid Stripe session amount.' }, { status: 400 });
   }
 
   const targetUrl = session.metadata?.targeturl || session.metadata?.targetUrl;
   const displayName =
     session.metadata?.displayname || session.metadata?.displayName || 'Anonymous Takeover';
-  const rawBid = (session.amount_total / 100).toFixed(2);
   const quote = parseCheckoutQuoteContext(session.metadata || undefined);
 
   const expiresAt =
@@ -84,7 +83,7 @@ export async function POST(req: Request) {
   }
 
   const quoteValidationError = validateStripeCheckoutQuote({
-    sessionAmountTotal: session.amount_total,
+    sessionAmountSubtotal: session.amount_subtotal,
     sessionCurrency: session.currency,
     quote,
   });
@@ -94,12 +93,14 @@ export async function POST(req: Request) {
       stripeSessionId: session.id,
       reason: quoteValidationError,
       currency: session.currency,
+      amountSubtotal: session.amount_subtotal,
       amountTotal: session.amount_total,
     });
     return NextResponse.json({ error: quoteValidationError }, { status: 400 });
   }
 
   const validatedQuote = quote!;
+  const rawBid = (validatedQuote.quotedStealPriceCents / 100).toFixed(2);
 
   if (calculateQuotedStealPrice(validatedQuote) !== validatedQuote.quotedStealPriceCents) {
     logger.warn('Stripe webhook rejected inconsistent quote pricing metadata', {
@@ -115,6 +116,7 @@ export async function POST(req: Request) {
     logger.warn('Stripe webhook rejected invalid bid amount', {
       route: 'stripe-webhook',
       stripeSessionId: session.id,
+      amountSubtotal: session.amount_subtotal,
       amountTotal: session.amount_total,
     });
     return NextResponse.json({ error: 'Invalid bid amount in Stripe session.' }, { status: 400 });
@@ -255,6 +257,8 @@ export async function POST(req: Request) {
       activeSlotId: insertResult.rows[0].id,
       replacedSlotId: currentActiveSlot?.id || null,
       bidAmount: validNumericBid.toFixed(2),
+      amountSubtotal: session.amount_subtotal,
+      amountTotal: session.amount_total,
       targetUrl,
     });
 
