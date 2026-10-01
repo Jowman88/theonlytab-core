@@ -873,7 +873,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
 
           <section className="flex min-h-0 flex-1 flex-col gap-4 lg:gap-5">
             <div
-              className="flex flex-wrap items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] font-medium text-neutral-300 shadow-[0_16px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/5 sm:gap-3 sm:px-4 sm:pl-28"
+              className="flex flex-nowrap items-center gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] font-medium text-neutral-300 shadow-[0_16px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/5 sm:gap-3 sm:px-4 sm:pl-28 lg:flex-wrap lg:overflow-x-visible lg:whitespace-normal"
               style={{ paddingLeft: isStatusBarDesktop && statusBarLeftInset > 0 ? `${statusBarLeftInset}px` : undefined }}
             >
               <Link
