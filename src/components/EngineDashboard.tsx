@@ -8,6 +8,7 @@ import {
   Clock3,
   Copy,
   ExternalLink,
+  Flag,
   Loader2,
   Maximize2,
   Share2,
@@ -100,6 +101,8 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const [formError, setFormError] = useState('');
   const [touchedFields, setTouchedFields] = useState<Record<FieldName, boolean>>(initialTouchedState);
   const [statusNotice, setStatusNotice] = useState<Notice>(null);
+  const [reportedSlotIds, setReportedSlotIds] = useState<string[]>([]);
+  const [isReporting, setIsReporting] = useState(false);
   const [copyFeedback, setCopyFeedback] = useState('Copy code');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isCursorIdle, setIsCursorIdle] = useState(false);
@@ -107,6 +110,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const [isStatusBarDesktop, setIsStatusBarDesktop] = useState(false);
   const [statusBarLeftInset, setStatusBarLeftInset] = useState(0);
   const idleTimeoutRef = useRef<number | null>(null);
+  const reportingSlotIdsRef = useRef(new Set<string>());
   const hasLoggedFrameRef = useRef(false);
 
   const normalizedTargetUrl = targetUrl.trim().startsWith('http') ? targetUrl.trim() : `https://${targetUrl.trim()}`;
@@ -406,6 +410,21 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   }, [statusNotice]);
 
   useEffect(() => {
+    const reportedIds: string[] = [];
+    try {
+      for (let index = 0; index < window.sessionStorage.length; index += 1) {
+        const key = window.sessionStorage.key(index);
+        if (key?.startsWith('theonlytab:reported-stage:')) {
+          reportedIds.push(key.slice('theonlytab:reported-stage:'.length));
+        }
+      }
+    } catch {
+      return;
+    }
+    setReportedSlotIds(reportedIds);
+  }, []);
+
+  useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(Boolean(streamFrameRef.current?.contains(document.fullscreenElement)));
     };
@@ -534,6 +553,53 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') return;
       setStatusNotice({ type: 'error', message: 'The share sheet could not be opened. Please try another share button.' });
+    }
+  };
+
+  const handleReportStage = async () => {
+    const slotId = slot?.id;
+    if (!slotId || slotId === 'house-default-id' || reportedSlotIds.includes(slotId) || reportingSlotIdsRef.current.has(slotId)) {
+      return;
+    }
+
+    try {
+      if (window.sessionStorage.getItem(`theonlytab:reported-stage:${slotId}`)) {
+        setReportedSlotIds((current) => current.includes(slotId) ? current : [...current, slotId]);
+        return;
+      }
+    } catch {
+      // Continue with the in-memory session guard when storage is unavailable.
+    }
+
+    reportingSlotIdsRef.current.add(slotId);
+    setIsReporting(true);
+    try {
+      const response = await fetch('/api/report-tab', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slotId }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Unable to report this stage.');
+      }
+
+      try {
+        window.sessionStorage.setItem(`theonlytab:reported-stage:${slotId}`, '1');
+      } catch {
+        // Keep the report disabled for this page if session storage is unavailable.
+      }
+      setReportedSlotIds((current) => [...current, slotId]);
+      setStatusNotice({ type: 'success', message: 'Reported. Thank you for keeping the stage clean.' });
+    } catch (error) {
+      setStatusNotice({
+        type: 'error',
+        message: error instanceof Error ? error.message : 'Unable to report this stage.',
+      });
+    } finally {
+      reportingSlotIdsRef.current.delete(slotId);
+      setIsReporting(false);
     }
   };
 
@@ -700,7 +766,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const stageOwner = slot?.displayName || 'SYSTEM IDLE';
 
   return (
-    <div className="fixed inset-0 h-[100dvh] w-screen overflow-x-hidden overflow-y-auto bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.15),_transparent_30%),radial-gradient(circle_at_right,_rgba(251,191,36,0.08),_transparent_28%),linear-gradient(180deg,_#08090d_0%,_#050507_100%)] px-3 py-3 text-neutral-100 sm:px-4 sm:py-4 lg:h-screen lg:overflow-hidden lg:px-6 lg:py-5">
+    <div className="fixed inset-0 h-[100dvh] w-screen overflow-x-hidden overflow-y-auto bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.15),_transparent_30%),radial-gradient(circle_at_right,_rgba(251,191,36,0.08),_transparent_28%),linear-gradient(180deg,_#08090d_0%,_#050507_100%)] px-3 py-3 text-neutral-100 sm:px-4 sm:py-4 lg:h-screen lg:overflow-y-auto lg:px-6 lg:py-5">
       <div className="dashboard-grid pointer-events-none absolute inset-0 opacity-40" aria-hidden="true" />
 
       {statusNotice && (
@@ -968,7 +1034,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
             <div className="flex min-h-0 flex-1 flex-col gap-3 sm:gap-4">
               <div
                 ref={streamFrameRef}
-                className={`relative flex min-h-[300px] flex-1 overflow-hidden border border-white/10 bg-[linear-gradient(180deg,_rgba(15,18,25,0.98),_rgba(8,9,13,0.98))] shadow-[0_30px_100px_rgba(0,0,0,0.45)] ring-1 ring-white/5 lg:min-h-[500px] ${isFullscreen ? 'rounded-none p-0' : 'rounded-[1.75rem] p-3 sm:p-4'} ${isFullscreen && isCursorIdle && !isTouchDevice ? 'cursor-none' : ''}`}
+                className={`relative flex min-h-[300px] flex-1 overflow-hidden border border-white/10 bg-[linear-gradient(180deg,_rgba(15,18,25,0.98),_rgba(8,9,13,0.98))] shadow-[0_30px_100px_rgba(0,0,0,0.45)] ring-1 ring-white/5 lg:min-h-[350px] ${isFullscreen ? 'rounded-none p-0' : 'rounded-[1.75rem] p-3 sm:p-4'} ${isFullscreen && isCursorIdle && !isTouchDevice ? 'cursor-none' : ''}`}
               >
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.06),_transparent_28%)]" aria-hidden="true" />
                 <button
@@ -1057,6 +1123,18 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                 >
                   <Zap className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
                   STEAL STAGE
+                </button>
+                <span className="hidden text-white/20 sm:inline">|</span>
+                <button
+                  type="button"
+                  onClick={handleReportStage}
+                  disabled={!slot || slot.id === 'house-default-id' || reportedSlotIds.includes(slot.id) || isReporting}
+                  title="Report this stage for malicious/NSFW content"
+                  aria-label="Report this stage for malicious or NSFW content"
+                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.03] px-3 py-2 text-xs font-semibold text-neutral-300 transition hover:border-rose-300/40 hover:bg-rose-500/10 hover:text-rose-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <Flag aria-hidden="true" className="h-4 w-4" />
+                  {isReporting ? 'Reporting…' : reportedSlotIds.includes(slot?.id || '') ? 'Reported' : 'Report'}
                 </button>
                 <span className="hidden text-white/20 sm:inline">|</span>
                 <div className="min-w-0 sm:min-w-[9rem]">
