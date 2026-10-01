@@ -198,7 +198,7 @@ export async function POST(req: Request) {
           quantity: 1,
         }],
         mode: 'payment',
-        success_url: 'https://theonlytab.io',
+        success_url: 'https://theonlytab.io?payment=success',
         cancel_url: 'https://theonlytab.io',
         metadata: buildCheckoutMetadata({
           targetUrl: finalTargetUrl,
