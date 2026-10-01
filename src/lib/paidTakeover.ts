@@ -92,20 +92,17 @@ export function buildCheckoutQuoteContext({
 export function buildCheckoutMetadata({
   targetUrl,
   displayName,
-  overlayLabel,
   expiresAt,
   quote,
 }: {
   targetUrl: string;
   displayName: string;
-  overlayLabel: string;
   expiresAt: string;
   quote: CheckoutQuoteContext;
 }) {
   return {
     targeturl: targetUrl,
     displayname: displayName,
-    overlaylabel: overlayLabel,
     bidamount: (quote.quotedStealPriceCents / 100).toFixed(2),
     bidamountcents: String(quote.quotedStealPriceCents),
     currency: quote.quotedCurrency,

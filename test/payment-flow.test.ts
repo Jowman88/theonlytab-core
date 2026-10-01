@@ -38,7 +38,6 @@ test('happy path quote metadata round-trips for fulfillment', () => {
   const metadata = buildCheckoutMetadata({
     targetUrl: 'https://example.com/path',
     displayName: 'Happy Path',
-    overlayLabel: 'LIVE',
     expiresAt: new Date(now.getTime() + 90 * 60 * 1000).toISOString(),
     quote,
   });
