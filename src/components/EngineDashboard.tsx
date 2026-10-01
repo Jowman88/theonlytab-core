@@ -76,7 +76,6 @@ const isValidTargetUrl = (value: string) => {
 };
 
 export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: string }) {
-  const brandMarkRef = useRef<HTMLAnchorElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamFrameRef = useRef<HTMLDivElement | null>(null);
   const stealStageButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -107,8 +106,6 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isCursorIdle, setIsCursorIdle] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
-  const [isStatusBarDesktop, setIsStatusBarDesktop] = useState(false);
-  const [statusBarLeftInset, setStatusBarLeftInset] = useState(0);
   const idleTimeoutRef = useRef<number | null>(null);
   const reportingSlotIdsRef = useRef(new Set<string>());
   const hasLoggedFrameRef = useRef(false);
@@ -151,75 +148,6 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       isTouchDevice ? IDLE_TIMEOUT_TOUCH_MS : IDLE_TIMEOUT_DESKTOP_MS
     );
   }, [isTouchDevice]);
-
-  useEffect(() => {
-    const brandMark = brandMarkRef.current;
-    if (!brandMark || typeof window === 'undefined') return;
-
-    const gap = 16;
-    const minimumDesktopInset = 112;
-    const desktopBreakpoint = window.matchMedia('(min-width: 640px)');
-    const updateInset = () => {
-      const isDesktop = desktopBreakpoint.matches;
-      setIsStatusBarDesktop(isDesktop);
-
-      if (!isDesktop) {
-        setStatusBarLeftInset(0);
-        return;
-      }
-
-      const rect = brandMark.getBoundingClientRect();
-      const inset = rect.right + gap;
-      setStatusBarLeftInset(Math.max(minimumDesktopInset, inset));
-    };
-
-    updateInset();
-
-    const addMediaQueryListener = (query: MediaQueryList, listener: () => void) => {
-      if (typeof query.addEventListener === 'function') {
-        query.addEventListener('change', listener);
-        return;
-      }
-      query.addListener(listener);
-    };
-
-    const removeMediaQueryListener = (query: MediaQueryList, listener: () => void) => {
-      if (typeof query.removeEventListener === 'function') {
-        query.removeEventListener('change', listener);
-        return;
-      }
-      query.removeListener(listener);
-    };
-
-    let resizeFrame: number | null = null;
-    const scheduleInsetUpdate = () => {
-      if (resizeFrame !== null) return;
-
-      resizeFrame = window.requestAnimationFrame(() => {
-        resizeFrame = null;
-        updateInset();
-      });
-    };
-
-    let resizeObserver: ResizeObserver | null = null;
-    if (typeof ResizeObserver !== 'undefined') {
-      resizeObserver = new ResizeObserver(scheduleInsetUpdate);
-
-      resizeObserver.observe(brandMark);
-    }
-
-    addMediaQueryListener(desktopBreakpoint, scheduleInsetUpdate);
-    window.addEventListener('resize', scheduleInsetUpdate);
-
-    return () => {
-      if (resizeFrame !== null) {
-        window.cancelAnimationFrame(resizeFrame);
-      }
-      removeMediaQueryListener(desktopBreakpoint, scheduleInsetUpdate);
-      resizeObserver?.disconnect();
-      window.removeEventListener('resize', scheduleInsetUpdate);
-    };
-  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
@@ -789,7 +717,6 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       )}
 
       <Link
-        ref={brandMarkRef}
         href="/"
         aria-label="Return to The Only Tab dashboard"
         className="group absolute left-4 top-4 z-20 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.2em] whitespace-nowrap text-white/45 transition-colors hover:text-emerald-300 focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 sm:left-5 sm:top-5 sm:gap-2 sm:px-3.5 sm:py-2 sm:text-[10px] sm:tracking-[0.28em]"
@@ -983,8 +910,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
 
           <section className="flex min-h-0 flex-1 flex-col gap-4 lg:gap-5">
             <div
-              className="flex flex-nowrap items-center gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] font-medium text-neutral-300 shadow-[0_16px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/5 sm:gap-3 sm:px-4 sm:pl-28 lg:flex-wrap lg:overflow-x-visible lg:whitespace-normal"
-              style={{ paddingLeft: isStatusBarDesktop && statusBarLeftInset > 0 ? `${statusBarLeftInset}px` : undefined }}
+              className="flex flex-nowrap items-center gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] font-medium text-neutral-300 shadow-[0_16px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/5 sm:gap-3 sm:px-4 sm:pl-48 lg:flex-wrap lg:overflow-x-visible lg:whitespace-normal"
             >
               <Link
                 href="/"
