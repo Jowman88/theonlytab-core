@@ -69,7 +69,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { targetUrl, displayName, overlayLabel, startPath } = body;
+    const { targetUrl, displayName, startPath } = body;
 
     if (!targetUrl || typeof targetUrl !== 'string') {
       logger.warn('Checkout session rejected for missing target URL', {
@@ -100,7 +100,6 @@ export async function POST(req: Request) {
     }
 
     const displayNameValue = String(displayName || 'Anonymous Takeover').trim();
-    const overlayLabelValue = String(overlayLabel || '').trim();
 
     let finalTargetUrl: string;
     try {
@@ -115,7 +114,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: err.message || 'Invalid path supplied.' }, { status: 400 });
     }
 
-    if (containsProfanity(overlayLabelValue) || containsProfanity(displayNameValue) || containsProfanity(finalTargetUrl)) {
+    if (containsProfanity(displayNameValue) || containsProfanity(finalTargetUrl)) {
       logger.warn('Checkout session rejected for profanity', {
         route: 'create-checkout-session',
         clientIpBucket,
@@ -127,14 +126,13 @@ export async function POST(req: Request) {
       );
     }
 
-    if (displayNameValue.length > 80 || overlayLabelValue.length > 15) {
-      logger.warn('Checkout session rejected for oversized display metadata', {
+    if (displayNameValue.length > 80) {
+      logger.warn('Checkout session rejected for oversized display name', {
         route: 'create-checkout-session',
         clientIpBucket,
         displayNameLength: displayNameValue.length,
-        overlayLabelLength: overlayLabelValue.length,
       });
-      return NextResponse.json({ error: 'DISPLAY NAME OR OVERLAY LABEL IS TOO LONG.' }, { status: 400 });
+      return NextResponse.json({ error: 'DISPLAY NAME IS TOO LONG.' }, { status: 400 });
     }
 
     const stripe = getStripeClient();
@@ -205,7 +203,6 @@ export async function POST(req: Request) {
         metadata: buildCheckoutMetadata({
           targetUrl: finalTargetUrl,
           displayName: displayNameValue,
-          overlayLabel: overlayLabelValue,
           expiresAt,
           quote,
         }),

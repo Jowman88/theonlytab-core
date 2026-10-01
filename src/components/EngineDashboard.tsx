@@ -36,24 +36,30 @@ interface HistoryItem {
 }
 
 type SocketStatus = 'connecting' | 'connected' | 'reconnecting' | 'disconnected';
-type FieldName = 'targetUrl' | 'displayName' | 'overlayLabel' | 'startPath';
+type FieldName = 'targetUrl' | 'displayName' | 'startPath';
 type Notice = { type: 'success' | 'error'; message: string } | null;
 
 const FIELD_LABELS: Record<FieldName, string> = {
   targetUrl: 'Target Website URL',
   displayName: 'Display Name',
-  overlayLabel: 'Overlay Label',
   startPath: 'Start Path / Hash',
 };
 
 const initialTouchedState: Record<FieldName, boolean> = {
   targetUrl: false,
   displayName: false,
-  overlayLabel: false,
   startPath: false,
 };
 
 const stripProtocol = (value?: string) => value?.replace(/^https?:\/\//, '') || '';
+const getSafeHttpUrl = (value?: string) => {
+  try {
+    const url = new URL(value || '');
+    return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : null;
+  } catch {
+    return null;
+  }
+};
 
 const isValidTargetUrl = (value: string) => {
   const trimmed = value.trim();
@@ -86,7 +92,6 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [targetUrl, setTargetUrl] = useState('');
   const [displayName, setDisplayName] = useState('');
-  const [overlayLabel, setOverlayLabel] = useState('');
   const [startPath, setStartPath] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [legalAgreed, setLegalAgreed] = useState(false);
@@ -107,7 +112,6 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const validatedFields = {
     targetUrl: isValidTargetUrl(targetUrl),
     displayName: displayName.trim().length === 0 || displayName.trim().length >= 2,
-    overlayLabel: overlayLabel.length <= 15,
     startPath: !startPath.trim() || /^[/?#]/.test(startPath.trim()),
   };
   const historyTickerItems = useMemo(() => (historyList.length > 0 ? [...historyList, ...historyList] : []), [historyList]);
@@ -549,7 +553,6 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
         body: JSON.stringify({
           displayName: displayName || 'Anonymous Takeover',
           targetUrl: normalizedTargetUrl,
-          overlayLabel,
           startPath,
         }),
       });
@@ -644,6 +647,10 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
 
   const ConnectionIcon = connectionStatusMeta.Icon;
   const stageUrl = stripProtocol(slot?.currentUrl) || 'SYSTEM_IDLE';
+  const liveSiteUrl =
+    hasFrames && slot && slot.id !== 'house-default-id' && Number.parseFloat(slot.current_bid || '0') > 0
+      ? getSafeHttpUrl(slot.currentUrl)
+      : null;
   const currentStake = slot?.current_bid || '0.00';
   const stageOwner = slot?.displayName || 'SYSTEM IDLE';
 
@@ -781,34 +788,6 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                         aria-describedby="display-name-help"
                         aria-invalid={touchedFields.displayName && !validatedFields.displayName}
                         className={`w-full rounded-2xl border px-4 py-3 text-sm text-white outline-none transition duration-200 placeholder:text-neutral-500 ${getFieldClassName('displayName')}`}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between gap-3">
-                        <label htmlFor="overlay-label-input" className="text-sm font-semibold text-neutral-100">{FIELD_LABELS.overlayLabel}</label>
-                        <div className="flex items-center gap-3 text-xs text-neutral-400">
-                          <span>{overlayLabel.length}/15 chars</span>
-                          {getFieldIndicator('overlayLabel')}
-                        </div>
-                      </div>
-                      <p id="overlay-label-help" className="text-xs leading-5 text-neutral-400">
-                        Short label shown on the stream overlay. Keep it punchy so it stays readable on mobile.
-                      </p>
-                      <input
-                        id="overlay-label-input"
-                        type="text"
-                        maxLength={15}
-                        placeholder="NOW STREAMING"
-                        value={overlayLabel}
-                        onBlur={() => setFieldTouched('overlayLabel')}
-                        onChange={(e) => {
-                          resetFormFeedback();
-                          setOverlayLabel(e.target.value);
-                        }}
-                        aria-describedby="overlay-label-help"
-                        aria-invalid={touchedFields.overlayLabel && !validatedFields.overlayLabel}
-                        className={`w-full rounded-2xl border px-4 py-3 text-sm text-white outline-none transition duration-200 placeholder:text-neutral-500 ${getFieldClassName('overlayLabel')}`}
                       />
                     </div>
 
@@ -960,6 +939,20 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                 )}
                 <div className={`relative flex h-full w-full items-center justify-center overflow-hidden border border-white/10 bg-[#040507] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.03),0_20px_70px_rgba(0,0,0,0.55)] ${isFullscreen ? 'rounded-none' : 'rounded-[1.35rem]'}`}>
                   <canvas ref={canvasRef} className={`h-full w-full object-contain transition duration-500 ${!hasFrames ? 'opacity-0' : 'opacity-100'}`} />
+
+                  {liveSiteUrl && (
+                    <a
+                      href={liveSiteUrl}
+                      target="_blank"
+                      rel="noopener noreferrer sponsored"
+                      aria-label={`Open streamed site ${stageUrl} in a new tab`}
+                      className="group absolute inset-0 z-[1] rounded-[inherit] bg-transparent transition-colors hover:bg-white/[0.035] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-300/80"
+                    >
+                      <span className="pointer-events-none absolute bottom-4 right-4 rounded-full border border-white/15 bg-black/60 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg backdrop-blur transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                        Visit site ↗
+                      </span>
+                    </a>
+                  )}
 
                   {!hasFrames && socketStatus !== 'disconnected' && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 px-6 text-center">
@@ -1147,10 +1140,6 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
                 <dt className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-400">Display name</dt>
                 <dd className="mt-2 font-semibold text-white">{displayName || 'Anonymous Takeover'}</dd>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-400">Overlay label</dt>
-                <dd className="mt-2 font-semibold text-white">{overlayLabel || 'No overlay label'}</dd>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:col-span-2">
                 <dt className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-400">Start path</dt>
