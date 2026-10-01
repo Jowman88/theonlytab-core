@@ -1035,9 +1035,9 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
 
               {historyList.length > 0 ? (
                 <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/20 px-3 py-3">
-                  <div className="dashboard-marquee-track flex min-w-max items-center gap-4 whitespace-nowrap pr-4">
+                  <div className="dashboard-marquee-track flex min-w-max items-center gap-6 whitespace-nowrap pr-4">
                     {historyTickerItems.map((item, idx) => (
-                      <div key={`${item.displayName || 'history'}-${idx}`} className="mx-2 flex shrink-0 items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm shadow-[0_8px_30px_rgba(0,0,0,0.2)]">
+                      <div key={`${item.displayName || 'history'}-${idx}`} className="flex shrink-0 items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm shadow-[0_8px_30px_rgba(0,0,0,0.2)]">
                         <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-200">↗</span>
                         <span className="font-semibold text-white">{item.displayName || 'Anonymous Takeover'}</span>
                         <span className="rounded-full border border-white/10 bg-black/30 px-2.5 py-1 text-xs text-neutral-300">{stripProtocol(item.currentUrl) || 'standby'}</span>
