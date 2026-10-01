@@ -1011,7 +1011,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                   ref={stealStageButtonRef}
                   aria-controls="steal-stage-panel"
                   aria-expanded={isFormOpen}
-                  className="group shrink-0 inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-300/25 bg-[linear-gradient(135deg,_rgba(52,211,153,0.95),_rgba(6,182,212,0.88))] px-5 py-2.5 text-xs font-black uppercase tracking-[0.2em] text-slate-950 shadow-[0_0_30px_rgba(16,185,129,0.35)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_40px_rgba(16,185,129,0.5)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07080c]"
+                  className="group shrink-0 inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-300/25 bg-[linear-gradient(135deg,_rgba(52,211,153,0.95),_rgba(6,182,212,0.88))] px-5 py-2.5 text-xs font-black uppercase tracking-[0.2em] text-slate-950 shadow-[0_0_30px_rgba(16,185,129,0.35)] animate-pulse motion-reduce:animate-none transition duration-200 hover:-translate-y-0.5 hover:animate-none hover:shadow-[0_0_45px_rgba(16,185,129,0.6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07080c]"
                 >
                   <Zap className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
                   STEAL STAGE
@@ -1035,9 +1035,9 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
 
               {historyList.length > 0 ? (
                 <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/20 px-3 py-3">
-                  <div className="dashboard-marquee-track flex min-w-max items-center gap-4 whitespace-nowrap pr-4">
+                  <div className="dashboard-marquee-track flex min-w-max items-center gap-6 whitespace-nowrap px-4">
                     {historyTickerItems.map((item, idx) => (
-                      <div key={`${item.displayName || 'history'}-${idx}`} className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm shadow-[0_8px_30px_rgba(0,0,0,0.2)]">
+                      <div key={`${item.displayName || 'history'}-${idx}`} className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2 text-sm shadow-[0_8px_30px_rgba(0,0,0,0.2)]">
                         <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-200">↗</span>
                         <span className="font-semibold text-white">{item.displayName || 'Anonymous Takeover'}</span>
                         <span className="rounded-full border border-white/10 bg-black/30 px-2.5 py-1 text-xs text-neutral-300">{stripProtocol(item.currentUrl) || 'standby'}</span>
