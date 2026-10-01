@@ -656,7 +656,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const stageOwner = slot?.displayName || 'SYSTEM IDLE';
 
   return (
-    <div className="fixed inset-0 h-screen w-screen overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.15),_transparent_30%),radial-gradient(circle_at_right,_rgba(251,191,36,0.08),_transparent_28%),linear-gradient(180deg,_#08090d_0%,_#050507_100%)] px-3 py-3 text-neutral-100 sm:px-4 sm:py-4 lg:px-6 lg:py-5">
+    <div className="fixed inset-0 h-[100dvh] w-screen overflow-x-hidden overflow-y-auto bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.15),_transparent_30%),radial-gradient(circle_at_right,_rgba(251,191,36,0.08),_transparent_28%),linear-gradient(180deg,_#08090d_0%,_#050507_100%)] px-3 py-3 text-neutral-100 sm:px-4 sm:py-4 lg:h-screen lg:overflow-hidden lg:px-6 lg:py-5">
       <div className="dashboard-grid pointer-events-none absolute inset-0 opacity-40" aria-hidden="true" />
 
       {statusNotice && (
@@ -678,15 +678,6 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
         </div>
       )}
 
-      {isFormOpen && (
-        <button
-          type="button"
-          className="dashboard-fade-in absolute inset-0 z-30 bg-black/70 backdrop-blur-sm lg:hidden"
-          aria-label="Close config drawer"
-          onClick={() => setIsFormOpen(false)}
-        />
-      )}
-
       <Link
         ref={brandMarkRef}
         href="/"
@@ -698,6 +689,14 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       </Link>
 
       <div className="relative z-10 flex h-full flex-col gap-4 lg:gap-5">
+        {isFormOpen && (
+          <button
+            type="button"
+            className="dashboard-fade-in fixed inset-0 z-30 bg-black/70 backdrop-blur-sm lg:hidden"
+            aria-label="Close config drawer"
+            onClick={() => setIsFormOpen(false)}
+          />
+        )}
 
         <div className="relative flex min-h-0 flex-1 gap-4 lg:gap-5">
           {isFormOpen && (
@@ -764,7 +763,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                         }}
                         aria-describedby="target-url-help"
                         aria-invalid={touchedFields.targetUrl && !validatedFields.targetUrl}
-                        className={`w-full rounded-2xl border px-4 py-3 text-sm text-white outline-none transition duration-200 placeholder:text-neutral-500 ${getFieldClassName('targetUrl')}`}
+                        className={`w-full rounded-2xl border px-4 py-3 text-base text-white outline-none transition duration-200 placeholder:text-neutral-500 sm:text-sm ${getFieldClassName('targetUrl')}`}
                       />
                     </div>
 
@@ -788,7 +787,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                         }}
                         aria-describedby="display-name-help"
                         aria-invalid={touchedFields.displayName && !validatedFields.displayName}
-                        className={`w-full rounded-2xl border px-4 py-3 text-sm text-white outline-none transition duration-200 placeholder:text-neutral-500 ${getFieldClassName('displayName')}`}
+                        className={`w-full rounded-2xl border px-4 py-3 text-base text-white outline-none transition duration-200 placeholder:text-neutral-500 sm:text-sm ${getFieldClassName('displayName')}`}
                       />
                     </div>
 
@@ -812,7 +811,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                         }}
                         aria-describedby="start-path-help"
                         aria-invalid={touchedFields.startPath && !validatedFields.startPath}
-                        className={`w-full rounded-2xl border px-4 py-3 text-sm text-white outline-none transition duration-200 placeholder:text-neutral-500 ${getFieldClassName('startPath')}`}
+                        className={`w-full rounded-2xl border px-4 py-3 text-base text-white outline-none transition duration-200 placeholder:text-neutral-500 sm:text-sm ${getFieldClassName('startPath')}`}
                       />
                     </div>
                   </div>
@@ -925,7 +924,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
             <div className="flex min-h-0 flex-1 flex-col gap-3 sm:gap-4">
               <div
                 ref={streamFrameRef}
-                className={`relative flex min-h-[500px] flex-1 overflow-hidden border border-white/10 bg-[linear-gradient(180deg,_rgba(15,18,25,0.98),_rgba(8,9,13,0.98))] shadow-[0_30px_100px_rgba(0,0,0,0.45)] ring-1 ring-white/5 ${isFullscreen ? 'rounded-none p-0' : 'rounded-[1.75rem] p-3 sm:p-4'} ${isFullscreen && isCursorIdle && !isTouchDevice ? 'cursor-none' : ''}`}
+                className={`relative flex min-h-[300px] flex-1 overflow-hidden border border-white/10 bg-[linear-gradient(180deg,_rgba(15,18,25,0.98),_rgba(8,9,13,0.98))] shadow-[0_30px_100px_rgba(0,0,0,0.45)] ring-1 ring-white/5 lg:min-h-[500px] ${isFullscreen ? 'rounded-none p-0' : 'rounded-[1.75rem] p-3 sm:p-4'} ${isFullscreen && isCursorIdle && !isTouchDevice ? 'cursor-none' : ''}`}
               >
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.06),_transparent_28%)]" aria-hidden="true" />
                 <button
@@ -1038,8 +1037,8 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                     {historyTickerItems.map((item, idx) => (
                       <div key={`${item.displayName || 'history'}-${idx}`} className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2 text-sm shadow-[0_8px_30px_rgba(0,0,0,0.2)]">
                         <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-200">↗</span>
-                        <span className="font-semibold text-white">{item.displayName || 'Anonymous Takeover'}</span>
-                        <span className="rounded-full border border-white/10 bg-black/30 px-2.5 py-1 text-xs text-neutral-300">{stripProtocol(item.currentUrl) || 'standby'}</span>
+                        <span className="max-w-[120px] truncate font-semibold text-white">{item.displayName || 'Anonymous Takeover'}</span>
+                        <span className="max-w-[120px] truncate rounded-full border border-white/10 bg-black/30 px-2.5 py-1 text-xs text-neutral-300">{stripProtocol(item.currentUrl) || 'standby'}</span>
                         <span className="rounded-full border border-amber-400/20 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-200">\${item.currentBid || '0.00'}</span>
                       </div>
                     ))}
@@ -1068,7 +1067,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
             <div
               ref={embedDialogRef}
               tabIndex={-1}
-              className="dashboard-slide-up relative w-full max-w-2xl rounded-[2rem] border border-emerald-400/25 bg-[linear-gradient(180deg,_rgba(12,18,16,0.98),_rgba(7,10,12,0.98))] p-6 shadow-[0_30px_120px_rgba(0,0,0,0.6)] ring-1 ring-white/5 focus:outline-none sm:p-7"
+              className="dashboard-slide-up relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-[2rem] border border-emerald-400/25 bg-[linear-gradient(180deg,_rgba(12,18,16,0.98),_rgba(7,10,12,0.98))] p-6 shadow-[0_30px_120px_rgba(0,0,0,0.6)] ring-1 ring-white/5 focus:outline-none sm:p-7"
               role="dialog"
               aria-modal="true"
               aria-labelledby="takeover-success-title"
@@ -1096,7 +1095,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                 readOnly
                 onClick={(e) => (e.target as HTMLTextAreaElement).select()}
                 value={embedCode}
-                className="h-28 w-full resize-none rounded-2xl border border-white/10 bg-black/35 p-4 font-mono text-xs leading-6 text-emerald-200 outline-none"
+                className="h-28 w-full resize-none rounded-2xl border border-white/10 bg-black/35 p-4 font-mono text-base leading-6 text-emerald-200 outline-none sm:text-sm"
               />
               <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-xs leading-5 text-neutral-400">Tip: click inside the code block to select it, or use the copy button for one-tap clipboard access.</p>
@@ -1124,7 +1123,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
             onClick={() => setIsConfirmOpen(false)}
           />
           <div className="dashboard-fade-in absolute inset-0 z-[70] flex items-center justify-center p-4">
-            <div ref={confirmDialogRef} tabIndex={-1} className="dashboard-slide-up relative w-full max-w-xl rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,_rgba(16,19,24,0.98),_rgba(7,9,13,0.98))] p-6 shadow-[0_30px_120px_rgba(0,0,0,0.6)] ring-1 ring-white/5 focus:outline-none sm:p-7" role="dialog" aria-modal="true" aria-labelledby="checkout-confirm-title">
+            <div ref={confirmDialogRef} tabIndex={-1} className="dashboard-slide-up relative max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,_rgba(16,19,24,0.98),_rgba(7,9,13,0.98))] p-6 shadow-[0_30px_120px_rgba(0,0,0,0.6)] ring-1 ring-white/5 focus:outline-none sm:p-7" role="dialog" aria-modal="true" aria-labelledby="checkout-confirm-title">
             <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/25 bg-amber-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-amber-200">
               <ShieldCheck className="h-4 w-4" />
               Confirm checkout details
