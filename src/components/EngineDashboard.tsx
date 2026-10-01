@@ -683,7 +683,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
         ref={brandMarkRef}
         href="/"
         aria-label="Return to The Only Tab dashboard"
-        className="group absolute left-3 top-3 z-20 flex items-center gap-1.5 rounded-full px-2 py-1 text-[9px] font-black uppercase tracking-[0.2em] whitespace-nowrap text-white/45 transition-colors hover:text-emerald-300 focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 sm:left-4 sm:top-4 sm:gap-2 sm:text-[10px] sm:tracking-[0.28em]"
+        className="group absolute left-4 top-4 z-20 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.2em] whitespace-nowrap text-white/45 transition-colors hover:text-emerald-300 focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 sm:left-5 sm:top-5 sm:gap-2 sm:px-3.5 sm:py-2 sm:text-[10px] sm:tracking-[0.28em]"
       >
         <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)] transition-shadow duration-200 group-hover:shadow-[0_0_14px_rgba(52,211,153,1)] sm:shadow-[0_0_12px_rgba(52,211,153,0.8)] sm:group-hover:shadow-[0_0_16px_rgba(52,211,153,1)]" />
         <span>THE ONLY TAB</span>
