@@ -10,7 +10,7 @@ import {
   parseCheckoutQuoteContext,
   validateStripeCheckoutQuote,
 } from '../src/lib/paidTakeover';
-import { DEFAULT_PRICING_SETTINGS } from '../src/lib/pricing';
+import { calculateStealPrice, DEFAULT_PRICING_SETTINGS } from '../src/lib/pricing';
 
 const now = new Date('2026-09-28T15:00:00.000Z');
 
@@ -29,7 +29,7 @@ function createQuote(activeSlot = createActiveSlot()) {
     activeSlot,
     now,
     pricingSettings: DEFAULT_PRICING_SETTINGS,
-    requiredStealPrice: 93.75,
+    requiredStealPrice: 150,
   });
 }
 
@@ -243,4 +243,27 @@ test('stale base-price checkout still fulfills when it covers a newer unlocked s
   });
 
   assert.equal(decision.action, 'fulfill');
+});
+
+test('base price is always $19 regardless of time of day (no prime-time variance)', () => {
+  const morning = new Date('2026-09-28T09:30:00.000Z');
+  const evening = new Date('2026-09-28T19:30:00.000Z');
+  const midnight = new Date('2026-09-28T00:05:00.000Z');
+
+  assert.equal(calculateStealPrice(0, morning), 19);
+  assert.equal(calculateStealPrice(0, evening), 19);
+  assert.equal(calculateStealPrice(0, midnight), 19);
+});
+
+test('steal price doubles the current bid', () => {
+  assert.equal(calculateStealPrice(19), 38);
+  assert.equal(calculateStealPrice(75), 150);
+});
+
+test('steal price is capped at $299 once doubling would exceed it', () => {
+  assert.equal(calculateStealPrice(150), 299);
+});
+
+test('steal price stays flat at $299 once the cap is reached', () => {
+  assert.equal(calculateStealPrice(299), 299);
 });

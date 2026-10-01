@@ -117,6 +117,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const historyTickerItems = useMemo(() => (historyList.length > 0 ? [...historyList, ...historyList] : []), [historyList]);
   const isLocked = lockTimer > 0;
   const stealPrice = slot?.stealPrice || '19.00';
+  const isStealPriceCapped = Number.parseFloat(stealPrice) >= 299;
   const checkoutValidationError = !validatedFields.targetUrl
     ? 'Enter a valid website URL to launch checkout.'
     : !validatedFields.startPath
@@ -897,6 +898,11 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
               <span>
                 <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Next</span>{' '}
                 <span className="text-amber-200">${stealPrice}</span>
+                {isStealPriceCapped && (
+                  <span className="ml-1.5 inline-flex items-center rounded-full border border-amber-300/40 bg-amber-300/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.18em] text-amber-200">
+                    Capped at $299
+                  </span>
+                )}
               </span>
               <span className="text-white/20">|</span>
               <span className="inline-flex items-center gap-1.5">
@@ -1135,7 +1141,14 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
                 <dt className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-400">Checkout total</dt>
-                <dd className="mt-2 text-2xl font-black text-white">\${stealPrice}</dd>
+                <dd className="mt-2 flex items-center gap-2 text-2xl font-black text-white">
+                  \${stealPrice}
+                  {isStealPriceCapped && (
+                    <span className="inline-flex items-center rounded-full border border-amber-300/40 bg-amber-300/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.18em] text-amber-200">
+                      Capped at $299
+                    </span>
+                  )}
+                </dd>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
                 <dt className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-400">Display name</dt>
