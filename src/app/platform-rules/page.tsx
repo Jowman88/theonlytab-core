@@ -33,19 +33,19 @@ export default function PlatformRulesPage() {
 
           <h1 className="mt-5 text-3xl font-black tracking-tight text-white sm:text-4xl">Plain-language rules for using the platform</h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-neutral-300 sm:text-base">
-            These rules explain how takeovers, submitted content, and platform access are expected to work. This is product policy copy, not legal advice.
+            These rules explain how paid takeovers, submitted destinations, public streaming, and platform access are expected to work. This is product policy copy, not legal advice, and it must be reviewed by a lawyer before use as binding terms.
           </p>
 
           <div className="mt-6 rounded-2xl border border-amber-300/20 bg-amber-500/10 p-4 text-sm leading-6 text-amber-100">
             <p className="font-semibold text-amber-200">Important:</p>
             <p>
-              Before relying on this page, obtain legal advice for your jurisdiction. Requirements can vary based on where you operate, what you publish, and the laws that apply to you.
+              Have qualified counsel review and complete this page for the operator&apos;s business, jurisdiction, and service before relying on it. Requirements vary by location and business model; this page is not a substitute for legal advice.
             </p>
           </div>
 
           <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm text-neutral-300">
             <p>
-              <span className="font-semibold text-white">Effective date:</span> September 28, 2026
+              <span className="font-semibold text-white">Effective date:</span> October 1, 2026
             </p>
             <p>
               <span className="font-semibold text-white">Support:</span> Contact the service operator through the support channel provided with your account or deployment.
@@ -53,19 +53,30 @@ export default function PlatformRulesPage() {
           </div>
         </header>
 
+        <section className={sectionClassName} aria-labelledby="eligibility-heading">
+          <h2 id="eligibility-heading" className="text-2xl font-black tracking-tight text-white">
+            Eligibility
+          </h2>
+          <ul className="mt-4 space-y-3 text-sm leading-6 text-neutral-300 sm:text-base">
+            <li>You must be at least 18 years old, the age of majority where you live, and legally able to enter a binding contract. If the age of majority in your jurisdiction is higher than 18, that higher age applies.</li>
+            <li>Minors may not use the service, create or pay for takeovers, or submit destinations, even with a parent or guardian&apos;s permission.</li>
+            <li>By using the service, you represent that you meet these requirements and may lawfully use the service from your location.</li>
+          </ul>
+        </section>
+
         <section className={sectionClassName} aria-labelledby="takeover-rules-heading">
           <h2 id="takeover-rules-heading" className="text-2xl font-black tracking-tight text-white">
             Takeover rules
           </h2>
           <ul className="mt-4 space-y-3 text-sm leading-6 text-neutral-300 sm:text-base">
             <li>
-              <span className="font-semibold text-white">Non-refundable checkout:</span> once you start checkout for a takeover, treat the fee as final and non-refundable unless the service operator expressly says otherwise.
+              <span className="font-semibold text-white">Payments and refunds:</span> payments are processed by Stripe, our payment processor. All sales are final and non-refundable except where a refund is required by applicable law or expressly stated by the operator. Stripe&apos;s terms may also apply.
             </li>
             <li>
               <span className="font-semibold text-white">Stage duration and availability:</span> a takeover grants time on the stage only while capacity, system health, and platform availability allow. The platform may delay, shorten, pause, or end a session if needed to keep the service running safely.
             </li>
             <li>
-              <span className="font-semibold text-white">Pricing and competition:</span> takeover pricing can change over time, and your checkout does not stop others from competing for later stage access once your session ends or platform rules allow a new takeover.
+              <span className="font-semibold text-white">Pricing and competition:</span> prices, bidding, and steal mechanics may change at any time. The price presented for your checkout applies to that transaction; later prices may differ. A takeover does not guarantee any minimum audience, view count, click, or traffic.
             </li>
             <li>
               <span className="font-semibold text-white">No prohibited interference:</span> do not disrupt another user&apos;s active session, attempt to manipulate timers or bids, or interfere with checkout, stream delivery, or platform operations.
@@ -82,21 +93,41 @@ export default function PlatformRulesPage() {
           </h2>
           <ul className="mt-4 space-y-3 text-sm leading-6 text-neutral-300 sm:text-base">
             <li>
-              <span className="font-semibold text-white">Lawful content only:</span> submit and display only content you are legally allowed to use, publish, and direct traffic toward.
+              <span className="font-semibold text-white">Rights and authorization:</span> submit only a URL and content you are authorized to access, publicly display, stream, and direct viewers to. You are responsible for obtaining all necessary permissions and for the content and operation of your destination.
             </li>
             <li>
-              <span className="font-semibold text-white">No abuse or harm:</span> do not use the platform for harassment, hate, threats, intimidation, or sexual exploitation.
+              <span className="font-semibold text-white">Illegal and exploitative content:</span> no content or activity that violates applicable law, including child sexual abuse material (CSAM). CSAM is strictly prohibited and may be reported to law enforcement and the National Center for Missing &amp; Exploited Children (NCMEC), where applicable.
             </li>
             <li>
-              <span className="font-semibold text-white">No illegal offers:</span> do not promote illegal goods, illegal services, or activity that would make access to the destination unlawful.
+              <span className="font-semibold text-white">Violence and exploitation:</span> no terrorism or violent-extremism content, credible threats, incitement to violence, non-consensual intimate imagery, sexual exploitation, harassment, or hateful abuse.
             </li>
             <li>
-              <span className="font-semibold text-white">No malware or deception:</span> do not submit destinations, overlays, or related material that deliver malware, phishing, deceptive impersonation, or other fraudulent experiences.
+              <span className="font-semibold text-white">Intellectual property:</span> no content that infringes copyright, trademark, privacy, publicity, or other rights. Rights holders may use the takedown process below.
             </li>
             <li>
-              <span className="font-semibold text-white">Respect intellectual property:</span> do not use content that infringes another party&apos;s copyright, trademark, or similar rights.
+              <span className="font-semibold text-white">Malware, phishing, and fraud:</span> no malware, viruses, phishing, credential theft, deceptive impersonation, scams, fraudulent schemes, or links designed to compromise, mislead, or exploit viewers.
+            </li>
+            <li>
+              <span className="font-semibold text-white">Unlawful promotion:</span> no spam or schemes, or advertising, products, or claims that violate applicable advertising, consumer-protection, or disclosure laws.
+            </li>
+            <li>
+              <span className="font-semibold text-white">Safety and legal risk:</span> the operator may reject or remove content it reasonably believes creates legal, security, or safety risks, even if a specific category is not listed here.
             </li>
           </ul>
+        </section>
+
+        <section className={sectionClassName} aria-labelledby="third-party-sites-heading">
+          <h2 id="third-party-sites-heading" className="text-2xl font-black tracking-tight text-white">
+            Third-party destinations
+          </h2>
+          <div className="mt-4 space-y-3 text-sm leading-6 text-neutral-300 sm:text-base">
+            <p>
+              The service may use an automated browser to load and publicly stream the URL you submit. The operator does not control, endorse, or assume responsibility for third-party websites, their content, availability, security, or privacy practices.
+            </p>
+            <p>
+              Viewers access third-party destinations at their own risk. You are responsible for the destination you submit and must not use the service to cause unlawful access or display.
+            </p>
+          </div>
         </section>
 
         <section className={sectionClassName} aria-labelledby="privacy-heading">
@@ -105,13 +136,91 @@ export default function PlatformRulesPage() {
           </h2>
           <div className="mt-4 space-y-3 text-sm leading-6 text-neutral-300 sm:text-base">
             <p>
-              To provide the service, the platform may process configuration data you submit, such as your target URL, display name, overlay label, start path, payment or session metadata, and operational logs connected to the takeover flow.
+              To provide and secure the service, the platform may process your target URL (including its start path), display name, checkout and payment-session metadata, takeover and pricing data, and operational records. IP addresses may be used for rate limiting; hashed or derived IP-based buckets may be recorded in security logs.
             </p>
             <p>
-              That processing may be used to operate the service, prevent abuse, maintain security, troubleshoot issues, and comply with law.
+              This information may be used to operate the public stream and checkout, prevent abuse, maintain security, troubleshoot issues, and comply with law. Payment details are handled through the checkout provider and are subject to its privacy terms. This summary is not a complete privacy notice; the operator should publish a separate notice describing applicable collection, retention, sharing, and privacy rights.
             </p>
             <p>
               Do not submit secrets, credentials, payment card data outside the intended checkout flow, or unnecessary personal information in fields meant for takeover configuration.
+            </p>
+          </div>
+        </section>
+
+        <section className={sectionClassName} aria-labelledby="dmca-heading">
+          <h2 id="dmca-heading" className="text-2xl font-black tracking-tight text-white">
+            Copyright and takedown notices
+          </h2>
+          <div className="mt-4 space-y-3 text-sm leading-6 text-neutral-300 sm:text-base">
+            <p>
+              If you believe content submitted by a user infringes your copyright, send a notice to <span className="font-semibold text-white">[Copyright Contact Email]</span> with: your physical or electronic signature; identification of the copyrighted work; the URL or other information sufficient to locate the allegedly infringing material; your contact information; a statement of good-faith belief that the use is unauthorized; and a statement, under penalty of perjury, that the notice is accurate and you are authorized to act for the rights holder.
+            </p>
+            <p>
+              The operator may remove or disable access to reported material, notify the submitting user, and terminate repeat infringers. Counsel should adapt this process and add any required counter-notice procedure and designated-agent details for the operator&apos;s jurisdiction.
+            </p>
+          </div>
+        </section>
+
+        <section className={sectionClassName} aria-labelledby="warranty-heading">
+          <h2 id="warranty-heading" className="text-2xl font-black tracking-tight text-white">
+            No warranties
+          </h2>
+          <p className="mt-4 text-sm leading-6 text-neutral-300 sm:text-base">
+            To the maximum extent permitted by law, the service, streams, stage availability, uptime, and any audience or traffic are provided “as is” and “as available,” without warranties of any kind, express, implied, or statutory, including merchantability, fitness for a particular purpose, non-infringement, uninterrupted availability, or error-free operation. The operator does not warrant that a submitted destination will load or remain available.
+          </p>
+        </section>
+
+        <section className={sectionClassName} aria-labelledby="liability-heading">
+          <h2 id="liability-heading" className="text-2xl font-black tracking-tight text-white">
+            Limitation of liability
+          </h2>
+          <p className="mt-4 text-sm leading-6 text-neutral-300 sm:text-base">
+            To the maximum extent permitted by law, the operator and its personnel will not be liable for indirect, incidental, special, consequential, exemplary, or punitive damages, or lost profits, data, goodwill, audience, or traffic. To the maximum extent permitted by law, the operator&apos;s total liability for claims relating to the service will not exceed the amount you paid for the transaction giving rise to the claim, or, if no single transaction gives rise to the claim, the amount you paid for the service during the 12 months before the event. These limits do not apply where prohibited by law or to liability that cannot legally be limited.
+          </p>
+        </section>
+
+        <section className={sectionClassName} aria-labelledby="indemnity-heading">
+          <h2 id="indemnity-heading" className="text-2xl font-black tracking-tight text-white">
+            Indemnification
+          </h2>
+          <p className="mt-4 text-sm leading-6 text-neutral-300 sm:text-base">
+            To the extent permitted by law, you agree to defend, indemnify, and hold harmless the operator and its personnel from third-party claims, losses, liabilities, and reasonable costs arising from your submitted URL or content, your use of the service, or your violation of these rules or applicable law. Counsel should review the scope and enforceability of this clause.
+          </p>
+        </section>
+
+        <section className={sectionClassName} aria-labelledby="termination-heading">
+          <h2 id="termination-heading" className="text-2xl font-black tracking-tight text-white">
+            Suspension and termination
+          </h2>
+          <p className="mt-4 text-sm leading-6 text-neutral-300 sm:text-base">
+            The operator may suspend or terminate access, refuse service, remove a destination, or forfeit remaining stage time if it reasonably believes there is a rule violation, suspected fraud, chargeback, security issue, or legal or safety risk. Where access is terminated for cause, the operator is not liable for lost stage time, subject to any non-waivable rights under applicable law.
+          </p>
+        </section>
+
+        <section className={sectionClassName} aria-labelledby="governing-law-heading">
+          <h2 id="governing-law-heading" className="text-2xl font-black tracking-tight text-white">
+            Governing law and disputes — placeholder for legal review
+          </h2>
+          <div className="mt-4 space-y-3 text-sm leading-6 text-neutral-300 sm:text-base">
+            <p>
+              <span className="font-semibold text-amber-200">[PLACEHOLDER — insert governing law/jurisdiction]</span> This section must be completed by qualified counsel after confirming the operator&apos;s legal entity, location, and applicable law. Do not publish this placeholder as a final dispute-resolution clause.
+            </p>
+            <p>
+              Before starting formal proceedings, the parties should first attempt to resolve a dispute informally by sending a description of the issue and proposed resolution to <span className="font-semibold text-white">[Contact Email]</span> and allowing <span className="font-semibold text-white">[number of days]</span> for a response. Counsel must specify the courts and venue, if any, and whether arbitration is desired. <span className="font-semibold text-amber-200">[OPTIONAL ARBITRATION PLACEHOLDER — counsel must insert or remove a complete, jurisdiction-compliant clause, including the arbitration provider, rules, venue, fees, and any required consumer rights and opt-out.]</span>
+            </p>
+          </div>
+        </section>
+
+        <section className={sectionClassName} aria-labelledby="changes-heading">
+          <h2 id="changes-heading" className="text-2xl font-black tracking-tight text-white">
+            Changes and severability
+          </h2>
+          <div className="mt-4 space-y-3 text-sm leading-6 text-neutral-300 sm:text-base">
+            <p>
+              The operator may update these rules at any time and will update the effective date when doing so. Continued use after an updated version is posted constitutes acceptance of the changes to the extent permitted by law. The operator should provide any additional notice required by law.
+            </p>
+            <p>
+              If a provision is found unenforceable, it will be limited or removed only to the extent necessary, and the remaining provisions will remain in effect.
             </p>
           </div>
         </section>
@@ -131,7 +240,7 @@ export default function PlatformRulesPage() {
 
         <footer className="rounded-3xl border border-white/10 bg-white/[0.03] px-6 py-5 text-sm leading-6 text-neutral-300 ring-1 ring-white/5">
           <p>
-            Questions about these rules or whether a planned use is appropriate? Contact the service operator through the support channel provided with your account or deployment before launching a takeover.
+            Questions, legal notices, or copyright reports? Contact the service operator through the support channel provided with your account or deployment, or use <span className="font-semibold text-white">[Contact Email]</span> once completed by the operator. Include your account or session details where relevant, but do not send payment-card data or sensitive credentials. The operator should add and verify its legal name, notice address, and monitored contact details before publishing these rules.
           </p>
         </footer>
       </div>
