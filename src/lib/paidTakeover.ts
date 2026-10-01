@@ -164,16 +164,20 @@ export function parseCheckoutQuoteContext(metadata?: Record<string, string | nul
 }
 
 export function validateStripeCheckoutQuote({
-  sessionAmountTotal,
+  sessionAmountSubtotal,
   sessionCurrency,
   quote,
 }: {
-  sessionAmountTotal: number | null;
+  sessionAmountSubtotal: number | null;
   sessionCurrency?: string | null;
   quote: CheckoutQuoteContext | null;
 }) {
-  if (sessionCurrency?.toLowerCase() !== 'usd' || sessionAmountTotal == null || sessionAmountTotal <= 0) {
+  if (sessionCurrency?.toLowerCase() !== 'usd') {
     return 'Invalid Stripe session amount.';
+  }
+
+  if (sessionAmountSubtotal == null || sessionAmountSubtotal <= 0) {
+    return 'Invalid Stripe session subtotal.';
   }
 
   if (!quote) {
@@ -184,7 +188,7 @@ export function validateStripeCheckoutQuote({
     return 'Invalid quoted currency in Stripe session.';
   }
 
-  if (quote.quotedStealPriceCents !== sessionAmountTotal) {
+  if (quote.quotedStealPriceCents !== sessionAmountSubtotal) {
     return 'Stripe amount did not match quoted price.';
   }
 

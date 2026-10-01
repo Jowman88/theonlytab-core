@@ -49,7 +49,7 @@ test('happy path quote metadata round-trips for fulfillment', () => {
   assert.equal(calculateQuotedStealPrice(parsedQuote!), quote.quotedStealPriceCents);
 
   const validationError = validateStripeCheckoutQuote({
-    sessionAmountTotal: quote.quotedStealPriceCents,
+    sessionAmountSubtotal: quote.quotedStealPriceCents,
     sessionCurrency: 'usd',
     quote: parsedQuote,
   });
@@ -132,7 +132,7 @@ test('stale checkout context without a quoted active slot is deferred when a new
 test('failed payment metadata is rejected for invalid currency, amount, or missing quote', () => {
   assert.equal(
     validateStripeCheckoutQuote({
-      sessionAmountTotal: 5000,
+      sessionAmountSubtotal: 5000,
       sessionCurrency: 'eur',
       quote: createQuote(),
     }),
@@ -141,20 +141,53 @@ test('failed payment metadata is rejected for invalid currency, amount, or missi
 
   assert.equal(
     validateStripeCheckoutQuote({
-      sessionAmountTotal: 0,
+      sessionAmountSubtotal: 0,
       sessionCurrency: 'usd',
       quote: createQuote(),
     }),
-    'Invalid Stripe session amount.'
+    'Invalid Stripe session subtotal.'
   );
 
   assert.equal(
     validateStripeCheckoutQuote({
-      sessionAmountTotal: 1900,
+      sessionAmountSubtotal: null,
+      sessionCurrency: 'usd',
+      quote: createQuote(),
+    }),
+    'Invalid Stripe session subtotal.'
+  );
+
+  assert.equal(
+    validateStripeCheckoutQuote({
+      sessionAmountSubtotal: 1900,
       sessionCurrency: 'usd',
       quote: null,
     }),
     'Missing quoted checkout context.'
+  );
+});
+
+test('tax-inclusive Stripe checkout validates against the pre-tax subtotal', () => {
+  const quote = buildCheckoutQuoteContext({
+    activeSlot: null,
+    now,
+    pricingSettings: DEFAULT_PRICING_SETTINGS,
+    requiredStealPrice: 19,
+  });
+  const session = {
+    amount_subtotal: 1900,
+    amount_total: 2299,
+    currency: 'usd',
+  };
+
+  assert.equal(quote.quotedStealPriceCents, 1900);
+  assert.equal(
+    validateStripeCheckoutQuote({
+      sessionAmountSubtotal: session.amount_subtotal,
+      sessionCurrency: session.currency,
+      quote,
+    }),
+    null
   );
 });
 
