@@ -10,6 +10,7 @@ import {
   ExternalLink,
   Loader2,
   Maximize2,
+  Share2,
   ShieldCheck,
   Sparkles,
   Wifi,
@@ -491,6 +492,49 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const formatClock = (seconds: number) => {
     if (!seconds || seconds <= 0) return '00:00';
     return `${Math.floor(seconds / 60).toString().padStart(2, '0')}:${(seconds % 60).toString().padStart(2, '0')}`;
+  };
+  const shareSiteUrl = 'https://theonlytab.io';
+  const shareBuyerName = slot?.displayName || displayName.trim() || 'Anonymous Takeover';
+  const shareTargetUrl = slot?.currentUrl || (targetUrl.trim() ? normalizedTargetUrl : shareSiteUrl);
+  const purchasePrice = slot?.current_bid || '19.00';
+  const shareText = `I just took over the stage on The Only Tab as ${shareBuyerName} for $${purchasePrice} 🔥\nI'm streaming ${shareTargetUrl}.\nMy lock expires in ${formatClock(lockTimer)} — steal it from me before the price doubles to $${stealPrice}!\n${shareSiteUrl}`;
+
+  const handleSocialShare = (platform: 'x' | 'facebook' | 'linkedin' | 'reddit') => {
+    const shareIntentUrl = {
+      x: new URL('https://twitter.com/intent/tweet'),
+      facebook: new URL('https://www.facebook.com/sharer/sharer.php'),
+      linkedin: new URL('https://www.linkedin.com/sharing/share-offsite/'),
+      reddit: new URL('https://reddit.com/submit'),
+    }[platform];
+
+    if (platform === 'x') {
+      shareIntentUrl.searchParams.set('text', shareText);
+      shareIntentUrl.searchParams.set('url', shareSiteUrl);
+    } else if (platform === 'facebook') {
+      shareIntentUrl.searchParams.set('u', shareSiteUrl);
+      shareIntentUrl.searchParams.set('quote', shareText);
+    } else if (platform === 'linkedin') {
+      shareIntentUrl.searchParams.set('url', shareSiteUrl);
+    } else {
+      shareIntentUrl.searchParams.set('url', shareSiteUrl);
+      shareIntentUrl.searchParams.set('title', `I just took over The Only Tab for $${purchasePrice}`);
+    }
+
+    window.open(shareIntentUrl.toString(), '_blank', 'noopener,noreferrer,width=550,height=420');
+  };
+
+  const handleNativeShare = async () => {
+    if (!navigator.share) {
+      setStatusNotice({ type: 'error', message: 'Native sharing is unavailable. Choose one of the social share buttons instead.' });
+      return;
+    }
+
+    try {
+      await navigator.share({ title: 'I just took over The Only Tab', text: shareText, url: shareSiteUrl });
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') return;
+      setStatusNotice({ type: 'error', message: 'The share sheet could not be opened. Please try another share button.' });
+    }
   };
 
   const setFieldTouched = (field: FieldName) => {
@@ -1097,6 +1141,58 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                 value={embedCode}
                 className="h-28 w-full resize-none rounded-2xl border border-white/10 bg-black/35 p-4 font-mono text-base leading-6 text-emerald-200 outline-none sm:text-sm"
               />
+              <div className="mt-4 rounded-2xl border border-amber-300/25 bg-amber-400/[0.08] px-4 py-3 text-sm leading-6 text-amber-100">
+                <p className="font-semibold">⏱ Your lock expires in {formatClock(lockTimer)} — after that, anyone can steal your stage for ${stealPrice}.</p>
+                <p className="mt-1 text-xs leading-5 text-amber-100/75">Share now while you&apos;re still the one on stage.</p>
+              </div>
+              <div role="group" aria-label="Share your takeover" className="mt-4 flex flex-wrap items-center gap-2">
+                <span className="mr-1 text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">Share</span>
+                <button
+                  type="button"
+                  title="Share to X"
+                  aria-label="Share to X"
+                  onClick={() => handleSocialShare('x')}
+                  className="group inline-flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-400/25 bg-emerald-500/10 text-emerald-100 transition hover:border-emerald-300/50 hover:bg-emerald-500/20 hover:shadow-[0_0_18px_rgba(16,185,129,0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+                >
+                  <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-current transition-transform group-hover:scale-110"><path d="M18.9 2H22l-6.8 7.8L23.2 22h-6.3L12 14.6 5.6 22H2.4l7.3-8.4L1.9 2h6.5l4.5 6.8L18.9 2Zm-1.1 18h1.7L7.4 3.9H5.6L17.8 20Z" /></svg>
+                </button>
+                <button
+                  type="button"
+                  title="Share to Facebook"
+                  aria-label="Share to Facebook"
+                  onClick={() => handleSocialShare('facebook')}
+                  className="group inline-flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-400/25 bg-emerald-500/10 text-emerald-100 transition hover:border-emerald-300/50 hover:bg-emerald-500/20 hover:shadow-[0_0_18px_rgba(16,185,129,0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+                >
+                  <span aria-hidden="true" className="text-xl font-black leading-none transition-transform group-hover:scale-110">f</span>
+                </button>
+                <button
+                  type="button"
+                  title="Share to LinkedIn"
+                  aria-label="Share to LinkedIn"
+                  onClick={() => handleSocialShare('linkedin')}
+                  className="group inline-flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-400/25 bg-emerald-500/10 text-emerald-100 transition hover:border-emerald-300/50 hover:bg-emerald-500/20 hover:shadow-[0_0_18px_rgba(16,185,129,0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+                >
+                  <span aria-hidden="true" className="text-sm font-black leading-none transition-transform group-hover:scale-110">in</span>
+                </button>
+                <button
+                  type="button"
+                  title="Share to Reddit"
+                  aria-label="Share to Reddit"
+                  onClick={() => handleSocialShare('reddit')}
+                  className="group inline-flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-400/25 bg-emerald-500/10 text-emerald-100 transition hover:border-emerald-300/50 hover:bg-emerald-500/20 hover:shadow-[0_0_18px_rgba(16,185,129,0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+                >
+                  <span aria-hidden="true" className="text-sm font-black leading-none transition-transform group-hover:scale-110">r/</span>
+                </button>
+                <button
+                  type="button"
+                  title="Share with another app"
+                  aria-label="Share with another app"
+                  onClick={handleNativeShare}
+                  className="group inline-flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-400/25 bg-emerald-500/10 text-emerald-100 transition hover:border-emerald-300/50 hover:bg-emerald-500/20 hover:shadow-[0_0_18px_rgba(16,185,129,0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+                >
+                  <Share2 aria-hidden="true" className="h-4 w-4 transition-transform group-hover:scale-110" />
+                </button>
+              </div>
               <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-xs leading-5 text-neutral-400">Tip: click inside the code block to select it, or use the copy button for one-tap clipboard access.</p>
                 <button
