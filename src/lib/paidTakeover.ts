@@ -1,4 +1,4 @@
-import { getBasePrice, PricingSettings } from './pricing';
+import { getBasePrice, PricingSettings, STEAL_PRICE_CAP } from './pricing';
 
 export const TAKEOVER_LOCK_WINDOW_MINUTES = 12;
 export const TAKEOVER_DURATION_MINUTES = 90;
@@ -21,8 +21,6 @@ export interface CheckoutQuoteContext {
   quotedBasePriceCents: number;
   quotedStealPriceCents: number;
   quotedCurrency: string;
-  stealFlatIncreaseCents: number;
-  stealMultiplierBasisPoints: number;
 }
 
 export interface FulfillmentDecision {
@@ -84,8 +82,6 @@ export function buildCheckoutQuoteContext({
     quotedBasePriceCents: toAmountCents(getBasePrice(now, pricingSettings)),
     quotedStealPriceCents: toAmountCents(requiredStealPrice),
     quotedCurrency: 'usd',
-    stealFlatIncreaseCents: toAmountCents(pricingSettings.stealFlatIncrease),
-    stealMultiplierBasisPoints: Math.round(pricingSettings.stealMultiplier * 10_000),
   };
 }
 
@@ -113,8 +109,6 @@ export function buildCheckoutMetadata({
     quoteactivebidcents: String(quote.quotedActiveBidCents),
     quotebasepricecents: String(quote.quotedBasePriceCents),
     quotestealpricecents: String(quote.quotedStealPriceCents),
-    quotestealflatincreasecents: String(quote.stealFlatIncreaseCents),
-    quotestealmultiplierbps: String(quote.stealMultiplierBasisPoints),
     quotelockwindowminutes: String(TAKEOVER_LOCK_WINDOW_MINUTES),
     quotedurationminutes: String(TAKEOVER_DURATION_MINUTES),
   };
@@ -131,8 +125,6 @@ export function parseCheckoutQuoteContext(metadata?: Record<string, string | nul
   const quotedStealPriceCents = parseInteger(metadata.quotestealpricecents ?? metadata.bidamountcents);
   const quotedBasePriceCents = parseInteger(metadata.quotebasepricecents);
   const quotedActiveBidCents = parseInteger(metadata.quoteactivebidcents) ?? 0;
-  const stealFlatIncreaseCents = parseInteger(metadata.quotestealflatincreasecents);
-  const stealMultiplierBasisPoints = parseInteger(metadata.quotestealmultiplierbps);
   const quotedAt = parseDate(metadata.quotecreatedat)?.toISOString();
   const quotedCurrency = String(metadata.currency || metadata.quotecurrency || '').toLowerCase();
 
@@ -140,9 +132,7 @@ export function parseCheckoutQuoteContext(metadata?: Record<string, string | nul
     !quotedAt ||
     !quotedCurrency ||
     quotedStealPriceCents == null ||
-    quotedBasePriceCents == null ||
-    stealFlatIncreaseCents == null ||
-    stealMultiplierBasisPoints == null
+    quotedBasePriceCents == null
   ) {
     return null;
   }
@@ -155,8 +145,6 @@ export function parseCheckoutQuoteContext(metadata?: Record<string, string | nul
     quotedBasePriceCents,
     quotedStealPriceCents,
     quotedCurrency,
-    stealFlatIncreaseCents,
-    stealMultiplierBasisPoints,
   };
 }
 
@@ -192,27 +180,17 @@ export function validateStripeCheckoutQuote({
   return null;
 }
 
+const STEAL_PRICE_CAP_CENTS = STEAL_PRICE_CAP * 100;
+
 export function calculateQuotedStealPrice({
   quotedActiveBidCents,
   quotedBasePriceCents,
-  stealFlatIncreaseCents,
-  stealMultiplierBasisPoints,
-}: Pick<
-  CheckoutQuoteContext,
-  'quotedActiveBidCents' | 'quotedBasePriceCents' | 'stealFlatIncreaseCents' | 'stealMultiplierBasisPoints'
->) {
-  const quotedBid = quotedActiveBidCents / 100;
-  const quotedBasePrice = quotedBasePriceCents / 100;
-  const quotedFlatIncrease = stealFlatIncreaseCents / 100;
-  const quotedMultiplier = stealMultiplierBasisPoints / 10_000;
+}: Pick<CheckoutQuoteContext, 'quotedActiveBidCents' | 'quotedBasePriceCents'>) {
+  if (!quotedActiveBidCents || quotedActiveBidCents <= 0) {
+    return quotedBasePriceCents;
+  }
 
-  return toAmountCents(
-    Math.max(
-      quotedBid * quotedMultiplier,
-      quotedBid + quotedFlatIncrease,
-      quotedBasePrice
-    )
-  );
+  return Math.min(quotedActiveBidCents * 2, STEAL_PRICE_CAP_CENTS);
 }
 
 export function calculateStealPriceFromQuoteInputs({
@@ -220,18 +198,13 @@ export function calculateStealPriceFromQuoteInputs({
   quote,
 }: {
   currentBidCents: number;
-  quote: Pick<
-    CheckoutQuoteContext,
-    'quotedBasePriceCents' | 'stealFlatIncreaseCents' | 'stealMultiplierBasisPoints'
-  >;
+  quote: Pick<CheckoutQuoteContext, 'quotedBasePriceCents'>;
 }) {
-  return toAmountCents(
-    Math.max(
-      currentBidCents / 100 * (quote.stealMultiplierBasisPoints / 10_000),
-      currentBidCents / 100 + quote.stealFlatIncreaseCents / 100,
-      quote.quotedBasePriceCents / 100
-    )
-  );
+  if (!currentBidCents || currentBidCents <= 0) {
+    return quote.quotedBasePriceCents;
+  }
+
+  return Math.min(currentBidCents * 2, STEAL_PRICE_CAP_CENTS);
 }
 
 export function decideCheckoutFulfillment({

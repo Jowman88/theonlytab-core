@@ -8,22 +8,9 @@ let cachedSettings: PricingSettings | null = null;
 let cacheExpiresAt = 0;
 let dbRetryAfter = 0;
 
-function parseJsonEnv(value?: string): unknown {
-  if (!value) return undefined;
-  try {
-    return JSON.parse(value);
-  } catch {
-    return undefined;
-  }
-}
-
 function getEnvPricingOverrides(): Record<string, unknown> {
   return {
     basePrice: process.env.PRICING_BASE_PRICE,
-    primeBasePrice: process.env.PRICING_PRIME_BASE_PRICE,
-    stealMultiplier: process.env.PRICING_STEAL_MULTIPLIER,
-    stealFlatIncrease: process.env.PRICING_STEAL_FLAT_INCREASE,
-    primeWindows: parseJsonEnv(process.env.PRICING_PRIME_WINDOWS_JSON),
   };
 }
 
@@ -31,6 +18,14 @@ function isMissingTableError(error: any): boolean {
   return error?.code === '42P01';
 }
 
+/**
+ * NOTE: The `pricing_config` table still carries legacy
+ * `prime_base_price` / `steal_multiplier` / `steal_flat_increase` /
+ * `prime_windows_json` columns from the old prime-time pricing model.
+ * They are intentionally left in the schema for backward compatibility
+ * with existing database records, but are no longer read or used by the
+ * current "double per steal, capped at $299" pricing calculation below.
+ */
 export async function getServerPricingSettings(): Promise<PricingSettings> {
   const now = Date.now();
   if (cachedSettings && now < cacheExpiresAt) {
@@ -50,11 +45,7 @@ export async function getServerPricingSettings(): Promise<PricingSettings> {
     const result = await client.query(
       `
       SELECT
-        base_price,
-        prime_base_price,
-        steal_multiplier,
-        steal_flat_increase,
-        prime_windows_json
+        base_price
       FROM pricing_config
       WHERE id = 1
       `
@@ -71,10 +62,6 @@ export async function getServerPricingSettings(): Promise<PricingSettings> {
       ...DEFAULT_PRICING_SETTINGS,
       ...envFallback,
       basePrice: row.base_price ?? envFallback.basePrice,
-      primeBasePrice: row.prime_base_price ?? envFallback.primeBasePrice,
-      stealMultiplier: row.steal_multiplier ?? envFallback.stealMultiplier,
-      stealFlatIncrease: row.steal_flat_increase ?? envFallback.stealFlatIncrease,
-      primeWindows: row.prime_windows_json ?? envFallback.primeWindows,
     });
     dbRetryAfter = 0;
     cacheExpiresAt = now + CONFIG_CACHE_TTL_MS;
