@@ -24,7 +24,7 @@
   }
 
   .dashboard-marquee-track {
-    animation: dashboard-marquee 28s linear infinite;
+    animation: dashboard-marquee 14s linear infinite;
   }
 
   .dashboard-marquee-track:hover {
