@@ -78,6 +78,7 @@ const isValidTargetUrl = (value: string) => {
 export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: string }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamFrameRef = useRef<HTMLDivElement | null>(null);
+  const statusBarRef = useRef<HTMLDivElement | null>(null);
   const stealStageButtonRef = useRef<HTMLButtonElement | null>(null);
   const embedDialogRef = useRef<HTMLDivElement | null>(null);
   const confirmDialogRef = useRef<HTMLDivElement | null>(null);
@@ -87,6 +88,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const [stageTimer, setStageTimer] = useState<number>(0);
   const [hasFrames, setHasFrames] = useState<boolean>(false);
   const [historyList, setHistoryList] = useState<HistoryItem[]>([]);
+  const [hasStatusBarOverflow, setHasStatusBarOverflow] = useState(false);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEmbedOpen, setIsEmbedOpen] = useState(false);
@@ -693,6 +695,27 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const currentStake = slot?.current_bid || '0.00';
   const stageOwner = slot?.displayName || 'SYSTEM IDLE';
 
+  useEffect(() => {
+    const statusBar = statusBarRef.current;
+    if (!statusBar) return undefined;
+
+    const updateOverflow = () => {
+      setHasStatusBarOverflow(statusBar.scrollLeft + statusBar.clientWidth < statusBar.scrollWidth - 1);
+    };
+
+    statusBar.addEventListener('scroll', updateOverflow, { passive: true });
+    window.addEventListener('resize', updateOverflow);
+    const resizeObserver = new ResizeObserver(updateOverflow);
+    resizeObserver.observe(statusBar);
+    updateOverflow();
+
+    return () => {
+      statusBar.removeEventListener('scroll', updateOverflow);
+      window.removeEventListener('resize', updateOverflow);
+      resizeObserver.disconnect();
+    };
+  }, [stageUrl, currentStake, stealPrice, isLocked, lockTimer, socketStatus, isStealPriceCapped]);
+
   return (
     <div className="fixed inset-0 h-[100dvh] w-screen overflow-x-hidden overflow-y-auto bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.15),_transparent_30%),radial-gradient(circle_at_right,_rgba(251,191,36,0.08),_transparent_28%),linear-gradient(180deg,_#08090d_0%,_#050507_100%)] px-3 py-3 text-neutral-100 sm:px-4 sm:py-4 lg:h-screen lg:overflow-y-auto lg:px-6 lg:py-5">
       <div className="dashboard-grid pointer-events-none absolute inset-0 opacity-40" aria-hidden="true" />
@@ -725,7 +748,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
         <span>THE ONLY TAB</span>
       </Link>
 
-      <div className="relative z-10 flex h-full flex-col gap-4 lg:gap-5">
+      <div className="relative z-10 flex min-h-full flex-col gap-4 lg:h-full lg:min-h-0 lg:gap-5">
         {isFormOpen && (
           <button
             type="button"
@@ -735,7 +758,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
           />
         )}
 
-        <div className="relative flex min-h-0 flex-1 gap-4 lg:gap-5">
+        <div className="relative flex min-w-0 max-w-full flex-col gap-4 lg:min-h-0 lg:flex-1 lg:flex-row lg:gap-5">
           {isFormOpen && (
             <aside
               id="steal-stage-panel"
@@ -908,59 +931,68 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
             </aside>
           )}
 
-          <section className="flex min-h-0 min-w-0 max-w-full flex-1 flex-col gap-4 lg:gap-5">
-            <div
-              className="flex flex-nowrap items-center gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] font-medium text-neutral-300 shadow-[0_16px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/5 sm:gap-3 sm:px-4 sm:pl-48 lg:flex-wrap lg:overflow-x-visible lg:whitespace-normal"
-            >
-              <Link
-                href="/"
-                aria-label="Return to The Only Tab dashboard"
-                className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-white/55 transition hover:text-emerald-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 sm:hidden"
+          <section className="flex min-w-0 max-w-full flex-col gap-4 lg:min-h-0 lg:flex-1 lg:gap-5">
+            <div className="relative min-w-0 max-w-full">
+              <div
+                ref={statusBarRef}
+                className="scrollbar-hide flex min-w-0 max-w-full touch-pan-x flex-nowrap items-center gap-2 overflow-x-auto overflow-y-hidden overscroll-x-contain whitespace-nowrap rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] font-medium text-neutral-300 shadow-[0_16px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/5 sm:gap-3 sm:px-4 sm:pl-48 lg:flex-wrap lg:overflow-x-visible lg:whitespace-normal"
               >
-                Home
-              </Link>
-              <span className="text-white/20 sm:hidden">|</span>
-              <span className="truncate">
-                <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Stage</span>{' '}
-                <span className="text-white">{stageUrl}</span>
-              </span>
-              <span className="text-white/20">|</span>
-              <span>
-                <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Stake</span>{' '}
-                <span className="text-white">${currentStake}</span>
-              </span>
-              <span className="text-white/20">|</span>
-              <span>
-                <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Next</span>{' '}
-                <span className="text-amber-200">${stealPrice}</span>
-                {isStealPriceCapped && (
-                  <span className="ml-1.5 inline-flex items-center rounded-full border border-amber-300/40 bg-amber-300/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.18em] text-amber-200">
-                    Capped at $299
-                  </span>
-                )}
-              </span>
-              <span className="text-white/20">|</span>
-              <span className="inline-flex items-center gap-1.5">
-                <Clock3 className={`h-3.5 w-3.5 ${isLocked ? 'text-rose-300' : 'text-emerald-300'}`} />
-                <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Lock</span>{' '}
-                <span className={isLocked ? 'text-rose-200' : 'text-emerald-200'}>{isLocked ? formatClock(lockTimer) : 'OPEN'}</span>
-              </span>
-              <span className="text-white/20">|</span>
-              <span
-                className="inline-flex items-center gap-1.5"
-                aria-label={`Canvas connection is currently ${connectionStatusMeta.label}`}
-              >
-                <span className={`h-2 w-2 rounded-full ${connectionStatusMeta.accent} ${socketStatus !== 'disconnected' ? 'animate-pulse' : ''}`} />
-                <ConnectionIcon className="h-3.5 w-3.5" />
-                <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Link</span>{' '}
-                <span className="text-white">{connectionStatusMeta.label}</span>
-              </span>
+                <Link
+                  href="/"
+                  aria-label="Return to The Only Tab dashboard"
+                  className="inline-flex shrink-0 items-center rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-white/55 transition hover:text-emerald-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 sm:hidden"
+                >
+                  Home
+                </Link>
+                <span className="shrink-0 text-white/20 sm:hidden">|</span>
+                <span className="shrink-0 max-w-[65vw] truncate lg:max-w-[45%]">
+                  <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Stage</span>{' '}
+                  <span className="text-white">{stageUrl}</span>
+                </span>
+                <span className="shrink-0 text-white/20">|</span>
+                <span className="shrink-0">
+                  <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Stake</span>{' '}
+                  <span className="text-white">${currentStake}</span>
+                </span>
+                <span className="shrink-0 text-white/20">|</span>
+                <span className="shrink-0">
+                  <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Next</span>{' '}
+                  <span className="text-amber-200">${stealPrice}</span>
+                  {isStealPriceCapped && (
+                    <span className="ml-1.5 inline-flex items-center rounded-full border border-amber-300/40 bg-amber-300/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.18em] text-amber-200">
+                      Capped at $299
+                    </span>
+                  )}
+                </span>
+                <span className="shrink-0 text-white/20">|</span>
+                <span className="inline-flex shrink-0 items-center gap-1.5">
+                  <Clock3 className={`h-3.5 w-3.5 ${isLocked ? 'text-rose-300' : 'text-emerald-300'}`} />
+                  <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Lock</span>{' '}
+                  <span className={isLocked ? 'text-rose-200' : 'text-emerald-200'}>{isLocked ? formatClock(lockTimer) : 'OPEN'}</span>
+                </span>
+                <span className="shrink-0 text-white/20">|</span>
+                <span
+                  className="inline-flex shrink-0 items-center gap-1.5"
+                  aria-label={`Canvas connection is currently ${connectionStatusMeta.label}`}
+                >
+                  <span className={`h-2 w-2 rounded-full ${connectionStatusMeta.accent} ${socketStatus !== 'disconnected' ? 'animate-pulse' : ''}`} />
+                  <ConnectionIcon className="h-3.5 w-3.5" />
+                  <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Link</span>{' '}
+                  <span className="text-white">{connectionStatusMeta.label}</span>
+                </span>
+              </div>
+              {hasStatusBarOverflow && (
+                <div
+                  className="pointer-events-none absolute inset-y-0 right-0 w-8 rounded-r-2xl bg-gradient-to-l from-[#0b0d12]/95 to-transparent sm:hidden"
+                  aria-hidden="true"
+                />
+              )}
             </div>
 
-            <div className="flex min-h-0 min-w-0 max-w-full flex-1 flex-col gap-3 sm:gap-4">
+            <div className="flex min-w-0 max-w-full flex-col gap-3 sm:gap-4 lg:min-h-0 lg:flex-1">
               <div
                 ref={streamFrameRef}
-                className={`relative flex min-h-[300px] flex-1 overflow-hidden border border-white/10 bg-[linear-gradient(180deg,_rgba(15,18,25,0.98),_rgba(8,9,13,0.98))] shadow-[0_30px_100px_rgba(0,0,0,0.45)] ring-1 ring-white/5 lg:min-h-[350px] ${isFullscreen ? 'rounded-none p-0' : 'rounded-[1.75rem] p-3 sm:p-4'} ${isFullscreen && isCursorIdle && !isTouchDevice ? 'cursor-none' : ''}`}
+                className={`relative flex min-h-[300px] w-full shrink-0 overflow-hidden border border-white/10 bg-[linear-gradient(180deg,_rgba(15,18,25,0.98),_rgba(8,9,13,0.98))] shadow-[0_30px_100px_rgba(0,0,0,0.45)] ring-1 ring-white/5 lg:min-h-[350px] lg:flex-1 ${isFullscreen ? 'rounded-none p-0' : 'rounded-[1.75rem] p-3 sm:p-4'} ${isFullscreen && isCursorIdle && !isTouchDevice ? 'cursor-none' : ''}`}
               >
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.06),_transparent_28%)]" aria-hidden="true" />
                 <button
@@ -1033,23 +1065,25 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm shadow-[0_16px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/5">
-                <div className="min-w-0 flex-1">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-500">Stage owner</p>
-                  <p className="truncate text-sm font-semibold text-white sm:text-base">{stageOwner}</p>
-                </div>
-                <span className="hidden text-white/20 sm:inline">|</span>
+              <div className="flex w-full shrink-0 justify-center lg:justify-end">
                 <button
                   type="button"
                   onClick={() => setIsFormOpen((current) => !current)}
                   ref={stealStageButtonRef}
                   aria-controls="steal-stage-panel"
                   aria-expanded={isFormOpen}
-                  className="group shrink-0 inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-300/25 bg-[linear-gradient(135deg,_rgba(52,211,153,0.95),_rgba(6,182,212,0.88))] px-5 py-2.5 text-xs font-black uppercase tracking-[0.2em] text-slate-950 shadow-[0_0_30px_rgba(16,185,129,0.35)] animate-pulse motion-reduce:animate-none transition duration-200 hover:-translate-y-0.5 hover:animate-none hover:shadow-[0_0_45px_rgba(16,185,129,0.6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07080c]"
+                  className="group inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-emerald-300/25 bg-[linear-gradient(135deg,_rgba(52,211,153,0.95),_rgba(6,182,212,0.88))] px-5 py-3 text-xs font-black uppercase tracking-[0.2em] text-slate-950 shadow-[0_0_30px_rgba(16,185,129,0.35)] animate-pulse motion-reduce:animate-none transition duration-200 hover:-translate-y-0.5 hover:animate-none hover:shadow-[0_0_45px_rgba(16,185,129,0.6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07080c] sm:w-auto"
                 >
                   <Zap className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
                   STEAL STAGE
                 </button>
+              </div>
+
+              <div className="flex shrink-0 flex-wrap items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm shadow-[0_16px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/5">
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-500">Stage owner</p>
+                  <p className="truncate text-sm font-semibold text-white sm:text-base">{stageOwner}</p>
+                </div>
                 <span className="hidden text-white/20 sm:inline">|</span>
                 <button
                   type="button"
@@ -1063,39 +1097,39 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                   {isReporting ? 'Reporting…' : reportedSlotIds.includes(slot?.id || '') ? 'Reported' : 'Report'}
                 </button>
                 <span className="hidden text-white/20 sm:inline">|</span>
-                <div className="min-w-0 sm:min-w-[9rem]">
+                <div className="min-w-0 shrink-0 sm:min-w-[9rem]">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-500">Time on stage</p>
                   <p className="text-sm font-semibold text-emerald-200 sm:text-base">{formatClock(stageTimer)}</p>
                 </div>
               </div>
             </div>
 
-            <div className="min-w-0 w-full overflow-hidden rounded-3xl border border-white/10 bg-[linear-gradient(180deg,_rgba(17,20,27,0.94),_rgba(8,10,14,0.98))] px-4 py-4 shadow-[0_16px_50px_rgba(0,0,0,0.25)] ring-1 ring-white/5 sm:px-5">
-              <div className="mb-3 flex items-center justify-between gap-3">
+            <div className="min-w-0 w-full shrink-0 overflow-hidden rounded-3xl border border-white/10 bg-[linear-gradient(180deg,_rgba(17,20,27,0.94),_rgba(8,10,14,0.98))] px-3 py-3 shadow-[0_16px_50px_rgba(0,0,0,0.25)] ring-1 ring-white/5 sm:px-5 sm:py-4">
+              <div className="mb-2 flex items-center justify-between gap-3 sm:mb-3">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-neutral-400">History ticker</p>
-                  <p className="mt-1 text-sm text-neutral-300">Recent takeovers and the bids that moved the board.</p>
+                  <p className="mt-1 hidden text-sm text-neutral-300 sm:block">Recent takeovers and the bids that moved the board.</p>
                 </div>
-                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-neutral-300">Live ledger</span>
+                <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-neutral-300 sm:px-3 sm:py-1 sm:text-xs sm:tracking-[0.18em]">Live ledger</span>
               </div>
 
               {historyList.length > 0 ? (
-                <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/20 px-3 py-3">
-                  <div className="dashboard-marquee-track flex min-w-max items-center gap-6 whitespace-nowrap px-4">
+                <div className="min-h-[3.625rem] min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-black/20 px-2 py-2 sm:px-3 sm:py-3">
+                  <div className="dashboard-marquee-track flex min-w-max items-center gap-3 whitespace-nowrap px-2 sm:gap-6 sm:px-4">
                     {historyTickerItems.map((item, idx) => (
-                      <div key={`${item.displayName || 'history'}-${idx}`} className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2 text-sm shadow-[0_8px_30px_rgba(0,0,0,0.2)]">
-                        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-200">↗</span>
+                      <div key={`${item.displayName || 'history'}-${idx}`} className="flex items-center gap-1.5 rounded-2xl border border-white/10 bg-white/[0.04] px-2 py-1 text-xs shadow-[0_8px_30px_rgba(0,0,0,0.2)] sm:gap-2 sm:px-4 sm:py-2 sm:text-sm">
+                        <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-xs text-emerald-200 sm:h-7 sm:w-7 sm:text-base">↗</span>
                         <span className="max-w-[120px] truncate font-semibold text-white">{item.displayName || 'Anonymous Takeover'}</span>
-                        <span className="max-w-[120px] truncate rounded-full border border-white/10 bg-black/30 px-2.5 py-1 text-xs text-neutral-300">{stripProtocol(item.currentUrl) || 'standby'}</span>
-                        <span className="rounded-full border border-amber-400/20 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-200">\${item.currentBid || '0.00'}</span>
+                        <span className="max-w-[120px] truncate rounded-full border border-white/10 bg-black/30 px-2 py-0.5 text-[10px] text-neutral-300 sm:px-2.5 sm:py-1 sm:text-xs">{stripProtocol(item.currentUrl) || 'standby'}</span>
+                        <span className="rounded-full border border-amber-400/20 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-200 sm:px-2.5 sm:py-1 sm:text-xs">\${item.currentBid || '0.00'}</span>
                       </div>
                     ))}
                   </div>
                 </div>
               ) : (
-                <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 px-4 py-6 text-center">
+                <div className="flex min-h-[3.625rem] flex-col justify-center rounded-2xl border border-dashed border-white/10 bg-black/20 px-3 py-2 text-center sm:px-4 sm:py-[9px]">
                   <p className="text-sm font-semibold text-white">No history yet</p>
-                  <p className="mt-2 text-sm leading-6 text-neutral-400">The ticker will light up here as soon as the first takeover lands.</p>
+                  <p className="mt-1 hidden text-sm leading-6 text-neutral-400 sm:block sm:mt-2">The ticker will light up here as soon as the first takeover lands.</p>
                 </div>
               )}
             </div>
