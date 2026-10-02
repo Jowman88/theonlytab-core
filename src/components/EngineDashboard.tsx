@@ -908,7 +908,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
             </aside>
           )}
 
-          <section className="flex min-h-0 flex-1 flex-col gap-4 lg:gap-5">
+          <section className="flex min-h-0 min-w-0 max-w-full flex-1 flex-col gap-4 lg:gap-5">
             <div
               className="flex flex-nowrap items-center gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] font-medium text-neutral-300 shadow-[0_16px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/5 sm:gap-3 sm:px-4 sm:pl-48 lg:flex-wrap lg:overflow-x-visible lg:whitespace-normal"
             >
@@ -957,7 +957,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
               </span>
             </div>
 
-            <div className="flex min-h-0 flex-1 flex-col gap-3 sm:gap-4">
+            <div className="flex min-h-0 min-w-0 max-w-full flex-1 flex-col gap-3 sm:gap-4">
               <div
                 ref={streamFrameRef}
                 className={`relative flex min-h-[300px] flex-1 overflow-hidden border border-white/10 bg-[linear-gradient(180deg,_rgba(15,18,25,0.98),_rgba(8,9,13,0.98))] shadow-[0_30px_100px_rgba(0,0,0,0.45)] ring-1 ring-white/5 lg:min-h-[350px] ${isFullscreen ? 'rounded-none p-0' : 'rounded-[1.75rem] p-3 sm:p-4'} ${isFullscreen && isCursorIdle && !isTouchDevice ? 'cursor-none' : ''}`}
@@ -1070,7 +1070,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
               </div>
             </div>
 
-            <div className="rounded-3xl border border-white/10 bg-[linear-gradient(180deg,_rgba(17,20,27,0.94),_rgba(8,10,14,0.98))] px-4 py-4 shadow-[0_16px_50px_rgba(0,0,0,0.25)] ring-1 ring-white/5 sm:px-5">
+            <div className="min-w-0 w-full overflow-hidden rounded-3xl border border-white/10 bg-[linear-gradient(180deg,_rgba(17,20,27,0.94),_rgba(8,10,14,0.98))] px-4 py-4 shadow-[0_16px_50px_rgba(0,0,0,0.25)] ring-1 ring-white/5 sm:px-5">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-neutral-400">History ticker</p>
