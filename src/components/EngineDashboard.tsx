@@ -938,17 +938,9 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
             <div className="relative min-w-0 max-w-full">
               <div
                 ref={statusBarRef}
-                className="scrollbar-hide min-w-0 max-w-full touch-pan-x overflow-x-auto overflow-y-hidden overscroll-x-contain rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] font-medium text-neutral-300 shadow-[0_16px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/5 [-webkit-overflow-scrolling:touch] sm:px-4 sm:pl-48 lg:overflow-x-visible"
+                className="scrollbar-hide min-w-0 max-w-full touch-pan-x overflow-x-auto overflow-y-hidden overscroll-x-contain rounded-2xl border border-white/10 bg-white/[0.04] py-2 pl-40 pr-3 text-[11px] font-medium text-neutral-300 shadow-[0_16px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/5 [-webkit-overflow-scrolling:touch] sm:px-4 sm:pl-48 lg:overflow-x-visible"
               >
                 <div className="inline-flex w-max min-w-full flex-nowrap items-center gap-2 whitespace-nowrap sm:gap-3 lg:flex lg:w-full lg:flex-wrap lg:whitespace-normal">
-                <Link
-                  href="/"
-                  aria-label="Return to The Only Tab dashboard"
-                  className="inline-flex shrink-0 items-center rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-white/55 transition hover:text-emerald-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 sm:hidden"
-                >
-                  Home
-                </Link>
-                <span className="shrink-0 text-white/20 sm:hidden">|</span>
                 <span className="max-w-none shrink-0 lg:max-w-[45%] lg:truncate">
                   <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Stage</span>{' '}
                   <span className="text-white">{stageUrl}</span>
