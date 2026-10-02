@@ -88,7 +88,8 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const [stageTimer, setStageTimer] = useState<number>(0);
   const [hasFrames, setHasFrames] = useState<boolean>(false);
   const [historyList, setHistoryList] = useState<HistoryItem[]>([]);
-  const [hasStatusBarOverflow, setHasStatusBarOverflow] = useState(false);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEmbedOpen, setIsEmbedOpen] = useState(false);
@@ -700,19 +701,21 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
     if (!statusBar) return undefined;
 
     const updateOverflow = () => {
-      setHasStatusBarOverflow(statusBar.scrollLeft + statusBar.clientWidth < statusBar.scrollWidth - 1);
+      setCanScrollLeft(statusBar.scrollLeft > 1);
+      setCanScrollRight(statusBar.scrollLeft + statusBar.clientWidth < statusBar.scrollWidth - 1);
     };
 
     statusBar.addEventListener('scroll', updateOverflow, { passive: true });
     window.addEventListener('resize', updateOverflow);
-    const resizeObserver = new ResizeObserver(updateOverflow);
-    resizeObserver.observe(statusBar);
+    const resizeObserver = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(updateOverflow) : null;
+    resizeObserver?.observe(statusBar);
+    if (statusBar.firstElementChild) resizeObserver?.observe(statusBar.firstElementChild);
     updateOverflow();
 
     return () => {
       statusBar.removeEventListener('scroll', updateOverflow);
       window.removeEventListener('resize', updateOverflow);
-      resizeObserver.disconnect();
+      resizeObserver?.disconnect();
     };
   }, [stageUrl, currentStake, stealPrice, isLocked, lockTimer, socketStatus, isStealPriceCapped]);
 
@@ -935,8 +938,9 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
             <div className="relative min-w-0 max-w-full">
               <div
                 ref={statusBarRef}
-                className="scrollbar-hide flex min-w-0 max-w-full touch-pan-x flex-nowrap items-center gap-2 overflow-x-auto overflow-y-hidden overscroll-x-contain whitespace-nowrap rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] font-medium text-neutral-300 shadow-[0_16px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/5 sm:gap-3 sm:px-4 sm:pl-48 lg:flex-wrap lg:overflow-x-visible lg:whitespace-normal"
+                className="scrollbar-hide min-w-0 max-w-full touch-pan-x overflow-x-auto overflow-y-hidden overscroll-x-contain rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] font-medium text-neutral-300 shadow-[0_16px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/5 [-webkit-overflow-scrolling:touch] sm:px-4 sm:pl-48 lg:overflow-x-visible"
               >
+                <div className="inline-flex w-max min-w-full flex-nowrap items-center gap-2 whitespace-nowrap sm:gap-3 lg:flex lg:w-full lg:flex-wrap lg:whitespace-normal">
                 <Link
                   href="/"
                   aria-label="Return to The Only Tab dashboard"
@@ -945,7 +949,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                   Home
                 </Link>
                 <span className="shrink-0 text-white/20 sm:hidden">|</span>
-                <span className="shrink-0 max-w-[65vw] truncate lg:max-w-[45%]">
+                <span className="max-w-none shrink-0 lg:max-w-[45%] lg:truncate">
                   <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Stage</span>{' '}
                   <span className="text-white">{stageUrl}</span>
                 </span>
@@ -980,8 +984,15 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                   <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Link</span>{' '}
                   <span className="text-white">{connectionStatusMeta.label}</span>
                 </span>
+                </div>
               </div>
-              {hasStatusBarOverflow && (
+              {canScrollLeft && (
+                <div
+                  className="pointer-events-none absolute inset-y-0 left-0 w-8 rounded-l-2xl bg-gradient-to-r from-[#0b0d12]/95 to-transparent sm:hidden"
+                  aria-hidden="true"
+                />
+              )}
+              {canScrollRight && (
                 <div
                   className="pointer-events-none absolute inset-y-0 right-0 w-8 rounded-r-2xl bg-gradient-to-l from-[#0b0d12]/95 to-transparent sm:hidden"
                   aria-hidden="true"
