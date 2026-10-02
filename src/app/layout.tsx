@@ -1,6 +1,7 @@
 import './globals.css';
 import React from 'react';
 import type { Metadata, Viewport } from 'next';
+import { Analytics } from '@vercel/analytics/next';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -18,6 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className="h-full bg-neutral-50">
       <body className="h-full antialiased">
         {children}
+        <Analytics />
       </body>
     </html>
   );
