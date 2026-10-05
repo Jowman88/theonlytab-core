@@ -3,6 +3,7 @@ import { logger } from '../../../../lib/logger';
 import { getDbPool } from '../../../../lib/db';
 import { ACTIVE_SLOT_ORDER_BY_SQL } from '../../../../lib/paidTakeover';
 import { isValidAdminSecret } from '../../../../lib/adminAuth';
+import { settlePredictions } from '../../../../lib/predictions';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,6 +47,8 @@ export async function POST(request: Request) {
     } finally {
       client.release();
     }
+
+    if (slotId) await settlePredictions(slotId, new Date());
 
     logger.info('Admin stage revert completed', {
       route: 'admin/revert-to-house',

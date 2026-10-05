@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { logger } from '../lib/logger';
+import PredictReignCard from './PredictReignCard';
 
 interface SlotData {
   id: string;
@@ -32,6 +33,9 @@ interface SlotData {
   crowdPercent?: number;
   secondsOnStage?: number;
   secondsLeftInLock?: number;
+  predictionOpen?: boolean;
+  secondsLeftToPredict?: number;
+  totalPredictions?: number;
 }
 
 interface HistoryItem {
@@ -1161,6 +1165,12 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                 </div>
               </div>
             </div>
+
+            <PredictReignCard
+              slotId={slot?.id}
+              secondsLeftToPredict={slot?.secondsLeftToPredict}
+              totalPredictions={slot?.totalPredictions}
+            />
 
             <div className="min-w-0 w-full shrink-0 overflow-hidden rounded-3xl border border-white/10 bg-[linear-gradient(180deg,_rgba(17,20,27,0.94),_rgba(8,10,14,0.98))] px-3 py-3 shadow-[0_16px_50px_rgba(0,0,0,0.25)] ring-1 ring-white/5 sm:px-5 sm:py-4">
               <div className="mb-2 flex items-center justify-between gap-3 sm:mb-3">
