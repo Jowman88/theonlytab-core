@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buildLockedCheckoutResponse, LOCKED_CHECKOUT_ERROR_MESSAGE } from '../src/lib/checkoutResponses';
+import { buildProtectedCheckoutResponse } from '../src/lib/checkoutResponses';
 import {
   buildCheckoutMetadata,
   buildCheckoutQuoteContext,
   calculateQuotedStealPrice,
   decideCheckoutFulfillment,
-  getSecondsLeftInLock,
+  getSecondsLeftInProtection,
   parseCheckoutQuoteContext,
   validateStripeCheckoutQuote,
 } from '../src/lib/paidTakeover';
@@ -101,7 +101,7 @@ test('concurrent checkout fulfillment defers stale payment when another takeover
   });
 
   assert.equal(decision.action, 'defer');
-  assert.equal(decision.reason, 'active_slot_changed_and_locked');
+  assert.equal(decision.reason, 'active_slot_changed_and_protected');
   assert.equal(decision.currentActiveSlotId, 'slot-active-2');
 });
 
@@ -125,7 +125,7 @@ test('stale checkout context without a quoted active slot is deferred when a new
   });
 
   assert.equal(decision.action, 'defer');
-  assert.equal(decision.reason, 'active_slot_changed_and_locked');
+  assert.equal(decision.reason, 'active_slot_missing_quote');
 });
 
 test('failed payment metadata is rejected for invalid currency, amount, or missing quote', () => {
@@ -190,37 +190,55 @@ test('tax-inclusive Stripe checkout validates against the pre-tax subtotal', () 
   );
 });
 
-test('lock timer enforcement only blocks paid slots inside the first 12 minutes', () => {
-  const lockedSeconds = getSecondsLeftInLock(
+test('protection timer only blocks paid slots during the first 90 seconds', () => {
+  const protectedSeconds = getSecondsLeftInProtection(
     createActiveSlot({
       currentBid: 40,
-      createdAt: new Date(now.getTime() - 5 * 60 * 1000).toISOString(),
+      createdAt: new Date(now.getTime() - 30 * 1000).toISOString(),
     }),
     now
   );
-  const unlockedSeconds = getSecondsLeftInLock(
+  const expiredSeconds = getSecondsLeftInProtection(
     createActiveSlot({
       currentBid: 40,
-      createdAt: new Date(now.getTime() - 13 * 60 * 1000).toISOString(),
+      createdAt: new Date(now.getTime() - 91 * 1000).toISOString(),
     }),
     now
   );
 
-  assert.ok(lockedSeconds > 0);
-  assert.equal(unlockedSeconds, 0);
+  assert.equal(protectedSeconds, 60);
+  assert.equal(expiredSeconds, 0);
 });
 
-test('checkout route lock response stays a user-visible 400', async () => {
-  const response = buildLockedCheckoutResponse({
+test('checkout route explains the remaining protection time', async () => {
+  const response = buildProtectedCheckoutResponse({
     clientIpBucket: 'bucket-123',
     activeSlotId: 'slot-active-1',
-    targetUrl: 'https://example.com/locked',
+    targetUrl: 'https://example.com/protected',
+    secondsLeft: 42,
   });
 
   assert.equal(response.status, 400);
   assert.deepEqual(await response.json(), {
-    error: LOCKED_CHECKOUT_ERROR_MESSAGE,
+    error: 'Stage is protected for 42 more seconds.',
   });
+});
+
+test('protection ends at 90 seconds and future stage timestamps cannot extend it', () => {
+  assert.equal(
+    getSecondsLeftInProtection(
+      createActiveSlot({ createdAt: new Date(now.getTime() - 90_000).toISOString() }),
+      now
+    ),
+    0
+  );
+  assert.equal(
+    getSecondsLeftInProtection(
+      createActiveSlot({ createdAt: new Date(now.getTime() + 60_000).toISOString() }),
+      now
+    ),
+    90
+  );
 });
 
 test('stale base-price checkout still fulfills when it covers a newer unlocked slot', () => {

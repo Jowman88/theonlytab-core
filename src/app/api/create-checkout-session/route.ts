@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { buildLockedCheckoutResponse } from '../../../lib/checkoutResponses';
+import { buildProtectedCheckoutResponse } from '../../../lib/checkoutResponses';
 import { getDbPool } from '../../../lib/db';
 import { getActiveLikeCount } from '../../../lib/likes';
 import { hashIdentifier, logger, redactUrl } from '../../../lib/logger';
@@ -8,7 +8,7 @@ import {
   ACTIVE_SLOT_ORDER_BY_SQL,
   buildCheckoutMetadata,
   buildCheckoutQuoteContext,
-  isSlotLocked,
+  getSecondsLeftInProtection,
   normalizeBidAmount,
   TAKEOVER_DURATION_MINUTES,
 } from '../../../lib/paidTakeover';
@@ -142,7 +142,7 @@ export async function POST(req: Request) {
 
     try {
       const activeRes = await client.query(
-        `SELECT id, current_bid, created_at FROM slots WHERE is_frozen = FALSE AND expires_at > NOW() ORDER BY ${ACTIVE_SLOT_ORDER_BY_SQL} LIMIT 1`
+        `SELECT id, current_bid, created_at, report_count FROM slots WHERE is_frozen = FALSE AND expires_at > NOW() ORDER BY ${ACTIVE_SLOT_ORDER_BY_SQL} LIMIT 1`
       );
 
       const activeSlot = activeRes.rows?.[0]
@@ -157,15 +157,19 @@ export async function POST(req: Request) {
       let crowdPercent = 0;
 
       if (activeSlot?.currentBid && activeSlot.currentBid > 0) {
-        if (isSlotLocked(activeSlot)) {
-          return buildLockedCheckoutResponse({
+        const secondsLeftInProtection = getSecondsLeftInProtection(activeSlot);
+        if (secondsLeftInProtection > 0) {
+          return buildProtectedCheckoutResponse({
             clientIpBucket,
             activeSlotId: activeSlot.id,
             targetUrl: finalTargetUrl,
+            secondsLeft: secondsLeftInProtection,
           });
         }
 
-        const activeLikes = await getActiveLikeCount(client, activeSlot.id);
+        const activeLikes = Number(activeRes.rows[0].report_count || 0) > 0
+          ? 0
+          : await getActiveLikeCount(client, activeSlot.id);
         crowdPercent = getCrowdPercent(activeLikes);
         requiredStealPrice = calculateStealPrice(activeSlot.currentBid, new Date(), pricingSettings, activeLikes);
       }
