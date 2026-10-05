@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getDbPool } from '../../../lib/db';
 import { getActiveLikeCount } from '../../../lib/likes';
 import { logger } from '../../../lib/logger';
-import { ACTIVE_SLOT_ORDER_BY_SQL } from '../../../lib/paidTakeover';
+import { ACTIVE_SLOT_ORDER_BY_SQL, getSecondsLeftInProtection } from '../../../lib/paidTakeover';
 import { calculateStealPrice, getBasePrice, getCrowdPercent, PricingSettings } from '../../../lib/pricing';
 import { getServerPricingSettings } from '../../../lib/pricingConfig';
 
@@ -20,7 +20,7 @@ export async function GET() {
     await client.query(`UPDATE slots SET is_frozen = TRUE WHERE is_frozen = FALSE AND expires_at <= NOW()`);
 
     const activeRes = await client.query(
-      `SELECT id, current_url as "currentUrl", display_name as "displayName", current_bid, expires_at as "expiresAt", created_at as "createdAt"
+      `SELECT id, current_url as "currentUrl", display_name as "displayName", current_bid, expires_at as "expiresAt", created_at as "createdAt", report_count as "reportCount"
        FROM slots
        WHERE is_frozen = FALSE AND expires_at > NOW()
        ORDER BY ${ACTIVE_SLOT_ORDER_BY_SQL}
@@ -38,10 +38,16 @@ export async function GET() {
       }
       const currentPaid = Number.parseFloat(row.current_bid || '0');
       const activeLikes = await getActiveLikeCount(client, String(row.id));
-      const nextStealPrice = calculateStealPrice(currentPaid, new Date(), pricingSettings, activeLikes);
+      const isReported = Number(row.reportCount || 0) > 0;
+      const crowdLikes = isReported ? 0 : activeLikes;
+      const nextStealPrice = calculateStealPrice(currentPaid, new Date(), pricingSettings, crowdLikes);
 
-      const secondsOnStage = Math.floor((Date.now() - new Date(row.createdAt).getTime()) / 1000);
-      const secondsLeftInLock = Math.max(0, (12 * 60) - secondsOnStage);
+      const secondsOnStage = Math.max(0, Math.floor((Date.now() - new Date(row.createdAt).getTime()) / 1000));
+      const secondsLeftInProtection = getSecondsLeftInProtection({
+        id: String(row.id),
+        currentBid: currentPaid,
+        createdAt: row.createdAt,
+      });
 
       return NextResponse.json({
         data: {
@@ -49,10 +55,10 @@ export async function GET() {
           current_bid: currentPaid.toFixed(2),
           stealPrice: nextStealPrice.toFixed(2),
           active_likes: activeLikes,
-          crowdPercent: currentPaid > 0 ? getCrowdPercent(activeLikes) : 0,
+          crowdPercent: currentPaid > 0 ? getCrowdPercent(crowdLikes) : 0,
+          isReported,
           secondsOnStage,
-          secondsLeftInLock,
-          isLocked: secondsLeftInLock > 0,
+          secondsLeftInProtection,
         }
       });
     }
@@ -65,8 +71,8 @@ export async function GET() {
         current_bid: '0.00',
         stealPrice: getBasePrice(new Date(), pricingSettings).toFixed(2),
         secondsOnStage: 0,
-        secondsLeftInLock: 0,
-        isLocked: false,
+        secondsLeftInProtection: 0,
+        isReported: false,
         active_likes: 0,
         crowdPercent: 0,
       }
@@ -90,8 +96,8 @@ export async function GET() {
           current_bid: '0.00',
           stealPrice: fallbackStealPrice,
           secondsOnStage: 0,
-          secondsLeftInLock: 0,
-          isLocked: false,
+          secondsLeftInProtection: 0,
+          isReported: false,
         },
       },
       { status: 200 }

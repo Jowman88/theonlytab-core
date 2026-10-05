@@ -1,6 +1,6 @@
 import { calculateStealPriceCents, getBasePrice, PricingSettings } from './pricing';
 
-export const TAKEOVER_LOCK_WINDOW_MINUTES = 12;
+export const PROTECTION_WINDOW_SECONDS = 90;
 export const QUOTE_LOCK_MINUTES = 5;
 export const TAKEOVER_DURATION_MINUTES = 90;
 export const ACTIVE_SLOT_ORDER_BY_SQL = 'created_at DESC, id DESC';
@@ -30,12 +30,12 @@ export interface FulfillmentDecision {
   reason?:
     | 'existing_session'
     | 'active_slot_changed'
-    | 'active_slot_changed_and_locked'
+    | 'active_slot_changed_and_protected'
     | 'active_slot_missing_quote';
   currentActiveSlotId: string | null;
   quotedActiveSlotId: string | null;
   firstSeenAt?: string | null;
-  isLocked?: boolean;
+  isProtected?: boolean;
 }
 
 function parseDate(value: Date | string | null | undefined): Date | null {
@@ -53,16 +53,16 @@ export function toAmountCents(value: number | string): number {
   return Math.round(Number(value) * 100);
 }
 
-export function getSecondsLeftInLock(slot: ActiveSlotSnapshot | null | undefined, now = new Date()) {
+export function getSecondsLeftInProtection(slot: ActiveSlotSnapshot | null | undefined, now = new Date()) {
   if (!slot || slot.currentBid <= 0) return 0;
   const createdAt = parseDate(slot.createdAt);
   if (!createdAt) return 0;
-  const elapsedSeconds = Math.floor((now.getTime() - createdAt.getTime()) / 1000);
-  return Math.max(0, TAKEOVER_LOCK_WINDOW_MINUTES * 60 - elapsedSeconds);
+  const elapsedSeconds = (now.getTime() - createdAt.getTime()) / 1000;
+  return Math.max(0, Math.min(PROTECTION_WINDOW_SECONDS, Math.ceil(PROTECTION_WINDOW_SECONDS - elapsedSeconds)));
 }
 
-export function isSlotLocked(slot: ActiveSlotSnapshot | null | undefined, now = new Date()) {
-  return getSecondsLeftInLock(slot, now) > 0;
+export function isSlotProtected(slot: ActiveSlotSnapshot | null | undefined, now = new Date()) {
+  return getSecondsLeftInProtection(slot, now) > 0;
 }
 
 export function buildCheckoutQuoteContext({
@@ -116,7 +116,6 @@ export function buildCheckoutMetadata({
     quotestealpricecents: String(quote.quotedStealPriceCents),
     quotecrowdpercent: String(quote.quotedCrowdPercent),
     quotelockminutes: String(QUOTE_LOCK_MINUTES),
-    quotelockwindowminutes: String(TAKEOVER_LOCK_WINDOW_MINUTES),
     quotedurationminutes: String(TAKEOVER_DURATION_MINUTES),
   };
 }
@@ -238,34 +237,34 @@ export function decideCheckoutFulfillment({
     };
   }
 
-  const locked = isSlotLocked(currentActiveSlot, now);
+  const protectedStage = isSlotProtected(currentActiveSlot, now);
 
   if (quote.quotedActiveSlotId) {
     if (currentActiveSlot && currentActiveSlot.id !== quote.quotedActiveSlotId) {
       return {
         action: 'defer',
-        reason: locked ? 'active_slot_changed_and_locked' : 'active_slot_changed',
+        reason: protectedStage ? 'active_slot_changed_and_protected' : 'active_slot_changed',
         currentActiveSlotId: currentActiveSlot.id,
         quotedActiveSlotId: quote.quotedActiveSlotId,
-        isLocked: locked,
+        isProtected: protectedStage,
       };
     }
   } else if (currentActiveSlot && currentActiveSlot.currentBid > 0) {
-    if (!locked && currentRequiredPriceCents != null && quote.quotedStealPriceCents >= currentRequiredPriceCents) {
+    if (!protectedStage && currentRequiredPriceCents != null && quote.quotedStealPriceCents >= currentRequiredPriceCents) {
       return {
         action: 'fulfill',
         currentActiveSlotId: currentActiveSlot.id,
         quotedActiveSlotId: null,
-        isLocked: false,
+        isProtected: false,
       };
     }
 
     return {
       action: 'defer',
-      reason: locked ? 'active_slot_changed_and_locked' : 'active_slot_missing_quote',
+      reason: protectedStage ? 'active_slot_changed_and_protected' : 'active_slot_missing_quote',
       currentActiveSlotId: currentActiveSlot.id,
       quotedActiveSlotId: null,
-      isLocked: locked,
+      isProtected: protectedStage,
     };
   }
 
@@ -273,6 +272,6 @@ export function decideCheckoutFulfillment({
     action: 'fulfill',
     currentActiveSlotId: currentActiveSlot?.id || null,
     quotedActiveSlotId: quote.quotedActiveSlotId,
-    isLocked: locked,
+    isProtected: protectedStage,
   };
 }
