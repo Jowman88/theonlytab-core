@@ -208,6 +208,14 @@ export async function POST(req: Request) {
     }
 
     if (currentActiveSlot?.id) {
+      try {
+        await dbClient.query('SAVEPOINT clear_likes');
+        await dbClient.query(`DELETE FROM slot_likes WHERE slot_id = $1`, [currentActiveSlot.id]);
+        await dbClient.query('RELEASE SAVEPOINT clear_likes');
+      } catch (likesError: any) {
+        if (likesError?.code !== '42P01') throw likesError;
+        await dbClient.query('ROLLBACK TO SAVEPOINT clear_likes');
+      }
       await dbClient.query(
       `
       UPDATE slots

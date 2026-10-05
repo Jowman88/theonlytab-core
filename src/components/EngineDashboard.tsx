@@ -9,6 +9,7 @@ import {
   Copy,
   ExternalLink,
   Flag,
+  Heart,
   Loader2,
   Maximize2,
   Share2,
@@ -27,6 +28,8 @@ interface SlotData {
   displayName?: string;
   current_bid?: string;
   stealPrice?: string;
+  active_likes?: number;
+  crowdPercent?: number;
   secondsOnStage?: number;
   secondsLeftInLock?: number;
 }
@@ -105,6 +108,8 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const [statusNotice, setStatusNotice] = useState<Notice>(null);
   const [reportedSlotIds, setReportedSlotIds] = useState<string[]>([]);
   const [isReporting, setIsReporting] = useState(false);
+  const [likedSlotIds, setLikedSlotIds] = useState<string[]>([]);
+  const [isLiking, setIsLiking] = useState(false);
   const [copyFeedback, setCopyFeedback] = useState('Copy code');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isCursorIdle, setIsCursorIdle] = useState(false);
@@ -122,6 +127,8 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const historyTickerItems = useMemo(() => (historyList.length > 0 ? [...historyList, ...historyList] : []), [historyList]);
   const isLocked = lockTimer > 0;
   const stealPrice = slot?.stealPrice || '19.00';
+  const activeLikes = slot?.active_likes || 0;
+  const crowdPercent = slot?.crowdPercent || 0;
   const isStealPriceCapped = Number.parseFloat(stealPrice) >= 299;
   const checkoutValidationError = !validatedFields.targetUrl
     ? 'Enter a valid website URL to launch checkout.'
@@ -484,6 +491,43 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') return;
       setStatusNotice({ type: 'error', message: 'The share sheet could not be opened. Please try another share button.' });
+    }
+  };
+
+  const handleLikeStage = async () => {
+    const slotId = slot?.id;
+    if (!slotId || slotId === 'house-default-id' || likedSlotIds.includes(slotId) || isLiking) {
+      return;
+    }
+
+    setIsLiking(true);
+    try {
+      const response = await fetch('/api/like-tab', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slotId }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (response.ok || response.status === 409) {
+        setLikedSlotIds((current) => (current.includes(slotId) ? current : [...current, slotId]));
+        if (response.ok && typeof data.active_likes === 'number') {
+          setSlot((current) => (current && current.id === slotId ? { ...current, active_likes: data.active_likes } : current));
+        }
+        if (response.ok) {
+          const res = await fetch('/api/get-active-tab');
+          const payload = res.ok ? await res.json() : null;
+          if (payload?.data?.id === slotId) setSlot(payload.data);
+        }
+        return;
+      }
+      throw new Error(data.error || 'Unable to like this stage.');
+    } catch (error) {
+      setStatusNotice({
+        type: 'error',
+        message: error instanceof Error ? error.message : 'Unable to like this stage.',
+      });
+    } finally {
+      setIsLiking(false);
     }
   };
 
@@ -953,7 +997,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                 <span className="shrink-0 text-white/20">|</span>
                 <span className="shrink-0">
                   <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Next</span>{' '}
-                  <span className="text-amber-200">${stealPrice}</span>
+                  <span className="text-amber-200">${stealPrice}{crowdPercent > 0 ? ` (+${crowdPercent}% crowd)` : ''}</span>
                   {isStealPriceCapped && (
                     <span className="ml-1.5 inline-flex items-center rounded-full border border-amber-300/40 bg-amber-300/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.18em] text-amber-200">
                       Capped at $299
@@ -1088,6 +1132,17 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                   <p className="truncate text-sm font-semibold text-white sm:text-base">{stageOwner}</p>
                 </div>
                 <span className="hidden text-white/20 sm:inline">|</span>
+                <button
+                  type="button"
+                  onClick={handleLikeStage}
+                  disabled={!slot || slot.id === 'house-default-id' || likedSlotIds.includes(slot.id) || isLiking}
+                  title="Like this stage to raise its steal price"
+                  aria-label={`Like this stage. ${activeLikes} active likes`}
+                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.03] px-3 py-2 text-xs font-semibold text-neutral-300 transition hover:border-pink-300/40 hover:bg-pink-500/10 hover:text-pink-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-300 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <Heart aria-hidden="true" className={`h-4 w-4 ${slot && likedSlotIds.includes(slot.id) ? 'fill-pink-300 text-pink-300' : ''}`} />
+                  {activeLikes} {likedSlotIds.includes(slot?.id || '') ? 'Liked' : 'Like'}
+                </button>
                 <button
                   type="button"
                   onClick={handleReportStage}
