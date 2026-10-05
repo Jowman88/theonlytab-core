@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { buildLockedCheckoutResponse } from '../../../lib/checkoutResponses';
 import { getDbPool } from '../../../lib/db';
+import { getActiveLikeCount } from '../../../lib/likes';
 import { hashIdentifier, logger, redactUrl } from '../../../lib/logger';
 import {
   ACTIVE_SLOT_ORDER_BY_SQL,
@@ -13,7 +14,7 @@ import {
 } from '../../../lib/paidTakeover';
 import { buildTargetUrl, validateTargetUrl } from '../../../lib/urlValidation';
 import { checkUrlWithWebRisk } from '../../../lib/webRisk';
-import { calculateStealPrice, getBasePrice } from '../../../lib/pricing';
+import { calculateStealPrice, getBasePrice, getCrowdPercent } from '../../../lib/pricing';
 import { getServerPricingSettings } from '../../../lib/pricingConfig';
 import { enforceRateLimit, getClientIpAddress } from '../../../lib/rateLimit';
 
@@ -153,6 +154,7 @@ export async function POST(req: Request) {
         : null;
 
       let requiredStealPrice = getBasePrice(new Date(), pricingSettings);
+      let crowdPercent = 0;
 
       if (activeSlot?.currentBid && activeSlot.currentBid > 0) {
         if (isSlotLocked(activeSlot)) {
@@ -163,7 +165,9 @@ export async function POST(req: Request) {
           });
         }
 
-        requiredStealPrice = calculateStealPrice(activeSlot.currentBid, new Date(), pricingSettings);
+        const activeLikes = await getActiveLikeCount(client, activeSlot.id);
+        crowdPercent = getCrowdPercent(activeLikes);
+        requiredStealPrice = calculateStealPrice(activeSlot.currentBid, new Date(), pricingSettings, activeLikes);
       }
 
       if (!Number.isFinite(requiredStealPrice) || requiredStealPrice <= 0) {
@@ -181,6 +185,7 @@ export async function POST(req: Request) {
         now: new Date(),
         pricingSettings,
         requiredStealPrice,
+        crowdPercent,
       });
       const expiresAt = new Date(Date.now() + TAKEOVER_DURATION_MINUTES * 60 * 1000).toISOString();
 

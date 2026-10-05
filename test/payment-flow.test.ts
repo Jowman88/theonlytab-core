@@ -267,3 +267,28 @@ test('steal price is capped at $299 once doubling would exceed it', () => {
 test('steal price stays flat at $299 once the cap is reached', () => {
   assert.equal(calculateStealPrice(299), 299);
 });
+
+test('crowd likes add 1% per like, cap at +50%, and respect the $299 ceiling', () => {
+  assert.equal(calculateStealPrice(21, now, DEFAULT_PRICING_SETTINGS, 0), 42);
+  assert.equal(calculateStealPrice(21, now, DEFAULT_PRICING_SETTINGS, 20), 50.4);
+  assert.equal(calculateStealPrice(21, now, DEFAULT_PRICING_SETTINGS, 50), 63);
+  assert.equal(calculateStealPrice(21, now, DEFAULT_PRICING_SETTINGS, 500), 63);
+  assert.equal(calculateStealPrice(150, now, DEFAULT_PRICING_SETTINGS, 50), 299);
+});
+
+test('quoted price stays locked to the crowd percent captured at checkout', () => {
+  const activeSlot = createActiveSlot({ currentBid: 21 });
+  const quote = buildCheckoutQuoteContext({
+    activeSlot,
+    now,
+    pricingSettings: DEFAULT_PRICING_SETTINGS,
+    requiredStealPrice: calculateStealPrice(21, now, DEFAULT_PRICING_SETTINGS, 20),
+    crowdPercent: 20,
+  });
+  const parsed = parseCheckoutQuoteContext(
+    buildCheckoutMetadata({ targetUrl: 'https://example.com', displayName: 'x', expiresAt: now.toISOString(), quote })
+  );
+  assert.equal(parsed?.quotedCrowdPercent, 20);
+  assert.equal(calculateQuotedStealPrice(parsed!), quote.quotedStealPriceCents);
+  assert.equal(quote.quotedStealPriceCents, 5040);
+});

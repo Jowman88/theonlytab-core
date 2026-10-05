@@ -4,6 +4,9 @@ export interface PricingSettings {
 
 export const DEFAULT_BASE_PRICE = 19;
 export const STEAL_PRICE_CAP = 299;
+export const LIKE_STEP_PERCENT = 1;
+export const MAX_CROWD_PERCENT = 50;
+export const LIKE_WINDOW_MINUTES = 10;
 export const LONG_IDLE_RESET_MINUTES = 120;
 
 export const DEFAULT_PRICING_SETTINGS: PricingSettings = {
@@ -32,10 +35,23 @@ export function resolvePricingSettings(partialSettings?: Partial<PricingSettings
  * - Once price reaches $299, stealing costs exactly $299 (flat, no further doubling)
  * - No idle decay: price stays locked at its current value until a reset triggers
  */
+export function getCrowdPercent(activeLikes: number | string = 0): number {
+  const likes = Math.floor(Number(activeLikes));
+  if (!Number.isFinite(likes) || likes <= 0) return 0;
+  return Math.min(MAX_CROWD_PERCENT, likes * LIKE_STEP_PERCENT);
+}
+
+/** Doubles the current bid, applies the crowd multiplier first, then caps at $299. */
+export function calculateStealPriceCents(currentBidCents: number, crowdPercent = 0): number {
+  const percent = Math.min(MAX_CROWD_PERCENT, Math.max(0, Math.floor(crowdPercent) || 0));
+  return Math.min(Math.round((currentBidCents * 2 * (100 + percent)) / 100), STEAL_PRICE_CAP * 100);
+}
+
 export function calculateStealPrice(
   currentBid: number | string = 0,
   _now = new Date(),
-  settings: PricingSettings = DEFAULT_PRICING_SETTINGS
+  settings: PricingSettings = DEFAULT_PRICING_SETTINGS,
+  activeLikes: number | string = 0
 ): number {
   const numericBid = Number(currentBid || 0);
   const resolvedSettings = resolvePricingSettings(settings);
@@ -44,8 +60,7 @@ export function calculateStealPrice(
     return resolvedSettings.basePrice;
   }
 
-  const stealPrice = Math.min(numericBid * 2, STEAL_PRICE_CAP);
-  return Number(stealPrice.toFixed(2));
+  return calculateStealPriceCents(Math.round(numericBid * 100), getCrowdPercent(activeLikes)) / 100;
 }
 
 export function getBasePrice(_now = new Date(), settings: PricingSettings = DEFAULT_PRICING_SETTINGS): number {

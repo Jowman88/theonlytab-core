@@ -1,6 +1,7 @@
-import { getBasePrice, PricingSettings, STEAL_PRICE_CAP } from './pricing';
+import { calculateStealPriceCents, getBasePrice, PricingSettings } from './pricing';
 
 export const TAKEOVER_LOCK_WINDOW_MINUTES = 12;
+export const QUOTE_LOCK_MINUTES = 5;
 export const TAKEOVER_DURATION_MINUTES = 90;
 export const ACTIVE_SLOT_ORDER_BY_SQL = 'created_at DESC, id DESC';
 
@@ -20,6 +21,7 @@ export interface CheckoutQuoteContext {
   quotedActiveBidCents: number;
   quotedBasePriceCents: number;
   quotedStealPriceCents: number;
+  quotedCrowdPercent: number;
   quotedCurrency: string;
 }
 
@@ -68,11 +70,13 @@ export function buildCheckoutQuoteContext({
   now = new Date(),
   pricingSettings,
   requiredStealPrice,
+  crowdPercent = 0,
 }: {
   activeSlot: ActiveSlotSnapshot | null;
   now?: Date;
   pricingSettings: PricingSettings;
   requiredStealPrice: number;
+  crowdPercent?: number;
 }): CheckoutQuoteContext {
   return {
     quotedAt: now.toISOString(),
@@ -81,6 +85,7 @@ export function buildCheckoutQuoteContext({
     quotedActiveBidCents: toAmountCents(activeSlot?.currentBid || 0),
     quotedBasePriceCents: toAmountCents(getBasePrice(now, pricingSettings)),
     quotedStealPriceCents: toAmountCents(requiredStealPrice),
+    quotedCrowdPercent: crowdPercent,
     quotedCurrency: 'usd',
   };
 }
@@ -109,6 +114,8 @@ export function buildCheckoutMetadata({
     quoteactivebidcents: String(quote.quotedActiveBidCents),
     quotebasepricecents: String(quote.quotedBasePriceCents),
     quotestealpricecents: String(quote.quotedStealPriceCents),
+    quotecrowdpercent: String(quote.quotedCrowdPercent),
+    quotelockminutes: String(QUOTE_LOCK_MINUTES),
     quotelockwindowminutes: String(TAKEOVER_LOCK_WINDOW_MINUTES),
     quotedurationminutes: String(TAKEOVER_DURATION_MINUTES),
   };
@@ -144,6 +151,7 @@ export function parseCheckoutQuoteContext(metadata?: Record<string, string | nul
     quotedActiveBidCents,
     quotedBasePriceCents,
     quotedStealPriceCents,
+    quotedCrowdPercent: Math.max(0, parseInteger(metadata.quotecrowdpercent) ?? 0),
     quotedCurrency,
   };
 }
@@ -180,17 +188,17 @@ export function validateStripeCheckoutQuote({
   return null;
 }
 
-const STEAL_PRICE_CAP_CENTS = STEAL_PRICE_CAP * 100;
-
 export function calculateQuotedStealPrice({
   quotedActiveBidCents,
   quotedBasePriceCents,
-}: Pick<CheckoutQuoteContext, 'quotedActiveBidCents' | 'quotedBasePriceCents'>) {
+  quotedCrowdPercent = 0,
+}: Pick<CheckoutQuoteContext, 'quotedActiveBidCents' | 'quotedBasePriceCents'> &
+  Partial<Pick<CheckoutQuoteContext, 'quotedCrowdPercent'>>) {
   if (!quotedActiveBidCents || quotedActiveBidCents <= 0) {
     return quotedBasePriceCents;
   }
 
-  return Math.min(quotedActiveBidCents * 2, STEAL_PRICE_CAP_CENTS);
+  return calculateStealPriceCents(quotedActiveBidCents, quotedCrowdPercent);
 }
 
 export function calculateStealPriceFromQuoteInputs({
@@ -198,13 +206,13 @@ export function calculateStealPriceFromQuoteInputs({
   quote,
 }: {
   currentBidCents: number;
-  quote: Pick<CheckoutQuoteContext, 'quotedBasePriceCents'>;
+  quote: Pick<CheckoutQuoteContext, 'quotedBasePriceCents'> & Partial<Pick<CheckoutQuoteContext, 'quotedCrowdPercent'>>;
 }) {
   if (!currentBidCents || currentBidCents <= 0) {
     return quote.quotedBasePriceCents;
   }
 
-  return Math.min(currentBidCents * 2, STEAL_PRICE_CAP_CENTS);
+  return calculateStealPriceCents(currentBidCents, quote.quotedCrowdPercent);
 }
 
 export function decideCheckoutFulfillment({

@@ -79,6 +79,9 @@ export default function PlatformRulesPage() {
               <span className="font-semibold text-white">Pricing and competition:</span> prices, bidding, and steal mechanics may change at any time. The price presented for your checkout applies to that transaction; later prices may differ. A takeover does not guarantee any minimum audience, view count, click, or traffic.
             </li>
             <li>
+              <span className="font-semibold text-white">Viewer likes:</span> stage prices may increase based on viewer likes. The price is locked at checkout and does not change during payment.
+            </li>
+            <li>
               <span className="font-semibold text-white">No prohibited interference:</span> do not disrupt another user&apos;s active session, attempt to manipulate timers or bids, or interfere with checkout, stream delivery, or platform operations.
             </li>
             <li>

@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getDbPool } from '../../../lib/db';
+import { getActiveLikeCount } from '../../../lib/likes';
 import { logger } from '../../../lib/logger';
 import { ACTIVE_SLOT_ORDER_BY_SQL } from '../../../lib/paidTakeover';
-import { calculateStealPrice, getBasePrice, PricingSettings } from '../../../lib/pricing';
+import { calculateStealPrice, getBasePrice, getCrowdPercent, PricingSettings } from '../../../lib/pricing';
 import { getServerPricingSettings } from '../../../lib/pricingConfig';
 
 export const dynamic = 'force-dynamic';
@@ -36,7 +37,8 @@ export async function GET() {
         });
       }
       const currentPaid = Number.parseFloat(row.current_bid || '0');
-      const nextStealPrice = calculateStealPrice(currentPaid, new Date(), pricingSettings);
+      const activeLikes = await getActiveLikeCount(client, String(row.id));
+      const nextStealPrice = calculateStealPrice(currentPaid, new Date(), pricingSettings, activeLikes);
 
       const secondsOnStage = Math.floor((Date.now() - new Date(row.createdAt).getTime()) / 1000);
       const secondsLeftInLock = Math.max(0, (12 * 60) - secondsOnStage);
@@ -46,6 +48,8 @@ export async function GET() {
           ...row,
           current_bid: currentPaid.toFixed(2),
           stealPrice: nextStealPrice.toFixed(2),
+          active_likes: activeLikes,
+          crowdPercent: currentPaid > 0 ? getCrowdPercent(activeLikes) : 0,
           secondsOnStage,
           secondsLeftInLock,
           isLocked: secondsLeftInLock > 0,
@@ -63,6 +67,8 @@ export async function GET() {
         secondsOnStage: 0,
         secondsLeftInLock: 0,
         isLocked: false,
+        active_likes: 0,
+        crowdPercent: 0,
       }
     });
   } catch (err: any) {
