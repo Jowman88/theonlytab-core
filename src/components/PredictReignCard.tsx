@@ -60,6 +60,7 @@ export default function PredictReignCard({ slotId, secondsLeftToPredict = 0, tot
     setError('');
     if (!isRealSlot) return;
     let cancelled = false;
+    
     fetch(`/api/predictions?slotId=${encodeURIComponent(String(slotId))}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
@@ -67,7 +68,10 @@ export default function PredictReignCard({ slotId, secondsLeftToPredict = 0, tot
         if (typeof data.myGuess === 'number') setMyGuess(data.myGuess);
         if (typeof data.totalPredictions === 'number') setTotal(data.totalPredictions);
       })
-      .catch(() => undefined);
+      .catch((err) => {
+        if (!cancelled) console.error('Failed to load prediction:', err);
+      });
+    
     return () => {
       cancelled = true;
     };
@@ -90,12 +94,14 @@ export default function PredictReignCard({ slotId, secondsLeftToPredict = 0, tot
           timers.push(setTimeout(() => setResult(null), 10000));
           return;
         }
-      } catch {
-        // retry below
+      } catch (err) {
+        if (!cancelled) console.error('Failed to load reign result:', err);
       }
       if (attempt < 2 && !cancelled) timers.push(setTimeout(() => load(attempt + 1), 2000));
     };
+    
     load(0);
+    
     return () => {
       cancelled = true;
       timers.forEach(clearTimeout);
@@ -104,15 +110,24 @@ export default function PredictReignCard({ slotId, secondsLeftToPredict = 0, tot
 
   useEffect(() => {
     let cancelled = false;
-    const loadBoard = () =>
-      fetch('/api/prediction-leaderboard')
-        .then((res) => (res.ok ? res.json() : null))
-        .then((data) => {
-          if (!cancelled && Array.isArray(data?.leaderboard)) setLeaderboard(data.leaderboard);
-        })
-        .catch(() => undefined);
-    loadBoard();
-    const interval = setInterval(loadBoard, 60000);
+    
+    const loadBoard = async () => {
+      try {
+        const res = await fetch('/api/prediction-leaderboard');
+        const data = res.ok ? await res.json() : null;
+        if (!cancelled && Array.isArray(data?.leaderboard)) {
+          setLeaderboard(data.leaderboard);
+        }
+      } catch (err) {
+        if (!cancelled) console.error('Failed to load leaderboard:', err);
+      }
+    };
+    
+    void loadBoard();
+    const interval = setInterval(() => {
+      void loadBoard();
+    }, 60000);
+    
     return () => {
       cancelled = true;
       clearInterval(interval);
@@ -142,7 +157,8 @@ export default function PredictReignCard({ slotId, secondsLeftToPredict = 0, tot
       } else {
         setError(data.error || 'Unable to submit your prediction.');
       }
-    } catch {
+    } catch (err) {
+      console.error('Error submitting prediction:', err);
       setError('Unable to submit your prediction.');
     } finally {
       setIsSubmitting(false);
