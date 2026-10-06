@@ -12,6 +12,7 @@ import {
   TAKEOVER_DURATION_MINUTES,
   validateStripeCheckoutQuote,
 } from '../../../lib/paidTakeover';
+import { settlePredictions } from '../../../lib/predictions';
 import { validateTargetUrl } from '../../../lib/urlValidation';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
@@ -259,6 +260,7 @@ export async function POST(req: Request) {
 
     await dbClient.query('COMMIT');
     transactionOpen = false;
+    if (currentActiveSlot?.id) await settlePredictions(currentActiveSlot.id, new Date());
     logger.info('Stripe webhook committed stage takeover', {
       route: 'stripe-webhook',
       stripeSessionId: session.id,

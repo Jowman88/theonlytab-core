@@ -5,6 +5,7 @@ import { logger } from '../../../lib/logger';
 import { ACTIVE_SLOT_ORDER_BY_SQL, getSecondsLeftInProtection } from '../../../lib/paidTakeover';
 import { calculateStealPrice, getBasePrice, getCrowdPercent, PricingSettings } from '../../../lib/pricing';
 import { getServerPricingSettings } from '../../../lib/pricingConfig';
+import { getTotalPredictions, secondsLeftToPredict, settlePredictions } from '../../../lib/predictions';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,9 +18,15 @@ export async function GET() {
   try {
     pricingSettings = await getServerPricingSettings();
 
-    await client.query(`UPDATE slots SET is_frozen = TRUE WHERE is_frozen = FALSE AND expires_at <= NOW()`);
+    const expiredRes = await client.query(
+      `UPDATE slots SET is_frozen = TRUE WHERE is_frozen = FALSE AND expires_at <= NOW() RETURNING id, expires_at`
+    );
+    for (const expired of expiredRes.rows || []) {
+      await settlePredictions(String(expired.id), expired.expires_at);
+    }
 
     const activeRes = await client.query(
+      `SELECT id, current_url as "currentUrl", display_name as "displayName", current_bid, expires_at as "expiresAt", created_at as "createdAt", report_count
       `SELECT id, current_url as "currentUrl", display_name as "displayName", current_bid, expires_at as "expiresAt", created_at as "createdAt", report_count as "reportCount"
        FROM slots
        WHERE is_frozen = FALSE AND expires_at > NOW()
@@ -42,6 +49,11 @@ export async function GET() {
       const crowdLikes = isReported ? 0 : activeLikes;
       const nextStealPrice = calculateStealPrice(currentPaid, new Date(), pricingSettings, crowdLikes);
 
+      const secondsLeftToPredictNow = Number(row.report_count || 0) > 0 ? 0 : secondsLeftToPredict(row.createdAt);
+      const totalPredictions = await getTotalPredictions(client, String(row.id));
+
+      const secondsOnStage = Math.floor((Date.now() - new Date(row.createdAt).getTime()) / 1000);
+      const secondsLeftInLock = Math.max(0, (12 * 60) - secondsOnStage);
       const secondsOnStage = Math.max(0, Math.floor((Date.now() - new Date(row.createdAt).getTime()) / 1000));
       const secondsLeftInProtection = getSecondsLeftInProtection({
         id: String(row.id),
@@ -58,6 +70,11 @@ export async function GET() {
           crowdPercent: currentPaid > 0 ? getCrowdPercent(crowdLikes) : 0,
           isReported,
           secondsOnStage,
+          secondsLeftInLock,
+          isLocked: secondsLeftInLock > 0,
+          predictionOpen: secondsLeftToPredictNow > 0,
+          secondsLeftToPredict: secondsLeftToPredictNow,
+          totalPredictions,
           secondsLeftInProtection,
         }
       });
@@ -75,6 +92,9 @@ export async function GET() {
         isReported: false,
         active_likes: 0,
         crowdPercent: 0,
+        predictionOpen: false,
+        secondsLeftToPredict: 0,
+        totalPredictions: 0,
       }
     });
   } catch (err: any) {

@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "server": "node server/streamer-webrtc.js",
-    "test:payments": "tsx --test test/payment-flow.test.ts"
+    "test:payments": "tsx --test test/payment-flow.test.ts test/predictions.test.ts"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",
