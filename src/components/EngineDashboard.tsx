@@ -36,6 +36,8 @@ interface SlotData {
   predictionOpen?: boolean;
   secondsLeftToPredict?: number;
   totalPredictions?: number;
+  secondsLeftInProtection?: number;
+  isReported?: boolean;
 }
 
 interface HistoryItem {
@@ -91,7 +93,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const confirmDialogRef = useRef<HTMLDivElement | null>(null);
   const lastFocusedElementRef = useRef<HTMLElement | null>(null);
   const [slot, setSlot] = useState<SlotData | null>(null);
-  const [lockTimer, setLockTimer] = useState<number>(0);
+  const [protectionTimer, setProtectionTimer] = useState<number>(0);
   const [stageTimer, setStageTimer] = useState<number>(0);
   const [hasFrames, setHasFrames] = useState<boolean>(false);
   const [historyList, setHistoryList] = useState<HistoryItem[]>([]);
@@ -129,7 +131,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
     startPath: !startPath.trim() || /^[/?#]/.test(startPath.trim()),
   };
   const historyTickerItems = useMemo(() => (historyList.length > 0 ? [...historyList, ...historyList] : []), [historyList]);
-  const isLocked = lockTimer > 0;
+  const isProtected = protectionTimer > 0;
   const stealPrice = slot?.stealPrice || '19.00';
   const activeLikes = slot?.active_likes || 0;
   const crowdPercent = slot?.crowdPercent || 0;
@@ -142,8 +144,8 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
         ? 'Display name must be at least 2 characters or left blank.'
         : !legalAgreed
           ? 'You must accept the takeover rules before continuing.'
-          : isLocked
-            ? 'The feed is currently locked. Wait for the lock timer to expire before trying again.'
+          : isProtected
+            ? `Stage is protected for ${protectionTimer} more seconds.`
             : '';
   const canStartCheckout = !checkoutValidationError && !isSubmitting;
   const embedCode = '<iframe src="https://theonlytab.io" width="100%" height="140" style="border:none;background:transparent;" scrolling="no"></iframe>';
@@ -308,7 +310,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
           const payload = await res.json();
           if (payload?.data) {
             setSlot(payload.data);
-            setLockTimer(Number(payload.data.secondsLeftInLock) || 0);
+            setProtectionTimer(Number(payload.data.secondsLeftInProtection) || 0);
             setStageTimer(Number.parseFloat(payload.data.current_bid || '0') <= 0 ? 0 : Number(payload.data.secondsOnStage) || 0);
           }
         }
@@ -332,7 +334,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setLockTimer((prev) => Math.max(0, prev - 1));
+      setProtectionTimer((prev) => Math.max(0, prev - 1));
       setStageTimer((prev) => {
         const currentBid = Number.parseFloat(slot?.current_bid || '0');
         if (Number.isNaN(currentBid)) {
@@ -458,7 +460,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const shareBuyerName = slot?.displayName || displayName.trim() || 'Anonymous Takeover';
   const shareTargetUrl = slot?.currentUrl || (targetUrl.trim() ? normalizedTargetUrl : shareSiteUrl);
   const purchasePrice = slot?.current_bid || '19.00';
-  const shareText = `I just took over the stage on The Only Tab as ${shareBuyerName} for $${purchasePrice} 🔥\nI'm streaming ${shareTargetUrl}.\nMy lock expires in ${formatClock(lockTimer)} — steal it from me before the price doubles to $${stealPrice}!\n${shareSiteUrl}`;
+  const shareText = `I just took over the stage on The Only Tab as ${shareBuyerName} for $${purchasePrice} 🔥\nI'm streaming ${shareTargetUrl}.\nMy free protection expires in ${formatClock(protectionTimer)} — steal it from me before the price doubles to $${stealPrice}!\n${shareSiteUrl}`;
 
   const handleSocialShare = (platform: 'x' | 'facebook' | 'linkedin' | 'reddit') => {
     const shareIntentUrl = {
@@ -765,7 +767,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       window.removeEventListener('resize', updateOverflow);
       resizeObserver?.disconnect();
     };
-  }, [stageUrl, currentStake, stealPrice, isLocked, lockTimer, socketStatus, isStealPriceCapped]);
+  }, [stageUrl, currentStake, stealPrice, isProtected, protectionTimer, socketStatus, isStealPriceCapped]);
 
   return (
     <div className="fixed inset-0 h-[100dvh] w-screen overflow-x-hidden overflow-y-auto bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.15),_transparent_30%),radial-gradient(circle_at_right,_rgba(251,191,36,0.08),_transparent_28%),linear-gradient(180deg,_#08090d_0%,_#050507_100%)] px-3 py-3 text-neutral-100 sm:px-4 sm:py-4 lg:h-screen lg:overflow-y-auto lg:px-6 lg:py-5">
@@ -964,15 +966,15 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                 <div className="border-t border-white/10 px-5 py-5 sm:px-6">
                   <button
                     type="submit"
-                    disabled={isSubmitting || isLocked}
+                    disabled={isSubmitting || isProtected}
                     className={`group flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-4 text-sm font-black uppercase tracking-[0.22em] transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#090b10] sm:text-base ${
-                      isLocked
+                      isProtected
                         ? 'cursor-not-allowed border border-rose-400/20 bg-rose-500/10 text-rose-200'
                         : 'border border-emerald-300/25 bg-[linear-gradient(135deg,_rgba(52,211,153,0.96),_rgba(251,191,36,0.92))] text-slate-950 shadow-[0_0_35px_rgba(16,185,129,0.3)] hover:-translate-y-0.5 hover:shadow-[0_0_45px_rgba(16,185,129,0.45)]'
                     }`}
                   >
                     {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <ExternalLink className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />}
-                    {isSubmitting ? 'OPENING CHECKOUT…' : isLocked ? `FEED LOCKED · ${formatClock(lockTimer)}` : `STEAL FOR \$${stealPrice}`}
+                    {isSubmitting ? 'OPENING CHECKOUT…' : isProtected ? `PROTECTED · ${formatClock(protectionTimer)}` : `STEAL FOR \$${stealPrice}`}
                   </button>
                   <p className="mt-3 text-center text-xs leading-5 text-neutral-400">
                     Press <span className="font-semibold text-neutral-200">Enter</span> to review checkout details, then confirm when ready.
@@ -1010,9 +1012,9 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                 </span>
                 <span className="shrink-0 text-white/20">|</span>
                 <span className="inline-flex shrink-0 items-center gap-1.5">
-                  <Clock3 className={`h-3.5 w-3.5 ${isLocked ? 'text-rose-300' : 'text-emerald-300'}`} />
-                  <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Lock</span>{' '}
-                  <span className={isLocked ? 'text-rose-200' : 'text-emerald-200'}>{isLocked ? formatClock(lockTimer) : 'OPEN'}</span>
+                  <Clock3 className={`h-3.5 w-3.5 ${isProtected ? 'text-rose-300' : 'text-emerald-300'}`} />
+                  <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Protection</span>{' '}
+                  <span className={isProtected ? 'text-rose-200' : 'text-emerald-200'}>{isProtected ? formatClock(protectionTimer) : 'OPEN'}</span>
                 </span>
                 <span className="shrink-0 text-white/20">|</span>
                 <span
@@ -1139,7 +1141,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                 <button
                   type="button"
                   onClick={handleLikeStage}
-                  disabled={!slot || slot.id === 'house-default-id' || likedSlotIds.includes(slot.id) || isLiking}
+                  disabled={!slot || slot.id === 'house-default-id' || slot.isReported || likedSlotIds.includes(slot.id) || isLiking}
                   title="Like this stage to raise its steal price"
                   aria-label={`Like this stage. ${activeLikes} active likes`}
                   className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.03] px-3 py-2 text-xs font-semibold text-neutral-300 transition hover:border-pink-300/40 hover:bg-pink-500/10 hover:text-pink-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-300 disabled:cursor-not-allowed disabled:opacity-40"
@@ -1248,7 +1250,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                 className="h-28 w-full resize-none rounded-2xl border border-white/10 bg-black/35 p-4 font-mono text-base leading-6 text-emerald-200 outline-none sm:text-sm"
               />
               <div className="mt-4 rounded-2xl border border-amber-300/25 bg-amber-400/[0.08] px-4 py-3 text-sm leading-6 text-amber-100">
-                <p className="font-semibold">⏱ Your lock expires in {formatClock(lockTimer)} — after that, anyone can steal your stage for ${stealPrice}.</p>
+                <p className="font-semibold">⏱ Your free protection expires in {formatClock(protectionTimer)} — after that, anyone can steal your stage for ${stealPrice}.</p>
                 <p className="mt-1 text-xs leading-5 text-amber-100/75">Share now while you&apos;re still the one on stage.</p>
               </div>
               <div role="group" aria-label="Share your takeover" className="mt-4 flex flex-wrap items-center gap-2">

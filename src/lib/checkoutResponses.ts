@@ -1,22 +1,26 @@
 import { NextResponse } from 'next/server';
 import { logger } from './logger';
 
-export const LOCKED_CHECKOUT_ERROR_MESSAGE = 'FEED LOCKED: Protected for the first 12 minutes.';
-
-export function buildLockedCheckoutResponse({
+export function buildProtectedCheckoutResponse({
   clientIpBucket,
   activeSlotId,
   targetUrl,
+  secondsLeft,
 }: {
   clientIpBucket: string;
   activeSlotId: string;
   targetUrl: string;
+  secondsLeft: number;
 }) {
-  logger.warn('Checkout session rejected during slot lock window', {
+  logger.warn('Checkout session rejected during stage protection window', {
     route: 'create-checkout-session',
     clientIpBucket,
     activeSlotId,
     targetUrl,
+    secondsLeft,
   });
-  return NextResponse.json({ error: LOCKED_CHECKOUT_ERROR_MESSAGE }, { status: 400 });
+  return NextResponse.json(
+    { error: `Stage is protected for ${secondsLeft} more seconds.` },
+    { status: 400 }
+  );
 }
