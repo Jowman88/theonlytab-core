@@ -1,0 +1,4 @@
+{$STREAM_DOMAIN} {
+	# Caddy proxies websocket upgrades automatically.
+	reverse_proxy streamer:10000
+}

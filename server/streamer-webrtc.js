@@ -7,6 +7,7 @@ import puppeteer from 'puppeteer';
 import { lookup as dnsLookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
 import { logger, redactUrl } from './logger.js';
+import { getJpegQuality, getStreamDimension, getStreamFps, hasFrameChanged, hashFrame } from './stream-utils.js';
 
 const app = express();
 const server = http.createServer(app);
@@ -22,11 +23,18 @@ const allowAllOrigins = configuredOrigins.length === 0 || configuredOrigins.incl
 const maxConnectionsPerIp = Number.parseInt(process.env.STREAM_MAX_CONNECTIONS_PER_IP || '20', 10);
 const disableSandbox = process.env.PUPPETEER_DISABLE_SANDBOX === 'true';
 const trustProxyHeaders = process.env.TRUST_PROXY_HEADERS === 'true';
+const streamFps = getStreamFps(process.env.STREAM_FPS);
+const jpegQuality = getJpegQuality(process.env.STREAM_JPEG_QUALITY);
+const streamWidth = getStreamDimension(process.env.STREAM_WIDTH, 1280);
+const streamHeight = getStreamDimension(process.env.STREAM_HEIGHT, 720);
+const frameIntervalMs = Math.round(1000 / streamFps);
+const keepaliveIntervalMs = 5000;
+const metricsIntervalMs = 60_000;
 const browserLaunchArgs = [
   '--disable-dev-shm-usage',
   '--disable-accelerated-2d-canvas',
   '--disable-gpu',
-  '--window-size=1280,720',
+  `--window-size=${streamWidth},${streamHeight}`,
 ];
 
 if (disableSandbox) {
@@ -179,6 +187,7 @@ const io = new Server(server, {
     methods: ['GET', 'POST'],
   },
   transports: ['websocket', 'polling'],
+  perMessageDeflate: false,
   allowRequest: (req, callback) => {
     const origin = String(req.headers.origin || '');
     if (origin && !allowAllOrigins && !configuredOrigins.includes(origin)) {
@@ -216,7 +225,7 @@ async function initPuppeteer() {
     browser = await puppeteer.launch({
       headless: 'new',
       args: browserLaunchArgs,
-      defaultViewport: { width: 1280, height: 720 },
+      defaultViewport: { width: streamWidth, height: streamHeight },
     });
 
     page = await browser.newPage();
@@ -358,6 +367,54 @@ async function syncSlotToBrowser() {
   }
 }
 
+let lastFrame = null;
+let lastFrameHash = null;
+let lastEmitAt = 0;
+let metrics = { frames: 0, bytes: 0, screenshots: 0 };
+let wakeFrameLoop = null;
+
+function emitFrame(frame) {
+  const viewers = io.engine.clientsCount;
+  io.emit('v-frame', frame);
+  lastEmitAt = Date.now();
+  metrics.frames += 1;
+  metrics.bytes += frame.length * viewers;
+}
+
+async function captureAndEmitFrame() {
+  if (!page || !browser) return;
+  try {
+    const frame = await page.screenshot({ type: 'jpeg', quality: jpegQuality });
+    metrics.screenshots += 1;
+    const hash = hashFrame(frame);
+    const changed = hasFrameChanged(lastFrameHash, hash);
+    lastFrame = frame;
+    lastFrameHash = hash;
+    if (changed || Date.now() - lastEmitAt >= keepaliveIntervalMs) {
+      emitFrame(frame);
+    }
+  } catch {
+    // Ignore transient page/navigation issues during a live stream refresh.
+  }
+}
+
+async function frameLoop() {
+  for (;;) {
+    const startedAt = Date.now();
+    if (io.engine.clientsCount > 0) {
+      await captureAndEmitFrame();
+      const wait = Math.max(0, frameIntervalMs - (Date.now() - startedAt));
+      await new Promise((resolve) => setTimeout(resolve, wait));
+    } else {
+      await new Promise((resolve) => {
+        wakeFrameLoop = resolve;
+        setTimeout(resolve, 1000);
+      });
+      wakeFrameLoop = null;
+    }
+  }
+}
+
 async function startStreamingCore() {
   await initPuppeteer();
 
@@ -365,21 +422,19 @@ async function startStreamingCore() {
     syncSlotToBrowser();
   }, 4000);
 
-  setInterval(async () => {
-    if (!page || !browser) return;
+  setInterval(() => {
+    logger.info('Stream metrics', {
+      route: 'stream-metrics',
+      windowSeconds: metricsIntervalMs / 1000,
+      framesSent: metrics.frames,
+      bytesSent: metrics.bytes,
+      screenshotsTaken: metrics.screenshots,
+      viewers: io.engine.clientsCount,
+    });
+    metrics = { frames: 0, bytes: 0, screenshots: 0 };
+  }, metricsIntervalMs);
 
-    try {
-      const screenshotBase64 = await page.screenshot({
-        type: 'jpeg',
-        quality: 42,
-        encoding: 'base64',
-      });
-
-      io.emit('v-frame', screenshotBase64);
-    } catch {
-      // Ignore transient page/navigation issues during a live stream refresh.
-    }
-  }, 41);
+  frameLoop();
 }
 
 io.on('connection', (socket) => {
@@ -391,6 +446,13 @@ io.on('connection', (socket) => {
     route: 'stream-socket',
     clientIp: ip,
   });
+
+  if (lastFrame) {
+    socket.emit('v-frame', lastFrame);
+    metrics.frames += 1;
+    metrics.bytes += lastFrame.length;
+  }
+  if (wakeFrameLoop) wakeFrameLoop();
 
   socket.on('disconnect', () => {
     const existing = Number(socketCountByIp.get(ip) || 1);
