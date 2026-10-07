@@ -547,8 +547,8 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const shareSiteUrl = 'https://theonlytab.io';
   const shareBuyerName = slot?.displayName || displayName.trim() || 'Anonymous Takeover';
   const shareTargetUrl = slot?.currentUrl || (targetUrl.trim() ? normalizedTargetUrl : shareSiteUrl);
-  const purchasePrice = slot?.current_bid || '19.00';
-  const shareText = `I just took over The Only Tab as ${shareBuyerName} for $${purchasePrice} 🔥\nI'm streaming ${shareTargetUrl}.\nCome watch and try to steal the stage! 👀\n${shareSiteUrl}`;
+  const shareText = `I own The Only Tab 🔥 Now streaming ${shareTargetUrl} Your move 👀`;
+  const shareTextWithSiteUrl = `${shareText} ${shareSiteUrl}`;
 
   const handleSocialShare = (platform: 'x' | 'facebook' | 'linkedin' | 'reddit') => {
     const shareIntentUrl = {
@@ -568,7 +568,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       shareIntentUrl.searchParams.set('url', shareSiteUrl);
     } else {
       shareIntentUrl.searchParams.set('url', shareSiteUrl);
-      shareIntentUrl.searchParams.set('title', `I just took over The Only Tab for $${purchasePrice}`);
+      shareIntentUrl.searchParams.set('title', 'I own The Only Tab 🔥');
     }
 
     window.open(shareIntentUrl.toString(), '_blank', 'noopener,noreferrer,width=550,height=420');
@@ -581,7 +581,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
     }
 
     try {
-      await navigator.share({ title: 'I just took over The Only Tab', text: shareText, url: shareSiteUrl });
+      await navigator.share({ title: 'I own The Only Tab', text: shareTextWithSiteUrl });
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') return;
       setStatusNotice({ type: 'error', message: 'The share sheet could not be opened. Please try another share button.' });
