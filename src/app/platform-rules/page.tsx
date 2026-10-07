@@ -45,6 +45,9 @@ export default function PlatformRulesPage() {
 
           <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm text-neutral-300">
             <p>
+              <span className="font-semibold text-white">Stats:</span> See the <Link className="font-semibold text-emerald-300 underline underline-offset-2 hover:text-emerald-200" href="/hall-of-fame">Hall of Fame</Link>.
+            </p>
+            <p>
               <span className="font-semibold text-white">Effective date:</span> October 7, 2026
             </p>
             <p>
