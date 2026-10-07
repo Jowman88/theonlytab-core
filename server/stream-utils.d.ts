@@ -6,5 +6,8 @@ export function hashFrame(buffer: Uint8Array): string;
 export function hasFrameChanged(previousHash: string | null, nextHash: string): boolean;
 export const REACTION_EMOJIS: string[];
 export const REACTION_MIN_INTERVAL_MS: number;
+export const REACTION_MAX_LENGTH: number;
+export const REACTION_BLOCKLIST: string[];
+export function getReactionRejection(emoji: unknown): string | null;
 export function isValidReaction(emoji: unknown): boolean;
 export function canSendReaction(lastSentAt: number | null, now: number, minIntervalMs?: number): boolean;

@@ -7,7 +7,7 @@ import puppeteer from 'puppeteer';
 import { lookup as dnsLookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
 import { logger, redactUrl } from './logger.js';
-import { canSendReaction, getJpegQuality, getStreamDimension, getStreamFps, hasFrameChanged, hashFrame, isValidReaction } from './stream-utils.js';
+import { canSendReaction, getJpegQuality, getStreamDimension, getStreamFps, hasFrameChanged, hashFrame, getReactionRejection } from './stream-utils.js';
 
 const app = express();
 const server = http.createServer(app);
@@ -462,9 +462,16 @@ io.on('connection', (socket) => {
   let lastReactionAt = null;
   socket.on('reaction', (payload) => {
     const emoji = payload && typeof payload === 'object' ? payload.emoji : undefined;
-    if (!isValidReaction(emoji)) return;
+    const rejection = getReactionRejection(emoji);
+    if (rejection) {
+      console.warn(`Reaction rejected (${rejection}) from ${socket.id.slice(0, 6)}`);
+      return;
+    }
     const now = Date.now();
-    if (!canSendReaction(lastReactionAt, now)) return;
+    if (!canSendReaction(lastReactionAt, now)) {
+      console.warn(`Reaction rate limited from ${socket.id.slice(0, 6)}`);
+      return;
+    }
     lastReactionAt = now;
     io.emit('reaction', { emoji, from: socket.id.slice(0, 6), at: now });
   });

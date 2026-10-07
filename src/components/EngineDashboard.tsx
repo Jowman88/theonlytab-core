@@ -24,6 +24,9 @@ import { io } from 'socket.io-client';
 import { logger } from '../lib/logger';
 
 const REACTION_EMOJIS = ['🔥', '👏', '😂', '❤️', '🎉'];
+const RECENT_REACTIONS_KEY = 'theonlytab:recent-reactions';
+const MAX_RECENT_REACTIONS = 8;
+const REACTION_MAX_LENGTH = 10;
 const REACTION_COOLDOWN_MS = 1000;
 const REACTION_LIFETIME_MS = 2500;
 const MAX_FLOATING_REACTIONS = 30;
@@ -134,10 +137,14 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const [isTouchDevice, setIsTouchDevice] = useState(false);
   const [floatingReactions, setFloatingReactions] = useState<FloatingReaction[]>([]);
   const [isReactionCoolingDown, setIsReactionCoolingDown] = useState(false);
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const [recentReactions, setRecentReactions] = useState<string[]>([]);
+  const pickerContainerRef = useRef<HTMLDivElement | null>(null);
   const [isShareMenuOpen, setIsShareMenuOpen] = useState(false);
   const [shareCopyFeedback, setShareCopyFeedback] = useState('Copy link');
   const socketRef = useRef<ReturnType<typeof io> | null>(null);
   const reactionIdRef = useRef(0);
+  const handleSendReactionRef = useRef<(emoji: string) => void>(() => undefined);
   const idleTimeoutRef = useRef<number | null>(null);
   const reportingSlotIdsRef = useRef(new Set<string>());
   const hasLoggedFrameRef = useRef(false);
@@ -317,7 +324,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
     });
 
     socket.on('reaction', (payload: { emoji?: unknown }) => {
-      if (typeof payload?.emoji !== 'string' || !REACTION_EMOJIS.includes(payload.emoji)) return;
+      if (typeof payload?.emoji !== 'string' || payload.emoji.length === 0 || payload.emoji.length > REACTION_MAX_LENGTH) return;
       const id = (reactionIdRef.current += 1);
       const reaction: FloatingReaction = {
         id,
@@ -581,12 +588,64 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
     }
   };
 
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(window.localStorage.getItem(RECENT_REACTIONS_KEY) || '[]');
+      if (Array.isArray(stored)) {
+        setRecentReactions(stored.filter((item): item is string => typeof item === 'string').slice(0, MAX_RECENT_REACTIONS));
+      }
+    } catch {
+      /* ignore unavailable or corrupt storage */
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isPickerOpen) return;
+    const container = pickerContainerRef.current;
+    if (!container) return;
+    let cancelled = false;
+    let picker: HTMLElement | null = null;
+    const onPick = (event: Event) => {
+      const unicode = (event as CustomEvent<{ unicode?: string }>).detail?.unicode;
+      if (unicode) handleSendReactionRef.current(unicode);
+      setIsPickerOpen(false);
+    };
+    import('emoji-picker-element').then(() => {
+      if (cancelled) return;
+      picker = document.createElement('emoji-picker');
+      picker.className = 'dark';
+      picker.style.width = '100%';
+      picker.addEventListener('emoji-click', onPick);
+      container.appendChild(picker);
+    });
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsPickerOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('keydown', onKey);
+      picker?.removeEventListener('emoji-click', onPick);
+      picker?.remove();
+    };
+  }, [isPickerOpen]);
+
   const handleSendReaction = (emoji: string) => {
     if (isReactionCoolingDown || !socketRef.current?.connected) return;
+    setRecentReactions((current) => {
+      const next = [emoji, ...current.filter((item) => item !== emoji)].slice(0, MAX_RECENT_REACTIONS);
+      try {
+        window.localStorage.setItem(RECENT_REACTIONS_KEY, JSON.stringify(next));
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
     socketRef.current.emit('reaction', { emoji });
     setIsReactionCoolingDown(true);
     window.setTimeout(() => setIsReactionCoolingDown(false), REACTION_COOLDOWN_MS);
   };
+  handleSendReactionRef.current = handleSendReaction;
 
   const stageShareUrl = shareSiteUrl;
   const stageShareDescription = slot && slot.id !== 'house-default-id' && slot.currentUrl
@@ -1294,7 +1353,52 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                     {emoji}
                   </button>
                 ))}
+                <button
+                  type="button"
+                  onClick={() => setIsPickerOpen(true)}
+                  disabled={socketStatus !== 'connected'}
+                  aria-label="Choose another emoji"
+                  aria-haspopup="dialog"
+                  className="rounded-xl border border-white/10 bg-white/[0.03] px-2.5 py-1.5 text-lg font-semibold text-neutral-300 transition hover:scale-110 hover:border-emerald-300/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
+                >
+                  +
+                </button>
               </div>
+
+              {isPickerOpen && (
+                <div
+                  className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 sm:items-center"
+                  onClick={() => setIsPickerOpen(false)}
+                >
+                  <div
+                    role="dialog"
+                    aria-label="Emoji picker"
+                    className="w-full max-w-md rounded-t-2xl border border-white/10 bg-neutral-950 p-3 sm:rounded-2xl"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    {recentReactions.length > 0 && (
+                      <div className="mb-2 flex flex-wrap items-center gap-2">
+                        <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-500">Recent</span>
+                        {recentReactions.map((emoji) => (
+                          <button
+                            key={emoji}
+                            type="button"
+                            onClick={() => {
+                              handleSendReaction(emoji);
+                              setIsPickerOpen(false);
+                            }}
+                            aria-label={`React with ${emoji}`}
+                            className="rounded-xl border border-white/10 bg-white/[0.03] px-2 py-1 text-xl transition hover:scale-110"
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <div ref={pickerContainerRef} />
+                  </div>
+                </div>
+              )}
 
               <div className="flex shrink-0 flex-wrap items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm shadow-[0_16px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/5">
                 <div className="min-w-0 flex-1">
