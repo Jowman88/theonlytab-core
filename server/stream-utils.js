@@ -21,8 +21,22 @@ export function hasFrameChanged(previousHash, nextHash) {
 export const REACTION_EMOJIS = ['🔥', '👏', '😂', '❤️', '🎉'];
 export const REACTION_MIN_INTERVAL_MS = 1000;
 
+export const REACTION_MAX_LENGTH = 10;
+export const REACTION_BLOCKLIST = ['🖕', '🍆', '🖕🏻', '🖕🏼', '🖕🏽', '🖕🏾', '🖕🏿'];
+
+const EMOJI_PATTERN = /^(?:\p{Regional_Indicator}{2}|[0-9#*]\uFE0F?\u20E3|(?:\p{Extended_Pictographic}|\p{Emoji_Modifier_Base}|\p{Emoji_Presentation})[\uFE0F\u{1F3FB}-\u{1F3FF}\u{E0020}-\u{E007F}]*(?:\u200D(?:\p{Extended_Pictographic}|\p{Emoji_Presentation})[\uFE0F\u{1F3FB}-\u{1F3FF}]*)*)$/u;
+const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+
+export function getReactionRejection(emoji) {
+  if (typeof emoji !== 'string' || emoji.length === 0) return 'not-a-string';
+  if (emoji.length > REACTION_MAX_LENGTH) return 'too-long';
+  if (REACTION_BLOCKLIST.includes(emoji)) return 'blocked';
+  if ([...segmenter.segment(emoji)].length !== 1 || !EMOJI_PATTERN.test(emoji)) return 'not-single-emoji';
+  return null;
+}
+
 export function isValidReaction(emoji) {
-  return typeof emoji === 'string' && REACTION_EMOJIS.includes(emoji);
+  return getReactionRejection(emoji) === null;
 }
 
 export function canSendReaction(lastSentAt, now, minIntervalMs = REACTION_MIN_INTERVAL_MS) {

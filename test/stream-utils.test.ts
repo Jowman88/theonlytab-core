@@ -33,7 +33,18 @@ test('frame change detection', () => {
 test('reaction validation and rate limiting', async () => {
   const { canSendReaction, isValidReaction } = await import('../server/stream-utils.js');
   assert.equal(isValidReaction('🔥'), true);
-  assert.equal(isValidReaction('💩'), false);
+  assert.equal(isValidReaction('🍆'), false);
+  assert.equal(isValidReaction('🖕'), false);
+  assert.equal(isValidReaction('🤯'), true);
+  assert.equal(isValidReaction('👨‍👩‍👧'), true);
+  assert.equal(isValidReaction('👍🏽'), true);
+  assert.equal(isValidReaction('🇳🇱'), true);
+  assert.equal(isValidReaction('1️⃣'), true);
+  assert.equal(isValidReaction('hi'), false);
+  assert.equal(isValidReaction('a'), false);
+  assert.equal(isValidReaction('🔥🔥'), false);
+  assert.equal(isValidReaction('https://x.io'), false);
+  assert.equal(isValidReaction(''), false);
   assert.equal(isValidReaction({}), false);
   assert.equal(canSendReaction(null, 1000), true);
   assert.equal(canSendReaction(1000, 1500), false);
