@@ -1,0 +1,41 @@
+services:
+  streamer:
+    build:
+      context: ../..
+      dockerfile: deploy/hetzner/Dockerfile
+    restart: always
+    env_file: .env
+    environment:
+      PORT: "10000"
+    shm_size: 1gb
+    mem_limit: 3g
+    expose:
+      - "10000"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  caddy:
+    image: caddy:2
+    restart: always
+    depends_on:
+      - streamer
+    env_file: .env
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+volumes:
+  caddy_data:
+  caddy_config:

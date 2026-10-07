@@ -199,7 +199,17 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   }, []);
 
   useEffect(() => {
-    const socket = io(streamServerUrl || 'https://theonlytab-server.onrender.com', {
+    const resolvedStreamUrl = streamServerUrl || process.env.NEXT_PUBLIC_STREAM_URL || '';
+    if (!resolvedStreamUrl) {
+      setSocketStatus('disconnected');
+      logger.error('Stream server URL is not configured; set NEXT_PUBLIC_STREAM_URL', {
+        route: 'engine-dashboard',
+      });
+      return;
+    }
+
+    let currentObjectUrl: string | null = null;
+    const socket = io(resolvedStreamUrl, {
       path: '/socket.io/',
       transports: ['polling', 'websocket'],
       secure: true,
@@ -237,15 +247,28 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       });
     });
 
-    socket.on('v-frame', (frameData: string) => {
+    socket.on('v-frame', (frameData: string | ArrayBuffer | Uint8Array) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
 
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
+      let src: string;
+      let objectUrl: string | null = null;
+      if (typeof frameData === 'string') {
+        src = `data:image/jpeg;base64,${frameData}`;
+      } else {
+        objectUrl = URL.createObjectURL(new Blob([frameData as BlobPart], { type: 'image/jpeg' }));
+        src = objectUrl;
+      }
+
       const img = new Image();
       img.onload = () => {
+        if (objectUrl) {
+          if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
+          currentObjectUrl = objectUrl;
+        }
         if (canvas.width !== img.width || canvas.height !== img.height) {
           canvas.width = img.width;
           canvas.height = img.height;
@@ -261,12 +284,13 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
         }
       };
       img.onerror = () => {
+        if (objectUrl) URL.revokeObjectURL(objectUrl);
         logger.warn('Dashboard frame decode failed', {
           route: 'engine-dashboard',
           streamServerUrl,
         });
       };
-      img.src = `data:image/jpeg;base64,${frameData}`;
+      img.src = src;
     });
 
     socket.on('connect_error', (error) => {
@@ -292,6 +316,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
 
     return () => {
       socket.disconnect();
+      if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
     };
   }, [streamServerUrl]);
 
