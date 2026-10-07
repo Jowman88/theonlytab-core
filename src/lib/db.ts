@@ -33,3 +33,7 @@ export function getDbPool(): Pool {
   }
   return dbPool;
 }
+
+export function isMissingTableError(error: unknown): boolean {
+  return typeof error === 'object' && error !== null && (error as { code?: unknown }).code === '42P01';
+}

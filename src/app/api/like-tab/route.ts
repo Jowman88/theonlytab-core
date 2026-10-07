@@ -10,13 +10,16 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
 
 export async function POST(request: Request) {
   try {
-    let body: any;
+    let body: unknown;
     try {
       body = await request.json();
     } catch {
       return NextResponse.json({ error: 'Invalid request body.' }, { status: 400 });
     }
-    const { slotId, turnstileToken } = body || {};
+    const { slotId, turnstileToken } = (body && typeof body === 'object' ? body : {}) as {
+      slotId?: unknown;
+      turnstileToken?: unknown;
+    };
 
     if (!slotId || typeof slotId !== 'string' || !UUID_PATTERN.test(slotId)) {
       return NextResponse.json({ error: 'Invalid slotId parameter.' }, { status: 400 });
@@ -71,7 +74,7 @@ export async function POST(request: Request) {
     } finally {
       client.release();
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     logger.error('POST /api/like-tab failed', { route: 'like-tab', error: err });
     return NextResponse.json({ error: 'Unable to register like.' }, { status: 500 });
   }

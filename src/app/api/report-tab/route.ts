@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDbPool } from '../../../lib/db';
+import { logger } from '../../../lib/logger';
 import { enforceRateLimit, getClientIpAddress } from '../../../lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
@@ -57,8 +58,8 @@ export async function POST(request: Request) {
     } finally {
       client.release();
     }
-  } catch (err: any) {
-    console.error('Report Error:', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    logger.error('Report Error:', { error: err });
+    return NextResponse.json({ error: (err as Error)?.message }, { status: 500 });
   }
 }

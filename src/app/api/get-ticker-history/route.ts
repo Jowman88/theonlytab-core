@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDbPool } from '../../../lib/db';
+import { logger } from '../../../lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,8 +17,8 @@ export async function GET() {
     );
 
     return NextResponse.json({ history: historyRes.rows || [] });
-  } catch (err: any) {
-    console.error('Ticker history core error:', err.message);
+  } catch (err: unknown) {
+    logger.error('Ticker history core error:', { error: err });
     return NextResponse.json({ history: [] });
   } finally {
     client.release();

@@ -1,5 +1,5 @@
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
-export type LogContext = Record<string, unknown>;
+type LogContext = Record<string, unknown>;
 
 const SERVICE_NAME = 'theonlytab-core';
 const EXTERNAL_LOG_URL = process.env.LOG_FORWARD_URL;

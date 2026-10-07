@@ -1,8 +1,9 @@
 import { createHash } from 'crypto';
+import { isMissingTableError } from './db';
 import { LIKE_WINDOW_MINUTES } from './pricing';
 
 interface Queryable {
-  query: (text: string, values?: unknown[]) => Promise<{ rows: any[] }>;
+  query: (text: string, values?: unknown[]) => Promise<{ rows: Array<Record<string, unknown>> }>;
 }
 
 export function hashVoter(clientIp: string): string {
@@ -17,9 +18,9 @@ export async function getActiveLikeCount(client: Queryable, slotId: string): Pro
       [slotId]
     );
     return Number.parseInt(String(res.rows?.[0]?.count ?? '0'), 10) || 0;
-  } catch (error: any) {
-    if (error?.code === '42P01') return 0;
-    throw error;
+  } catch (err: unknown) {
+    if (isMissingTableError(err)) return 0;
+    throw err;
   }
 }
 

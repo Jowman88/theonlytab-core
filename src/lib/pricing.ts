@@ -2,10 +2,10 @@ export interface PricingSettings {
   basePrice: number;
 }
 
-export const DEFAULT_BASE_PRICE = 19;
-export const STEAL_PRICE_CAP = 299;
-export const LIKE_STEP_PERCENT = 1;
-export const MAX_CROWD_PERCENT = 50;
+const DEFAULT_BASE_PRICE = 19;
+const STEAL_PRICE_CAP = 299;
+const LIKE_STEP_PERCENT = 1;
+const MAX_CROWD_PERCENT = 50;
 export const LIKE_WINDOW_MINUTES = 10;
 
 export const DEFAULT_PRICING_SETTINGS: PricingSettings = {
