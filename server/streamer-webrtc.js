@@ -437,7 +437,12 @@ async function startStreamingCore() {
   frameLoop();
 }
 
+function broadcastViewerCount() {
+  io.emit('viewer-count', io.engine.clientsCount);
+}
+
 io.on('connection', (socket) => {
+  broadcastViewerCount();
   const ip = getRequestIp(socket.request);
   const currentCount = Number(socketCountByIp.get(ip) || 0);
   socketCountByIp.set(ip, currentCount + 1);
@@ -455,6 +460,7 @@ io.on('connection', (socket) => {
   if (wakeFrameLoop) wakeFrameLoop();
 
   socket.on('disconnect', () => {
+    setTimeout(broadcastViewerCount, 0);
     const existing = Number(socketCountByIp.get(ip) || 1);
     const next = Math.max(0, existing - 1);
     if (next === 0) {
