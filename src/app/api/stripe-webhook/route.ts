@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { getDbPool } from '../../../lib/db';
+import { getDbPool, isMissingTableError } from '../../../lib/db';
 import { logger } from '../../../lib/logger';
 import {
   ACTIVE_SLOT_ORDER_BY_SQL,
@@ -212,8 +212,8 @@ export async function POST(req: Request) {
         await dbClient.query('SAVEPOINT clear_likes');
         await dbClient.query(`DELETE FROM slot_likes WHERE slot_id = $1`, [currentActiveSlot.id]);
         await dbClient.query('RELEASE SAVEPOINT clear_likes');
-      } catch (likesError: any) {
-        if (likesError?.code !== '42P01') throw likesError;
+      } catch (likesError: unknown) {
+        if (!isMissingTableError(likesError)) throw likesError;
         await dbClient.query('ROLLBACK TO SAVEPOINT clear_likes');
       }
       await dbClient.query(
@@ -271,7 +271,7 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ received: true });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (transactionOpen) {
       try {
         await dbClient.query('ROLLBACK');
@@ -291,7 +291,7 @@ export async function POST(req: Request) {
       error,
       recoveryAction: 'manual_reconciliation_required',
     });
-    return NextResponse.json({ error: error.message || 'Webhook processing failed' }, { status: 500 });
+    return NextResponse.json({ error: (error as Error)?.message || 'Webhook processing failed' }, { status: 500 });
   } finally {
     dbClient.release();
   }

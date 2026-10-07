@@ -1,4 +1,4 @@
-export interface UrlValidationResult {
+interface UrlValidationResult {
   ok: boolean;
   normalizedUrl?: string;
   message?: string;

@@ -105,14 +105,14 @@ export async function POST(req: Request) {
     let finalTargetUrl: string;
     try {
       finalTargetUrl = buildTargetUrl(validation.normalizedUrl, startPath);
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.warn('Checkout session rejected for invalid start path', {
         route: 'create-checkout-session',
         clientIpBucket,
         targetUrl: validation.normalizedUrl,
-        reason: err?.message || 'invalid_start_path',
+        reason: (err as Error)?.message || 'invalid_start_path',
       });
-      return NextResponse.json({ error: err.message || 'Invalid path supplied.' }, { status: 400 });
+      return NextResponse.json({ error: (err as Error)?.message || 'Invalid path supplied.' }, { status: 400 });
     }
 
     if (containsProfanity(displayNameValue) || containsProfanity(finalTargetUrl)) {
@@ -230,11 +230,11 @@ export async function POST(req: Request) {
     } finally {
       client.release();
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     logger.error('Checkout session creation failed', {
       route: 'create-checkout-session',
       error: err,
     });
-    return NextResponse.json({ error: `SERVER ERROR: ${err.message}` }, { status: 500 });
+    return NextResponse.json({ error: `SERVER ERROR: ${(err as Error)?.message}` }, { status: 500 });
   }
 }

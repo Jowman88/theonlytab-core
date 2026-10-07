@@ -1,11 +1,11 @@
 import { calculateStealPriceCents, getBasePrice, PricingSettings } from './pricing';
 
-export const PROTECTION_WINDOW_SECONDS = 90;
-export const QUOTE_LOCK_MINUTES = 5;
+const PROTECTION_WINDOW_SECONDS = 90;
+const QUOTE_LOCK_MINUTES = 5;
 export const TAKEOVER_DURATION_MINUTES = 90;
 export const ACTIVE_SLOT_ORDER_BY_SQL = 'created_at DESC, id DESC';
 
-export interface ActiveSlotSnapshot {
+interface ActiveSlotSnapshot {
   id: string;
   currentBid: number;
   createdAt: string | Date | null;
@@ -14,7 +14,7 @@ export interface ActiveSlotSnapshot {
   displayName?: string | null;
 }
 
-export interface CheckoutQuoteContext {
+interface CheckoutQuoteContext {
   quotedAt: string;
   quotedActiveSlotId: string | null;
   quotedActiveCreatedAt: string | null;
@@ -25,7 +25,7 @@ export interface CheckoutQuoteContext {
   quotedCurrency: string;
 }
 
-export interface FulfillmentDecision {
+interface FulfillmentDecision {
   action: 'duplicate' | 'fulfill' | 'defer';
   reason?:
     | 'existing_session'
@@ -49,7 +49,7 @@ export function normalizeBidAmount(value: unknown): number {
   return Number.isFinite(numeric) ? Number(numeric.toFixed(2)) : 0;
 }
 
-export function toAmountCents(value: number | string): number {
+function toAmountCents(value: number | string): number {
   return Math.round(Number(value) * 100);
 }
 
@@ -61,7 +61,7 @@ export function getSecondsLeftInProtection(slot: ActiveSlotSnapshot | null | und
   return Math.max(0, Math.min(PROTECTION_WINDOW_SECONDS, Math.ceil(PROTECTION_WINDOW_SECONDS - elapsedSeconds)));
 }
 
-export function isSlotProtected(slot: ActiveSlotSnapshot | null | undefined, now = new Date()) {
+function isSlotProtected(slot: ActiveSlotSnapshot | null | undefined, now = new Date()) {
   return getSecondsLeftInProtection(slot, now) > 0;
 }
 

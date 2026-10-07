@@ -1,4 +1,5 @@
-import { getDbPool } from './db';
+import { getDbPool, isMissingTableError } from './db';
+import { logger } from './logger';
 import { DEFAULT_PRICING_SETTINGS, PricingSettings, resolvePricingSettings } from './pricing';
 
 const CONFIG_CACHE_TTL_MS = 60_000;
@@ -12,10 +13,6 @@ function getEnvPricingOverrides(): Record<string, unknown> {
   return {
     basePrice: process.env.PRICING_BASE_PRICE,
   };
-}
-
-function isMissingTableError(error: any): boolean {
-  return error?.code === '42P01';
 }
 
 /**
@@ -66,9 +63,9 @@ export async function getServerPricingSettings(): Promise<PricingSettings> {
     dbRetryAfter = 0;
     cacheExpiresAt = now + CONFIG_CACHE_TTL_MS;
     return cachedSettings;
-  } catch (error: any) {
-    if (!isMissingTableError(error)) {
-      console.warn('Pricing config fallback engaged:', error?.message || error);
+  } catch (err: unknown) {
+    if (!isMissingTableError(err)) {
+      logger.warn('Pricing config fallback engaged:', { error: (err as Error)?.message || err });
     }
     dbRetryAfter = now + DB_RETRY_BACKOFF_MS;
     cachedSettings = envFallback;

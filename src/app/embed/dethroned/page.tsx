@@ -3,8 +3,13 @@
 import React, { useEffect, useState } from 'react';
 import { Zap, ArrowUpRight } from 'lucide-react';
 
+interface DethronedData {
+  stealPrice?: string;
+  currentUrl?: string;
+}
+
 export default function DethronedEmbed() {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<DethronedData | null>(null);
 
   useEffect(() => {
     let isMounted = true;

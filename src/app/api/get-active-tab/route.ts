@@ -79,7 +79,7 @@ export async function GET() {
         crowdPercent: 0,
       }
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     const fallbackStealPrice = pricingSettings
       ? getBasePrice(new Date(), pricingSettings).toFixed(2)
       : getBasePrice(new Date()).toFixed(2);
@@ -90,7 +90,7 @@ export async function GET() {
     });
     return NextResponse.json(
       {
-        error: err?.message || 'Unable to load active tab',
+        error: (err as Error)?.message || 'Unable to load active tab',
         data: {
           id: 'house-default-id',
           currentUrl: HOUSE_DEFAULT_URL,

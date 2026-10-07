@@ -1,4 +1,5 @@
-import { getDbPool } from './db';
+import { getDbPool, isMissingTableError } from './db';
+import { logger } from './logger';
 
 interface RateLimitOptions {
   bucket: string;
@@ -94,9 +95,9 @@ export async function enforceRateLimit(options: RateLimitOptions): Promise<RateL
       retryAfterSeconds: Math.max(1, Math.ceil((expiresAt.getTime() - now) / 1000)),
       source: 'database',
     };
-  } catch (error: any) {
-    if (error?.code !== '42P01') {
-      console.warn('Shared rate-limit fallback engaged:', error?.message || error);
+  } catch (err: unknown) {
+    if (!isMissingTableError(err)) {
+      logger.warn('Shared rate-limit fallback engaged:', { error: (err as Error)?.message || err });
     }
     return enforceMemoryRateLimit(options);
   } finally {
