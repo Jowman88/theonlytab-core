@@ -21,7 +21,6 @@ import {
 } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { logger } from '../lib/logger';
-import PredictReignCard from './PredictReignCard';
 
 interface SlotData {
   id: string;
@@ -33,9 +32,6 @@ interface SlotData {
   crowdPercent?: number;
   secondsOnStage?: number;
   secondsLeftInLock?: number;
-  predictionOpen?: boolean;
-  secondsLeftToPredict?: number;
-  totalPredictions?: number;
   secondsLeftInProtection?: number;
   isReported?: boolean;
 }
@@ -97,6 +93,9 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const [stageTimer, setStageTimer] = useState<number>(0);
   const [hasFrames, setHasFrames] = useState<boolean>(false);
   const [historyList, setHistoryList] = useState<HistoryItem[]>([]);
+  const [viewerCount, setViewerCount] = useState<number | null>(null);
+  const [takeoverAlert, setTakeoverAlert] = useState<string | null>(null);
+  const lastTakeoverRef = useRef<string | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
@@ -293,6 +292,10 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       img.src = src;
     });
 
+    socket.on('viewer-count', (count: number) => {
+      if (Number.isFinite(count)) setViewerCount(Math.max(0, Math.floor(count)));
+    });
+
     socket.on('connect_error', (error) => {
       setSocketStatus('reconnecting');
       logger.error('Dashboard socket connection error', {
@@ -321,6 +324,12 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   }, [streamServerUrl]);
 
   useEffect(() => {
+    if (!takeoverAlert) return;
+    const timeout = window.setTimeout(() => setTakeoverAlert(null), 3000);
+    return () => window.clearTimeout(timeout);
+  }, [takeoverAlert]);
+
+  useEffect(() => {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('payment') === 'success' || urlParams.get('showEmbed') === 'true') {
@@ -342,7 +351,18 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
         const historyResponse = await fetch('/api/get-ticker-history');
         if (historyResponse.ok) {
           const historyPayload = await historyResponse.json();
-          setHistoryList(historyPayload.history || []);
+          const nextHistory: HistoryItem[] = historyPayload.history || [];
+          setHistoryList(nextHistory);
+          const latest = nextHistory[0];
+          const signature = latest ? `${latest.displayName || ''}|${latest.currentUrl || ''}|${latest.currentBid || ''}` : '';
+          if (lastTakeoverRef.current !== null && signature && signature !== lastTakeoverRef.current) {
+            const isAnonymous = !latest.displayName || latest.displayName === 'Anonymous Takeover';
+            const amount = Number.parseFloat(latest.currentBid || '0').toFixed(0);
+            setTakeoverAlert(
+              isAnonymous ? `💰 Anonymous Takeover for $${amount}` : `⚡ ${latest.displayName} just took the stage for $${amount}`,
+            );
+          }
+          lastTakeoverRef.current = signature;
         }
       } catch (error) {
         logger.error('Dashboard state refresh failed', {
@@ -1010,6 +1030,16 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
           )}
 
           <section className="flex min-w-0 max-w-full flex-col gap-4 lg:min-h-0 lg:flex-1 lg:gap-5">
+            {takeoverAlert && (
+              <div
+                role="status"
+                aria-live="polite"
+                className="dashboard-slide-up pointer-events-none fixed left-1/2 top-4 z-50 max-w-[90vw] -translate-x-1/2 truncate rounded-full border border-amber-300/30 bg-black/85 px-4 py-2 text-sm font-semibold text-amber-100 shadow-[0_16px_50px_rgba(0,0,0,0.45)] ring-1 ring-white/10 backdrop-blur"
+              >
+                {takeoverAlert}
+              </div>
+            )}
+
             <div className="relative min-w-0 max-w-full">
               <div
                 ref={statusBarRef}
@@ -1020,6 +1050,15 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                   <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Stage</span>{' '}
                   <span className="text-white">{stageUrl}</span>
                 </span>
+                {viewerCount !== null && socketStatus === 'connected' && (
+                  <>
+                    <span className="shrink-0 text-white/20">|</span>
+                    <span className="inline-flex shrink-0 items-center gap-1.5" aria-live="polite">
+                      <span className="h-2 w-2 rounded-full bg-rose-400 animate-pulse" />
+                      <span className="text-sm font-bold text-white">{viewerCount.toLocaleString()} watching</span>
+                    </span>
+                  </>
+                )}
                 <span className="shrink-0 text-white/20">|</span>
                 <span className="shrink-0">
                   <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Stake</span>{' '}
@@ -1192,12 +1231,6 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                 </div>
               </div>
             </div>
-
-            <PredictReignCard
-              slotId={slot?.id}
-              secondsLeftToPredict={slot?.secondsLeftToPredict}
-              totalPredictions={slot?.totalPredictions}
-            />
 
             <div className="min-w-0 w-full shrink-0 overflow-hidden rounded-3xl border border-white/10 bg-[linear-gradient(180deg,_rgba(17,20,27,0.94),_rgba(8,10,14,0.98))] px-3 py-3 shadow-[0_16px_50px_rgba(0,0,0,0.25)] ring-1 ring-white/5 sm:px-5 sm:py-4">
               <div className="mb-2 flex items-center justify-between gap-3 sm:mb-3">
