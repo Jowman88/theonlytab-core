@@ -7,7 +7,6 @@ export const STEAL_PRICE_CAP = 299;
 export const LIKE_STEP_PERCENT = 1;
 export const MAX_CROWD_PERCENT = 50;
 export const LIKE_WINDOW_MINUTES = 10;
-export const LONG_IDLE_RESET_MINUTES = 120;
 
 export const DEFAULT_PRICING_SETTINGS: PricingSettings = {
   basePrice: DEFAULT_BASE_PRICE,
@@ -65,41 +64,4 @@ export function calculateStealPrice(
 
 export function getBasePrice(_now = new Date(), settings: PricingSettings = DEFAULT_PRICING_SETTINGS): number {
   return resolvePricingSettings(settings).basePrice;
-}
-
-/**
- * @deprecated Prime-time/peak pricing windows were removed in favor of the
- * flat doubling-to-cap model. This is kept for backward compatibility with
- * any callers that still reference it; it always reports inactive.
- */
-export function getPrimeBlockStatus(
-  now = new Date(),
-  settings: PricingSettings = DEFAULT_PRICING_SETTINGS
-): { active: boolean; basePrice: number } {
-  return { active: false, basePrice: getBasePrice(now, settings) };
-}
-
-/**
- * Long-idle reset: if a slot has had zero steal activity for 2+ hours,
- * the price should snap back to the base price immediately (rather than
- * waiting for the next daily reset). Returns whether that reset should
- * trigger given the timestamp of the last activity on the slot.
- */
-export function getResetTime(
-  lastActivityTimestamp: Date | string | number | null | undefined,
-  now = new Date()
-): { shouldReset: boolean; idleMinutes: number } {
-  if (!lastActivityTimestamp) {
-    return { shouldReset: true, idleMinutes: Number.POSITIVE_INFINITY };
-  }
-
-  const lastActivity =
-    lastActivityTimestamp instanceof Date ? lastActivityTimestamp : new Date(lastActivityTimestamp);
-
-  if (Number.isNaN(lastActivity.getTime())) {
-    return { shouldReset: true, idleMinutes: Number.POSITIVE_INFINITY };
-  }
-
-  const idleMinutes = Math.max(0, (now.getTime() - lastActivity.getTime()) / 60_000);
-  return { shouldReset: idleMinutes >= LONG_IDLE_RESET_MINUTES, idleMinutes };
 }

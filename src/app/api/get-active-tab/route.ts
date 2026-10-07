@@ -5,7 +5,6 @@ import { logger } from '../../../lib/logger';
 import { ACTIVE_SLOT_ORDER_BY_SQL, getSecondsLeftInProtection } from '../../../lib/paidTakeover';
 import { calculateStealPrice, getBasePrice, getCrowdPercent, PricingSettings } from '../../../lib/pricing';
 import { getServerPricingSettings } from '../../../lib/pricingConfig';
-import { getTotalPredictions, secondsLeftToPredict, settlePredictions } from '../../../lib/predictions';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,12 +17,9 @@ export async function GET() {
   try {
     pricingSettings = await getServerPricingSettings();
 
-    const expiredRes = await client.query(
-      `UPDATE slots SET is_frozen = TRUE WHERE is_frozen = FALSE AND expires_at <= NOW() RETURNING id, expires_at`
+    await client.query(
+      `UPDATE slots SET is_frozen = TRUE WHERE is_frozen = FALSE AND expires_at <= NOW()`
     );
-    for (const expired of expiredRes.rows || []) {
-      await settlePredictions(String(expired.id), expired.expires_at);
-    }
 
     const activeRes = await client.query(
       `SELECT id, current_url as "currentUrl", display_name as "displayName", current_bid, expires_at as "expiresAt", created_at as "createdAt", report_count as "reportCount"
@@ -48,9 +44,6 @@ export async function GET() {
       const crowdLikes = isReported ? 0 : activeLikes;
       const nextStealPrice = calculateStealPrice(currentPaid, new Date(), pricingSettings, crowdLikes);
 
-      const secondsLeftToPredictNow = isReported ? 0 : secondsLeftToPredict(row.createdAt);
-      const totalPredictions = await getTotalPredictions(client, String(row.id));
-
       const secondsOnStage = Math.max(0, Math.floor((Date.now() - new Date(row.createdAt).getTime()) / 1000));
       const secondsLeftInProtection = getSecondsLeftInProtection({
         id: String(row.id),
@@ -68,9 +61,6 @@ export async function GET() {
           isReported,
           secondsOnStage,
           secondsLeftInProtection,
-          predictionOpen: secondsLeftToPredictNow > 0,
-          secondsLeftToPredict: secondsLeftToPredictNow,
-          totalPredictions,
         }
       });
     }
@@ -87,9 +77,6 @@ export async function GET() {
         isReported: false,
         active_likes: 0,
         crowdPercent: 0,
-        predictionOpen: false,
-        secondsLeftToPredict: 0,
-        totalPredictions: 0,
       }
     });
   } catch (err: any) {
