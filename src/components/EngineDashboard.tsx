@@ -1438,73 +1438,12 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                 </button>
               </div>
 
-              <div role="group" aria-label="Send a reaction" className="flex shrink-0 items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 ring-1 ring-white/5">
-                <Smile aria-hidden="true" className="h-4 w-4 text-neutral-500" />
-                {REACTION_EMOJIS.map((emoji) => (
-                  <button
-                    key={emoji}
-                    type="button"
-                    onClick={() => handleSendReaction(emoji)}
-                    disabled={socketStatus !== 'connected' || isReactionCoolingDown}
-                    aria-label={`React with ${emoji}`}
-                    className="rounded-xl border border-white/10 bg-white/[0.03] px-2.5 py-1.5 text-lg transition hover:scale-110 hover:border-emerald-300/50 hover:shadow-[0_0_14px_rgba(16,185,129,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
-                  >
-                    {emoji}
-                  </button>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => setIsPickerOpen(true)}
-                  disabled={socketStatus !== 'connected'}
-                  aria-label="Choose another emoji"
-                  aria-haspopup="dialog"
-                  className="rounded-xl border border-white/10 bg-white/[0.03] px-2.5 py-1.5 text-lg font-semibold text-neutral-300 transition hover:scale-110 hover:border-emerald-300/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
-                >
-                  +
-                </button>
-              </div>
-
-              {isPickerOpen && (
-                <div
-                  className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 sm:items-center"
-                  onClick={() => setIsPickerOpen(false)}
-                >
-                  <div
-                    role="dialog"
-                    aria-label="Emoji picker"
-                    className="w-full max-w-md rounded-t-2xl border border-white/10 bg-neutral-950 p-3 sm:rounded-2xl"
-                    onClick={(event) => event.stopPropagation()}
-                  >
-                    {recentReactions.length > 0 && (
-                      <div className="mb-2 flex flex-wrap items-center gap-2">
-                        <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-500">Recent</span>
-                        {recentReactions.map((emoji) => (
-                          <button
-                            key={emoji}
-                            type="button"
-                            onClick={() => {
-                              handleSendReaction(emoji);
-                              setIsPickerOpen(false);
-                            }}
-                            aria-label={`React with ${emoji}`}
-                            className="rounded-xl border border-white/10 bg-white/[0.03] px-2 py-1 text-xl transition hover:scale-110"
-                          >
-                            {emoji}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                    <div ref={pickerContainerRef} />
-                  </div>
-                </div>
-              )}
-
-              <div className="grid shrink-0 grid-cols-2 gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm shadow-[0_16px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/5 lg:flex lg:flex-wrap lg:items-center">
-                <div className="order-1 min-w-0 lg:flex-1">
+              <div className="grid shrink-0 grid-cols-2 gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm shadow-[0_16px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/5 lg:flex lg:flex-wrap lg:items-center lg:justify-between lg:gap-x-4 lg:gap-y-2 lg:py-2">
+                <div className="order-1 min-w-0 lg:min-w-[8rem] lg:max-w-[14rem]">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-500">Stage owner</p>
                   <p className="truncate text-sm font-semibold text-white sm:text-base">{stageOwner}</p>
                 </div>
-                <div className="order-3 col-span-2 grid grid-cols-3 gap-2 lg:order-2 lg:flex lg:items-center lg:gap-3">
+                <div className="order-3 col-span-2 grid grid-cols-3 gap-2 lg:order-3 lg:flex lg:items-center lg:gap-3">
                 <button
                   type="button"
                   onClick={handleLikeStage}
@@ -1553,11 +1492,71 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                   {isReporting ? 'Reporting…' : reportedSlotIds.includes(slot?.id || '') ? 'Reported' : 'Report'}
                 </button>
                 </div>
-                <div className="order-2 min-w-0 lg:order-4 lg:shrink-0 lg:min-w-[9rem]">
+                <div role="group" aria-label="Send a reaction" className="order-4 col-span-2 flex min-w-0 flex-wrap items-center gap-2 border-t border-white/10 pt-3 lg:order-2 lg:col-span-1 lg:shrink-0 lg:flex-nowrap lg:border-t-0 lg:pt-0">
+                  <Smile aria-hidden="true" className="h-4 w-4 text-neutral-500" />
+                  {REACTION_EMOJIS.map((emoji) => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      onClick={() => handleSendReaction(emoji)}
+                      disabled={socketStatus !== 'connected' || isReactionCoolingDown}
+                      aria-label={`React with ${emoji}`}
+                      className="rounded-xl border border-white/10 bg-white/[0.03] px-2.5 py-1.5 text-lg transition hover:scale-110 hover:border-emerald-300/50 hover:shadow-[0_0_14px_rgba(16,185,129,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setIsPickerOpen(true)}
+                    disabled={socketStatus !== 'connected'}
+                    aria-label="Choose another emoji"
+                    aria-haspopup="dialog"
+                    className="rounded-xl border border-white/10 bg-white/[0.03] px-2.5 py-1.5 text-lg font-semibold text-neutral-300 transition hover:scale-110 hover:border-emerald-300/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
+                  >
+                    +
+                  </button>
+                </div>
+                <div className="order-2 min-w-0 lg:order-4 lg:shrink-0 lg:min-w-[7rem]">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-500">Time on stage</p>
                   <p className="text-sm font-semibold text-emerald-200 sm:text-base">{formatClock(stageTimer)}</p>
                 </div>
               </div>
+
+              {isPickerOpen && (
+                <div
+                  className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 sm:items-center"
+                  onClick={() => setIsPickerOpen(false)}
+                >
+                  <div
+                    role="dialog"
+                    aria-label="Emoji picker"
+                    className="w-full max-w-md rounded-t-2xl border border-white/10 bg-neutral-950 p-3 sm:rounded-2xl"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    {recentReactions.length > 0 && (
+                      <div className="mb-2 flex flex-wrap items-center gap-2">
+                        <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-500">Recent</span>
+                        {recentReactions.map((emoji) => (
+                          <button
+                            key={emoji}
+                            type="button"
+                            onClick={() => {
+                              handleSendReaction(emoji);
+                              setIsPickerOpen(false);
+                            }}
+                            aria-label={`React with ${emoji}`}
+                            className="rounded-xl border border-white/10 bg-white/[0.03] px-2 py-1 text-xl transition hover:scale-110"
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <div ref={pickerContainerRef} />
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="min-w-0 w-full shrink-0 overflow-hidden rounded-3xl border border-white/10 bg-[linear-gradient(180deg,_rgba(17,20,27,0.94),_rgba(8,10,14,0.98))] px-3 py-3 shadow-[0_16px_50px_rgba(0,0,0,0.25)] ring-1 ring-white/5 sm:px-5 sm:py-4">
