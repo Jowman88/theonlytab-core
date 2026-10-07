@@ -12,6 +12,12 @@ let cached: { data: HallOfFameData; expiresAt: number } | null = null;
 
 const toIso = (value: unknown) => new Date(value as string | Date).toISOString();
 
+const EXCLUDE_HOUSE_CLAUSE = `
+  WHERE id::text <> 'house-default-id'
+    AND COALESCE(TRIM(display_name), '') <> ''
+    AND display_name NOT ILIKE '%house%'
+    AND display_name NOT ILIKE '%default%'`;
+
 export async function getHallOfFame(): Promise<HallOfFameData> {
   if (cached && cached.expiresAt > Date.now()) {
     return cached.data;
@@ -24,19 +30,19 @@ export async function getHallOfFame(): Promise<HallOfFameData> {
       client.query(
         `SELECT display_name, id, LEAST(expires_at, NOW()) AS ended_at,
                 EXTRACT(EPOCH FROM (LEAST(expires_at, NOW()) - created_at)) / 60 AS duration_minutes
-         FROM slots
+         FROM slots${EXCLUDE_HOUSE_CLAUSE}
          ORDER BY duration_minutes DESC, created_at DESC
          LIMIT 1`
       ),
       client.query(
         `SELECT display_name, id, created_at, ROUND(current_bid * 100)::bigint AS bid_cents
-         FROM slots
+         FROM slots${EXCLUDE_HOUSE_CLAUSE}
          ORDER BY current_bid DESC, created_at DESC
          LIMIT 1`
       ),
       client.query(
         `SELECT display_name, COUNT(*)::int AS takeover_count, MAX(created_at) AS last_takeover
-         FROM slots
+         FROM slots${EXCLUDE_HOUSE_CLAUSE}
          GROUP BY display_name
          ORDER BY takeover_count DESC, last_takeover DESC
          LIMIT 1`

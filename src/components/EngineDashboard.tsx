@@ -1566,7 +1566,16 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                   <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-neutral-400">History ticker</p>
                   <p className="mt-1 hidden text-sm text-neutral-300 sm:block">Recent takeovers and the bids that moved the board.</p>
                 </div>
-                <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-neutral-300 sm:px-3 sm:py-1 sm:text-xs sm:tracking-[0.18em]">Live ledger</span>
+                <div className="flex items-center gap-2">
+                  <Link
+                    href="/hall-of-fame"
+                    title="See the longest reigns and top takeovers"
+                    className="rounded-full border border-amber-400/20 bg-amber-500/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-amber-200 transition hover:border-amber-300/40 hover:bg-amber-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 sm:px-3 sm:py-1 sm:text-xs sm:tracking-[0.18em]"
+                  >
+                    🏆 Hall of Fame
+                  </Link>
+                  <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-neutral-300 sm:px-3 sm:py-1 sm:text-xs sm:tracking-[0.18em]">Live ledger</span>
+                </div>
               </div>
 
               {historyList.length > 0 ? (
