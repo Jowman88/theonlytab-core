@@ -548,7 +548,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const shareBuyerName = slot?.displayName || displayName.trim() || 'Anonymous Takeover';
   const shareTargetUrl = slot?.currentUrl || (targetUrl.trim() ? normalizedTargetUrl : shareSiteUrl);
   const purchasePrice = slot?.current_bid || '19.00';
-  const shareText = `I just took over the stage on The Only Tab as ${shareBuyerName} for $${purchasePrice} 🔥\nI'm streaming ${shareTargetUrl}.\nMy free protection expires in ${formatClock(protectionTimer)} — steal it from me before the price doubles to $${stealPrice}!\n${shareSiteUrl}`;
+  const shareText = `I just took over The Only Tab as ${shareBuyerName} for $${purchasePrice} 🔥\nI'm streaming ${shareTargetUrl}.\nCome watch and try to steal the stage! 👀\n${shareSiteUrl}`;
 
   const handleSocialShare = (platform: 'x' | 'facebook' | 'linkedin' | 'reddit') => {
     const shareIntentUrl = {
@@ -649,8 +649,8 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
 
   const stageShareUrl = shareSiteUrl;
   const stageShareDescription = slot && slot.id !== 'house-default-id' && slot.currentUrl
-    ? `${slot.displayName || 'Someone'} is on The Only Tab stage right now, streaming ${stripProtocol(slot.currentUrl)}. Steal the stage!`
-    : 'Watch the live stage on The Only Tab and steal it!';
+    ? `${slot.displayName || 'Someone'} is on The Only Tab stage right now, streaming ${stripProtocol(slot.currentUrl)}. Come watch and try to steal the stage! 👀`
+    : 'Watch the live stage on The Only Tab and try to steal it! 👀';
 
   const handleShareStage = (platform: 'x' | 'whatsapp') => {
     const intentUrl = platform === 'x'
