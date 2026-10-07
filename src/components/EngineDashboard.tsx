@@ -1225,7 +1225,14 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                         >
                           contact page
                         </Link>
-                        .
+                        . See the{' '}
+                        <Link
+                          href="/hall-of-fame"
+                          className="font-semibold text-emerald-300 underline decoration-emerald-300/60 underline-offset-2 transition hover:text-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#090b10]"
+                        >
+                          Hall of Fame
+                        </Link>
+                        {' '}for top records.
                       </span>
                     </span>
                   </label>
