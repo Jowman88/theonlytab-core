@@ -1438,12 +1438,12 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                 </button>
               </div>
 
-              <div className="grid shrink-0 grid-cols-2 gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm shadow-[0_16px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/5 lg:flex lg:flex-wrap lg:items-center lg:justify-between lg:gap-x-4 lg:gap-y-2 lg:py-2">
-                <div className="order-1 min-w-0 lg:min-w-[8rem] lg:max-w-[14rem]">
+              <div className="grid shrink-0 grid-cols-2 gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm shadow-[0_16px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/5 lg:flex lg:flex-wrap lg:items-center lg:gap-x-4 lg:gap-y-2 lg:py-2">
+                <div className="order-1 min-w-0 lg:order-1 lg:min-w-[8rem] lg:max-w-[14rem]">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-500">Stage owner</p>
                   <p className="truncate text-sm font-semibold text-white sm:text-base">{stageOwner}</p>
                 </div>
-                <div className="order-3 col-span-2 grid grid-cols-3 gap-2 lg:order-3 lg:flex lg:items-center lg:gap-3">
+                <div className="order-3 col-span-2 grid grid-cols-3 gap-2 lg:order-3 lg:ml-auto lg:flex lg:items-center lg:gap-3">
                 <button
                   type="button"
                   onClick={handleLikeStage}
