@@ -1218,6 +1218,13 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                         >
                           platform rules
                         </Link>
+                        . For help or to submit a report, visit the{' '}
+                        <Link
+                          href="/contact"
+                          className="font-semibold text-emerald-300 underline decoration-emerald-300/60 underline-offset-2 transition hover:text-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#090b10]"
+                        >
+                          contact page
+                        </Link>
                         .
                       </span>
                     </span>
