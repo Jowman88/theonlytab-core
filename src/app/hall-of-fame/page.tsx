@@ -117,7 +117,7 @@ export default async function HallOfFamePage() {
           record={
             highestTakeover && {
               name: highestTakeover.displayName,
-              metric: `€${(highestTakeover.bidCents / 100).toFixed(2)}`,
+              metric: `$${(highestTakeover.bidCents / 100).toFixed(2)}`,
               caption: `Set ${formatDate(highestTakeover.createdAt)}`,
             }
           }
