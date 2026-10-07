@@ -14,6 +14,7 @@ import {
   Maximize2,
   Share2,
   ShieldCheck,
+  Smile,
   Sparkles,
   Wifi,
   WifiOff,
@@ -21,6 +22,18 @@ import {
 } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { logger } from '../lib/logger';
+
+const REACTION_EMOJIS = ['🔥', '👏', '😂', '❤️', '🎉'];
+const REACTION_COOLDOWN_MS = 1000;
+const REACTION_LIFETIME_MS = 2500;
+const MAX_FLOATING_REACTIONS = 30;
+
+interface FloatingReaction {
+  id: number;
+  emoji: string;
+  left: number;
+  drift: number;
+}
 
 interface SlotData {
   id: string;
@@ -119,6 +132,12 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isCursorIdle, setIsCursorIdle] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [floatingReactions, setFloatingReactions] = useState<FloatingReaction[]>([]);
+  const [isReactionCoolingDown, setIsReactionCoolingDown] = useState(false);
+  const [isShareMenuOpen, setIsShareMenuOpen] = useState(false);
+  const [shareCopyFeedback, setShareCopyFeedback] = useState('Copy link');
+  const socketRef = useRef<ReturnType<typeof io> | null>(null);
+  const reactionIdRef = useRef(0);
   const idleTimeoutRef = useRef<number | null>(null);
   const reportingSlotIdsRef = useRef(new Set<string>());
   const hasLoggedFrameRef = useRef(false);
@@ -218,6 +237,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       reconnectionAttempts: 10,
     });
 
+    socketRef.current = socket;
     setSocketStatus('connecting');
 
     socket.on('connect', () => {
@@ -296,6 +316,21 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       if (Number.isFinite(count)) setViewerCount(Math.max(0, Math.floor(count)));
     });
 
+    socket.on('reaction', (payload: { emoji?: unknown }) => {
+      if (typeof payload?.emoji !== 'string' || !REACTION_EMOJIS.includes(payload.emoji)) return;
+      const id = (reactionIdRef.current += 1);
+      const reaction: FloatingReaction = {
+        id,
+        emoji: payload.emoji,
+        left: 8 + Math.random() * 84,
+        drift: Math.round((Math.random() - 0.5) * 60),
+      };
+      setFloatingReactions((current) => [...current.slice(-(MAX_FLOATING_REACTIONS - 1)), reaction]);
+      window.setTimeout(() => {
+        setFloatingReactions((current) => current.filter((item) => item.id !== id));
+      }, REACTION_LIFETIME_MS);
+    });
+
     socket.on('connect_error', (error) => {
       setSocketStatus('reconnecting');
       logger.error('Dashboard socket connection error', {
@@ -318,6 +353,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
     });
 
     return () => {
+      socketRef.current = null;
       socket.disconnect();
       if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
     };
@@ -543,6 +579,42 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       if (error instanceof Error && error.name === 'AbortError') return;
       setStatusNotice({ type: 'error', message: 'The share sheet could not be opened. Please try another share button.' });
     }
+  };
+
+  const handleSendReaction = (emoji: string) => {
+    if (isReactionCoolingDown || !socketRef.current?.connected) return;
+    socketRef.current.emit('reaction', { emoji });
+    setIsReactionCoolingDown(true);
+    window.setTimeout(() => setIsReactionCoolingDown(false), REACTION_COOLDOWN_MS);
+  };
+
+  const stageShareUrl = shareSiteUrl;
+  const stageShareDescription = slot && slot.id !== 'house-default-id' && slot.currentUrl
+    ? `${slot.displayName || 'Someone'} is on The Only Tab stage right now, streaming ${stripProtocol(slot.currentUrl)}. Steal the stage!`
+    : 'Watch the live stage on The Only Tab and steal it!';
+
+  const handleShareStage = (platform: 'x' | 'whatsapp') => {
+    const intentUrl = platform === 'x'
+      ? new URL('https://twitter.com/intent/tweet')
+      : new URL('https://wa.me/');
+    if (platform === 'x') {
+      intentUrl.searchParams.set('text', stageShareDescription);
+      intentUrl.searchParams.set('url', stageShareUrl);
+    } else {
+      intentUrl.searchParams.set('text', `${stageShareDescription} ${stageShareUrl}`);
+    }
+    window.open(intentUrl.toString(), '_blank', 'noopener,noreferrer,width=550,height=420');
+    setIsShareMenuOpen(false);
+  };
+
+  const handleCopyStageLink = async () => {
+    try {
+      await navigator.clipboard.writeText(stageShareUrl);
+      setShareCopyFeedback('Copied!');
+    } catch {
+      setShareCopyFeedback('Copy failed');
+    }
+    window.setTimeout(() => setShareCopyFeedback('Copy link'), 1800);
   };
 
   const handleLikeStage = async () => {
@@ -1130,6 +1202,18 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                 <div className={`relative flex h-full w-full items-center justify-center overflow-hidden border border-white/10 bg-[#040507] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.03),0_20px_70px_rgba(0,0,0,0.55)] ${isFullscreen ? 'rounded-none' : 'rounded-[1.35rem]'}`}>
                   <canvas ref={canvasRef} className={`h-full w-full object-contain transition duration-500 ${!hasFrames ? 'opacity-0' : 'opacity-100'}`} />
 
+                  <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-[2] overflow-hidden">
+                    {floatingReactions.map((reaction) => (
+                      <span
+                        key={reaction.id}
+                        className="dashboard-reaction-float absolute bottom-3 text-3xl drop-shadow-[0_0_10px_rgba(52,211,153,0.6)]"
+                        style={{ left: `${reaction.left}%`, ['--reaction-drift' as string]: `${reaction.drift}px` }}
+                      >
+                        {reaction.emoji}
+                      </span>
+                    ))}
+                  </div>
+
                   {liveSiteUrl && (
                     <a
                       href={liveSiteUrl}
@@ -1196,6 +1280,22 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                 </button>
               </div>
 
+              <div role="group" aria-label="Send a reaction" className="flex shrink-0 items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 ring-1 ring-white/5">
+                <Smile aria-hidden="true" className="h-4 w-4 text-neutral-500" />
+                {REACTION_EMOJIS.map((emoji) => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => handleSendReaction(emoji)}
+                    disabled={socketStatus !== 'connected' || isReactionCoolingDown}
+                    aria-label={`React with ${emoji}`}
+                    className="rounded-xl border border-white/10 bg-white/[0.03] px-2.5 py-1.5 text-lg transition hover:scale-110 hover:border-emerald-300/50 hover:shadow-[0_0_14px_rgba(16,185,129,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+
               <div className="flex shrink-0 flex-wrap items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm shadow-[0_16px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/5">
                 <div className="min-w-0 flex-1">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-500">Stage owner</p>
@@ -1213,6 +1313,31 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                   <Heart aria-hidden="true" className={`h-4 w-4 ${slot && likedSlotIds.includes(slot.id) ? 'fill-pink-300 text-pink-300' : ''}`} />
                   {activeLikes} {likedSlotIds.includes(slot?.id || '') ? 'Liked' : 'Like'}
                 </button>
+                <div className="relative shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setIsShareMenuOpen((open) => !open)}
+                    aria-haspopup="true"
+                    aria-expanded={isShareMenuOpen}
+                    aria-label="Share this stage"
+                    title="Share this stage"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.03] px-3 py-2 text-xs font-semibold text-neutral-300 transition hover:border-emerald-300/40 hover:bg-emerald-500/10 hover:text-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+                  >
+                    <Share2 aria-hidden="true" className="h-4 w-4" />
+                    Share
+                  </button>
+                  {isShareMenuOpen && (
+                    <div role="menu" aria-label="Share this stage" className="dashboard-fade-in absolute bottom-full left-0 z-20 mb-2 w-64 rounded-2xl border border-emerald-400/25 bg-[#0b0e13] p-3 shadow-[0_16px_50px_rgba(0,0,0,0.6)]">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-500">You&apos;re sharing</p>
+                      <p className="mt-1 text-xs leading-5 text-neutral-200">{stageShareDescription}</p>
+                      <div className="mt-3 grid gap-2">
+                        <button type="button" role="menuitem" onClick={() => handleShareStage('x')} className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-left text-xs font-semibold text-white transition hover:border-emerald-300/40 hover:bg-emerald-500/10">Share to X</button>
+                        <button type="button" role="menuitem" onClick={() => handleShareStage('whatsapp')} className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-left text-xs font-semibold text-white transition hover:border-emerald-300/40 hover:bg-emerald-500/10">Share to WhatsApp</button>
+                        <button type="button" role="menuitem" onClick={handleCopyStageLink} className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-left text-xs font-semibold text-white transition hover:border-emerald-300/40 hover:bg-emerald-500/10">{shareCopyFeedback}</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
                 <button
                   type="button"
                   onClick={handleReportStage}

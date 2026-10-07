@@ -7,7 +7,7 @@ import puppeteer from 'puppeteer';
 import { lookup as dnsLookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
 import { logger, redactUrl } from './logger.js';
-import { getJpegQuality, getStreamDimension, getStreamFps, hasFrameChanged, hashFrame } from './stream-utils.js';
+import { canSendReaction, getJpegQuality, getStreamDimension, getStreamFps, hasFrameChanged, hashFrame, isValidReaction } from './stream-utils.js';
 
 const app = express();
 const server = http.createServer(app);
@@ -458,6 +458,16 @@ io.on('connection', (socket) => {
     metrics.bytes += lastFrame.length;
   }
   if (wakeFrameLoop) wakeFrameLoop();
+
+  let lastReactionAt = null;
+  socket.on('reaction', (payload) => {
+    const emoji = payload && typeof payload === 'object' ? payload.emoji : undefined;
+    if (!isValidReaction(emoji)) return;
+    const now = Date.now();
+    if (!canSendReaction(lastReactionAt, now)) return;
+    lastReactionAt = now;
+    io.emit('reaction', { emoji, from: socket.id.slice(0, 6), at: now });
+  });
 
   socket.on('disconnect', () => {
     setTimeout(broadcastViewerCount, 0);

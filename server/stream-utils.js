@@ -17,3 +17,14 @@ export function hashFrame(buffer) {
 export function hasFrameChanged(previousHash, nextHash) {
   return previousHash !== nextHash;
 }
+
+export const REACTION_EMOJIS = ['🔥', '👏', '😂', '❤️', '🎉'];
+export const REACTION_MIN_INTERVAL_MS = 1000;
+
+export function isValidReaction(emoji) {
+  return typeof emoji === 'string' && REACTION_EMOJIS.includes(emoji);
+}
+
+export function canSendReaction(lastSentAt, now, minIntervalMs = REACTION_MIN_INTERVAL_MS) {
+  return !Number.isFinite(lastSentAt) || now - lastSentAt >= minIntervalMs;
+}

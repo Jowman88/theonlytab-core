@@ -4,3 +4,7 @@ export function getJpegQuality(raw: unknown): number;
 export function getStreamDimension(raw: unknown, defaultValue: number): number;
 export function hashFrame(buffer: Uint8Array): string;
 export function hasFrameChanged(previousHash: string | null, nextHash: string): boolean;
+export const REACTION_EMOJIS: string[];
+export const REACTION_MIN_INTERVAL_MS: number;
+export function isValidReaction(emoji: unknown): boolean;
+export function canSendReaction(lastSentAt: number | null, now: number, minIntervalMs?: number): boolean;
