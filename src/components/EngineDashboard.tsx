@@ -945,8 +945,93 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
     };
   }, [stageUrl, currentStake, stealPrice, isProtected, protectionTimer, socketStatus, isStealPriceCapped]);
 
+  useEffect(() => {
+    const statusBar = statusBarRef.current;
+    if (!statusBar || typeof window === 'undefined') return undefined;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return undefined;
+
+    const SPEED = 18; // px per second
+    const RESUME_DELAY = 2500;
+    const END_PAUSE = 1200;
+    let position = statusBar.scrollLeft;
+    let direction = 1;
+    let paused = false;
+    let resumeAt = 0;
+    let holdUntil = 0;
+    let lastTime = 0;
+    let frame = 0;
+    let resumeTimer: number | undefined;
+
+    const pause = () => {
+      paused = true;
+      window.clearTimeout(resumeTimer);
+    };
+    const scheduleResume = () => {
+      window.clearTimeout(resumeTimer);
+      resumeAt = performance.now() + RESUME_DELAY;
+      resumeTimer = window.setTimeout(() => {
+        position = statusBar.scrollLeft;
+        paused = false;
+      }, RESUME_DELAY);
+    };
+    const onUserScroll = () => {
+      if (Math.abs(statusBar.scrollLeft - position) > 2) {
+        pause();
+        scheduleResume();
+      }
+    };
+
+    const tick = (now: number) => {
+      const dt = lastTime ? Math.min(now - lastTime, 100) : 0;
+      lastTime = now;
+      const max = statusBar.scrollWidth - statusBar.clientWidth;
+      if (!paused && max > 1 && now >= holdUntil && now >= resumeAt) {
+        position += direction * SPEED * (dt / 1000);
+        if (position >= max) {
+          position = max;
+          direction = -1;
+          holdUntil = now + END_PAUSE;
+        } else if (position <= 0) {
+          position = 0;
+          direction = 1;
+          holdUntil = now + END_PAUSE;
+        }
+        statusBar.scrollLeft = position;
+      }
+      frame = window.requestAnimationFrame(tick);
+    };
+
+    const onHold = () => {
+      pause();
+    };
+    const onRelease = () => {
+      scheduleResume();
+    };
+
+    statusBar.addEventListener('touchstart', onHold, { passive: true });
+    statusBar.addEventListener('touchend', onRelease, { passive: true });
+    statusBar.addEventListener('touchcancel', onRelease, { passive: true });
+    statusBar.addEventListener('mouseenter', onHold);
+    statusBar.addEventListener('mouseleave', onRelease);
+    statusBar.addEventListener('wheel', onUserScroll, { passive: true });
+    statusBar.addEventListener('scroll', onUserScroll, { passive: true });
+    frame = window.requestAnimationFrame(tick);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(resumeTimer);
+      statusBar.removeEventListener('touchstart', onHold);
+      statusBar.removeEventListener('touchend', onRelease);
+      statusBar.removeEventListener('touchcancel', onRelease);
+      statusBar.removeEventListener('mouseenter', onHold);
+      statusBar.removeEventListener('mouseleave', onRelease);
+      statusBar.removeEventListener('wheel', onUserScroll);
+      statusBar.removeEventListener('scroll', onUserScroll);
+    };
+  }, []);
+
   return (
-    <div className="fixed inset-0 h-[100dvh] w-screen overflow-x-hidden overflow-y-auto bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.15),_transparent_30%),radial-gradient(circle_at_right,_rgba(251,191,36,0.08),_transparent_28%),linear-gradient(180deg,_#08090d_0%,_#050507_100%)] px-3 py-3 text-neutral-100 sm:px-4 sm:py-4 lg:h-screen lg:overflow-y-auto lg:px-6 lg:py-5">
+    <div className="fixed inset-0 h-[100dvh] w-screen overflow-x-hidden overflow-y-auto bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.15),_transparent_30%),radial-gradient(circle_at_right,_rgba(251,191,36,0.08),_transparent_28%),linear-gradient(180deg,_#08090d_0%,_#050507_100%)] px-3 pb-3 pt-14 text-neutral-100 sm:px-4 sm:pb-4 sm:pt-16 lg:h-screen lg:overflow-y-auto lg:px-6 lg:pb-5 lg:pt-16">
       <div className="dashboard-grid pointer-events-none absolute inset-0 opacity-40" aria-hidden="true" />
 
       {statusNotice && (
@@ -1174,7 +1259,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
             <div className="relative min-w-0 max-w-full">
               <div
                 ref={statusBarRef}
-                className="scrollbar-hide min-w-0 max-w-full touch-pan-x overflow-x-auto overflow-y-hidden overscroll-x-contain rounded-2xl border border-white/10 bg-white/[0.04] py-2 pl-40 pr-3 text-[11px] font-medium text-neutral-300 shadow-[0_16px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/5 [-webkit-overflow-scrolling:touch] sm:px-4 sm:pl-48 lg:overflow-x-visible"
+                className="scrollbar-hide min-w-0 max-w-full touch-pan-x overflow-x-auto overflow-y-hidden overscroll-x-contain rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] font-medium text-neutral-300 shadow-[0_16px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/5 [-webkit-overflow-scrolling:touch] sm:px-4 lg:overflow-x-visible"
               >
                 <div className="inline-flex w-max min-w-full flex-nowrap items-center gap-2 whitespace-nowrap sm:gap-3 lg:flex lg:w-full lg:flex-wrap lg:whitespace-normal">
                 <span className="max-w-none shrink-0 lg:max-w-[45%] lg:truncate">
@@ -1240,7 +1325,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
             <div className="flex min-w-0 max-w-full flex-col gap-3 sm:gap-4 lg:min-h-0 lg:flex-1">
               <div
                 ref={streamFrameRef}
-                className={`relative flex min-h-[300px] w-full shrink-0 overflow-hidden border border-white/10 bg-[linear-gradient(180deg,_rgba(15,18,25,0.98),_rgba(8,9,13,0.98))] shadow-[0_30px_100px_rgba(0,0,0,0.45)] ring-1 ring-white/5 lg:min-h-[350px] lg:flex-1 ${isFullscreen ? 'rounded-none p-0' : 'rounded-[1.75rem] p-3 sm:p-4'} ${isFullscreen && isCursorIdle && !isTouchDevice ? 'cursor-none' : ''}`}
+                className={`relative flex w-full shrink-0 overflow-hidden border border-white/10 bg-[linear-gradient(180deg,_rgba(15,18,25,0.98),_rgba(8,9,13,0.98))] shadow-[0_30px_100px_rgba(0,0,0,0.45)] ring-1 ring-white/5 lg:min-h-[350px] lg:flex-1 ${isFullscreen ? 'rounded-none p-0' : 'aspect-video rounded-[1.75rem] p-2 sm:p-3 lg:aspect-auto lg:p-4'} ${isFullscreen && isCursorIdle && !isTouchDevice ? 'cursor-none' : ''}`}
               >
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.06),_transparent_28%)]" aria-hidden="true" />
                 <button
@@ -1400,24 +1485,24 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                 </div>
               )}
 
-              <div className="flex shrink-0 flex-wrap items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm shadow-[0_16px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/5">
-                <div className="min-w-0 flex-1">
+              <div className="grid shrink-0 grid-cols-2 gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm shadow-[0_16px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/5 lg:flex lg:flex-wrap lg:items-center">
+                <div className="order-1 min-w-0 lg:flex-1">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-500">Stage owner</p>
                   <p className="truncate text-sm font-semibold text-white sm:text-base">{stageOwner}</p>
                 </div>
-                <span className="hidden text-white/20 sm:inline">|</span>
+                <div className="order-3 col-span-2 grid grid-cols-3 gap-2 lg:order-2 lg:flex lg:items-center lg:gap-3">
                 <button
                   type="button"
                   onClick={handleLikeStage}
                   disabled={!slot || slot.id === 'house-default-id' || slot.isReported || likedSlotIds.includes(slot.id) || isLiking}
                   title="Like this stage to raise its steal price"
                   aria-label={`Like this stage. ${activeLikes} active likes`}
-                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.03] px-3 py-2 text-xs font-semibold text-neutral-300 transition hover:border-pink-300/40 hover:bg-pink-500/10 hover:text-pink-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-300 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="inline-flex min-h-11 w-full min-w-0 items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.03] px-2 py-2 text-xs lg:w-auto lg:min-h-0 lg:shrink-0 lg:px-3 font-semibold text-neutral-300 transition hover:border-pink-300/40 hover:bg-pink-500/10 hover:text-pink-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-300 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <Heart aria-hidden="true" className={`h-4 w-4 ${slot && likedSlotIds.includes(slot.id) ? 'fill-pink-300 text-pink-300' : ''}`} />
                   {activeLikes} {likedSlotIds.includes(slot?.id || '') ? 'Liked' : 'Like'}
                 </button>
-                <div className="relative shrink-0">
+                <div className="relative min-w-0 lg:shrink-0">
                   <button
                     type="button"
                     onClick={() => setIsShareMenuOpen((open) => !open)}
@@ -1425,13 +1510,13 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                     aria-expanded={isShareMenuOpen}
                     aria-label="Share this stage"
                     title="Share this stage"
-                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.03] px-3 py-2 text-xs font-semibold text-neutral-300 transition hover:border-emerald-300/40 hover:bg-emerald-500/10 hover:text-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+                    className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.03] px-2 py-2 text-xs lg:w-auto lg:min-h-0 lg:px-3 font-semibold text-neutral-300 transition hover:border-emerald-300/40 hover:bg-emerald-500/10 hover:text-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
                   >
                     <Share2 aria-hidden="true" className="h-4 w-4" />
                     Share
                   </button>
                   {isShareMenuOpen && (
-                    <div role="menu" aria-label="Share this stage" className="dashboard-fade-in absolute bottom-full left-0 z-20 mb-2 w-64 rounded-2xl border border-emerald-400/25 bg-[#0b0e13] p-3 shadow-[0_16px_50px_rgba(0,0,0,0.6)]">
+                    <div role="menu" aria-label="Share this stage" className="dashboard-fade-in absolute bottom-full left-1/2 z-20 mb-2 w-[min(16rem,calc(100vw-2rem))] -translate-x-1/2 lg:left-0 lg:w-64 lg:translate-x-0 rounded-2xl border border-emerald-400/25 bg-[#0b0e13] p-3 shadow-[0_16px_50px_rgba(0,0,0,0.6)]">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-500">You&apos;re sharing</p>
                       <p className="mt-1 text-xs leading-5 text-neutral-200">{stageShareDescription}</p>
                       <div className="mt-3 grid gap-2">
@@ -1448,13 +1533,13 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                   disabled={!slot || slot.id === 'house-default-id' || reportedSlotIds.includes(slot.id) || isReporting}
                   title="Report this stage for malicious/NSFW content"
                   aria-label="Report this stage for malicious or NSFW content"
-                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.03] px-3 py-2 text-xs font-semibold text-neutral-300 transition hover:border-rose-300/40 hover:bg-rose-500/10 hover:text-rose-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="inline-flex min-h-11 w-full min-w-0 items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.03] px-2 py-2 text-xs lg:w-auto lg:min-h-0 lg:shrink-0 lg:px-3 font-semibold text-neutral-300 transition hover:border-rose-300/40 hover:bg-rose-500/10 hover:text-rose-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <Flag aria-hidden="true" className="h-4 w-4" />
                   {isReporting ? 'Reporting…' : reportedSlotIds.includes(slot?.id || '') ? 'Reported' : 'Report'}
                 </button>
-                <span className="hidden text-white/20 sm:inline">|</span>
-                <div className="min-w-0 shrink-0 sm:min-w-[9rem]">
+                </div>
+                <div className="order-2 min-w-0 lg:order-4 lg:shrink-0 lg:min-w-[9rem]">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-500">Time on stage</p>
                   <p className="text-sm font-semibold text-emerald-200 sm:text-base">{formatClock(stageTimer)}</p>
                 </div>
