@@ -36,13 +36,6 @@ export default function PlatformRulesPage() {
             These rules explain how paid takeovers, submitted destinations, public streaming, and platform access are expected to work. This is product policy copy, not legal advice, and it must be reviewed by a lawyer before use as binding terms.
           </p>
 
-          <div className="mt-6 rounded-2xl border border-amber-300/20 bg-amber-500/10 p-4 text-sm leading-6 text-amber-100">
-            <p className="font-semibold text-amber-200">Important:</p>
-            <p>
-              Have qualified counsel review and complete this page for the operator&apos;s business, jurisdiction, and service before relying on it. Requirements vary by location and business model; this page is not a substitute for legal advice.
-            </p>
-          </div>
-
           <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm text-neutral-300">
             <p>
               <span className="font-semibold text-white">Stats:</span> See the <Link className="font-semibold text-emerald-300 underline underline-offset-2 hover:text-emerald-200" href="/hall-of-fame">Hall of Fame</Link>.
