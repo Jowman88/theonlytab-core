@@ -1586,7 +1586,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                         <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-xs text-emerald-200 sm:h-7 sm:w-7 sm:text-base">↗</span>
                         <span className="max-w-[120px] truncate font-semibold text-white">{item.displayName || 'Anonymous Takeover'}</span>
                         <span className="max-w-[120px] truncate rounded-full border border-white/10 bg-black/30 px-2 py-0.5 text-[10px] text-neutral-300 sm:px-2.5 sm:py-1 sm:text-xs">{stripProtocol(item.currentUrl) || 'standby'}</span>
-                        <span className="rounded-full border border-amber-400/20 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-200 sm:px-2.5 sm:py-1 sm:text-xs">\${item.currentBid || '0.00'}</span>
+                        <span className="rounded-full border border-amber-400/20 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-200 sm:px-2.5 sm:py-1 sm:text-xs">${item.currentBid || '0.00'}</span>
                       </div>
                     ))}
                   </div>
@@ -1740,7 +1740,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
                 <dt className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-400">Checkout total</dt>
                 <dd className="mt-2 flex items-center gap-2 text-2xl font-black text-white">
-                  \${stealPrice}
+                  ${stealPrice}
                   {isStealPriceCapped && (
                     <span className="inline-flex items-center rounded-full border border-amber-300/40 bg-amber-300/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.18em] text-amber-200">
                       Capped at $299
