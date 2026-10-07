@@ -33,7 +33,7 @@ export default function PlatformRulesPage() {
 
           <h1 className="mt-5 text-3xl font-black tracking-tight text-white sm:text-4xl">Plain-language rules for using the platform</h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-neutral-300 sm:text-base">
-            These rules explain how paid takeovers, submitted destinations, public streaming, and platform access are expected to work. This is product policy copy, not legal advice, and it must be reviewed by a lawyer before use as binding terms.
+            These rules explain how paid takeovers, submitted destinations, public streaming, and platform access are expected to work. 
           </p>
 
           <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm text-neutral-300">
