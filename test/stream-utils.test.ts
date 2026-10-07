@@ -29,3 +29,13 @@ test('frame change detection', () => {
   assert.equal(hasFrameChanged(a, hashFrame(Buffer.from('frame-a'))), false);
   assert.equal(hasFrameChanged(a, hashFrame(Buffer.from('frame-b'))), true);
 });
+
+test('reaction validation and rate limiting', async () => {
+  const { canSendReaction, isValidReaction } = await import('../server/stream-utils.js');
+  assert.equal(isValidReaction('🔥'), true);
+  assert.equal(isValidReaction('💩'), false);
+  assert.equal(isValidReaction({}), false);
+  assert.equal(canSendReaction(null, 1000), true);
+  assert.equal(canSendReaction(1000, 1500), false);
+  assert.equal(canSendReaction(1000, 2000), true);
+});
