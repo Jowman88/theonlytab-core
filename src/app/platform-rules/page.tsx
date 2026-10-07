@@ -45,10 +45,10 @@ export default function PlatformRulesPage() {
 
           <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm text-neutral-300">
             <p>
-              <span className="font-semibold text-white">Effective date:</span> October 1, 2026
+              <span className="font-semibold text-white">Effective date:</span> October 7, 2026
             </p>
             <p>
-              <span className="font-semibold text-white">Support:</span> Contact the service operator through the support channel provided with your account or deployment.
+              <span className="font-semibold text-white">Support:</span> Visit the <Link className="font-semibold text-emerald-300 underline underline-offset-2 hover:text-emerald-200" href="/contact">contact page</Link> or email <a className="font-semibold text-emerald-300 underline underline-offset-2 hover:text-emerald-200" href="mailto:support@theonlytab.io">support@theonlytab.io</a>.
             </p>
           </div>
         </header>
@@ -150,6 +150,9 @@ export default function PlatformRulesPage() {
             <p>
               Do not submit secrets, credentials, payment card data outside the intended checkout flow, or unnecessary personal information in fields meant for takeover configuration.
             </p>
+            <p>
+              As an operator in the European Union, we handle personal data in accordance with GDPR. For data subject requests, contact <a className="font-semibold text-emerald-300 underline underline-offset-2 hover:text-emerald-200" href="mailto:support@theonlytab.io">support@theonlytab.io</a>.
+            </p>
           </div>
         </section>
 
@@ -159,7 +162,7 @@ export default function PlatformRulesPage() {
           </h2>
           <div className="mt-4 space-y-3 text-sm leading-6 text-neutral-300 sm:text-base">
             <p>
-              If you believe content submitted by a user infringes your copyright, send a notice to <span className="font-semibold text-white">[Copyright Contact Email]</span> with: your physical or electronic signature; identification of the copyrighted work; the URL or other information sufficient to locate the allegedly infringing material; your contact information; a statement of good-faith belief that the use is unauthorized; and a statement, under penalty of perjury, that the notice is accurate and you are authorized to act for the rights holder.
+              If you believe content submitted by a user infringes your copyright, send a notice to <a className="font-semibold text-emerald-300 underline underline-offset-2 hover:text-emerald-200" href="mailto:support@theonlytab.io">support@theonlytab.io</a> with: your physical or electronic signature; identification of the copyrighted work; the URL or other information sufficient to locate the allegedly infringing material; your contact information; a statement of good-faith belief that the use is unauthorized; and a statement, under penalty of perjury, that the notice is accurate and you are authorized to act for the rights holder.
             </p>
             <p>
               The operator may remove or disable access to reported material, notify the submitting user, and terminate repeat infringers. Counsel should adapt this process and add any required counter-notice procedure and designated-agent details for the operator&apos;s jurisdiction.
@@ -205,14 +208,14 @@ export default function PlatformRulesPage() {
 
         <section className={sectionClassName} aria-labelledby="governing-law-heading">
           <h2 id="governing-law-heading" className="text-2xl font-black tracking-tight text-white">
-            Governing law and disputes — placeholder for legal review
+            Governing law and disputes
           </h2>
           <div className="mt-4 space-y-3 text-sm leading-6 text-neutral-300 sm:text-base">
             <p>
-              <span className="font-semibold text-amber-200">[PLACEHOLDER — insert governing law/jurisdiction]</span> This section must be completed by qualified counsel after confirming the operator&apos;s legal entity, location, and applicable law. Do not publish this placeholder as a final dispute-resolution clause.
+              Before starting formal proceedings, the parties should first attempt to resolve a dispute informally by sending a description of the issue and proposed resolution to <a className="font-semibold text-emerald-300 underline underline-offset-2 hover:text-emerald-200" href="mailto:support@theonlytab.io">support@theonlytab.io</a> and allowing 30 days for a response.
             </p>
             <p>
-              Before starting formal proceedings, the parties should first attempt to resolve a dispute informally by sending a description of the issue and proposed resolution to <span className="font-semibold text-white">[Contact Email]</span> and allowing <span className="font-semibold text-white">[number of days]</span> for a response. Counsel must specify the courts and venue, if any, and whether arbitration is desired. <span className="font-semibold text-amber-200">[OPTIONAL ARBITRATION PLACEHOLDER — counsel must insert or remove a complete, jurisdiction-compliant clause, including the arbitration provider, rules, venue, fees, and any required consumer rights and opt-out.]</span>
+              Disputes arising from these rules shall be governed by and construed in accordance with the laws of the Netherlands, without regard to its conflict of law principles. You agree to submit to the exclusive jurisdiction of the courts of Amsterdam, Netherlands.
             </p>
           </div>
         </section>
@@ -246,7 +249,10 @@ export default function PlatformRulesPage() {
 
         <footer className="rounded-3xl border border-white/10 bg-white/[0.03] px-6 py-5 text-sm leading-6 text-neutral-300 ring-1 ring-white/5">
           <p>
-            Questions, legal notices, or copyright reports? Contact the service operator through the support channel provided with your account or deployment, or use <span className="font-semibold text-white">[Contact Email]</span> once completed by the operator. Include your account or session details where relevant, but do not send payment-card data or sensitive credentials. The operator should add and verify its legal name, notice address, and monitored contact details before publishing these rules.
+            Questions, legal notices, or copyright reports? Visit the <Link className="font-semibold text-emerald-300 underline underline-offset-2 hover:text-emerald-200" href="/contact">contact page</Link> or email <a className="font-semibold text-emerald-300 underline underline-offset-2 hover:text-emerald-200" href="mailto:support@theonlytab.io">support@theonlytab.io</a>. Include your account or session details where relevant, but do not send payment-card data or sensitive credentials. The operator should add and verify its legal name and notice address before publishing these rules.
+          </p>
+          <p className="mt-3">
+            <Link className="font-semibold text-emerald-300 underline underline-offset-2 hover:text-emerald-200" href="/">Back to dashboard</Link>
           </p>
         </footer>
       </div>
