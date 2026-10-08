@@ -1279,7 +1279,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                   <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Stage</span>{' '}
                   <span className="text-white">{stageUrl}</span>
                 </span>
-                {viewerCount !== null && socketStatus === 'connected' && (
+                {viewerCount !== null && viewerCount >= 20 && socketStatus === 'connected' && (
                   <>
                     <span className="shrink-0 text-white/20">|</span>
                     <span className="inline-flex shrink-0 items-center gap-1.5" aria-live="polite">
