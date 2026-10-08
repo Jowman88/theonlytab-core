@@ -109,11 +109,11 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const [stageTimer, setStageTimer] = useState<number>(0);
   const [hasFrames, setHasFrames] = useState<boolean>(false);
   const [historyList, setHistoryList] = useState<HistoryItem[]>([]);
+  const [viewerCount, setViewerCount] = useState<number | null>(null);
   const [takeoverAlert, setTakeoverAlert] = useState<string | null>(null);
   const lastTakeoverRef = useRef<string | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
-
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEmbedOpen, setIsEmbedOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
