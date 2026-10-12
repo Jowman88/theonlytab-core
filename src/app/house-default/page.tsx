@@ -25,14 +25,19 @@ interface LastTakeover {
 // legible once the stream canvas is scaled to fit the dashboard.
 const card = {
   border: '1px solid rgba(255,255,255,0.14)',
-  background: 'rgba(255,255,255,0.04)',
+  background: 'linear-gradient(135deg, rgba(16,185,129,0.10) 0%, rgba(255,255,255,0.03) 60%)',
   borderRadius: '1.2vmin',
   padding: 'clamp(0.75rem, 2vmin, 1.5rem) clamp(1rem, 2.6vmin, 2rem)',
   textAlign: 'left' as const,
   minWidth: 0,
 };
+const priceCard = {
+  ...card,
+  border: '1px solid rgba(110,231,183,0.6)',
+  background: 'linear-gradient(135deg, rgba(16,185,129,0.20) 0%, rgba(255,255,255,0.04) 70%)',
+};
 const label = {
-  color: '#9ca3af',
+  color: '#a7f3d0',
   fontSize: 'clamp(0.75rem, 1.9vmin, 1.15rem)',
   letterSpacing: '0.18em',
   fontWeight: 700,
@@ -140,9 +145,9 @@ export default function HouseDefaultPage() {
   const showIdleClock = Number.isFinite(idleSeconds) && idleSeconds > 0;
 
   const steps = [
-    ['1', 'PICK A URL', 'Any website you like'],
-    ['2', 'PAY', `Next price $${price}`],
-    ['3', "YOU'RE LIVE", `${TAKEOVER_DURATION_MINUTES} min, ${PROTECTION_WINDOW_SECONDS}s protected at the start`],
+    ['1', 'PICK A URL', 'Drop your link, your stream, your brand'],
+    ['2', 'PAY', `Lock in your price ($${price}), beat the clock`],
+    ['3', "YOU'RE LIVE", `${TAKEOVER_DURATION_MINUTES} minutes on the biggest stage, protected for the first ${PROTECTION_WINDOW_SECONDS}s`],
   ];
 
   return (
@@ -165,7 +170,7 @@ export default function HouseDefaultPage() {
           width: '100%',
           maxWidth: 'min(96vw, 90rem)',
           display: 'grid',
-          gap: 'clamp(0.75rem, 2.6vmin, 2rem)',
+          gap: 'clamp(1rem, 3.4vmin, 2.6rem)',
         }}
       >
         <div>
@@ -176,7 +181,8 @@ export default function HouseDefaultPage() {
               gap: '1.4vmin',
               marginBottom: '1.2vmin',
               padding: '0.6vmin 1.8vmin',
-              border: '1px solid rgba(110,231,183,0.35)',
+              border: '1px solid rgba(110,231,183,0.6)',
+              boxShadow: '0 0 1.6vmin rgba(110,231,183,0.25)',
               borderRadius: '999px',
               background: 'rgba(16,185,129,0.08)',
               color: '#6ee7b7',
@@ -202,26 +208,26 @@ export default function HouseDefaultPage() {
           <div style={{ fontSize: 'clamp(2rem, 8vmin, 5.5rem)', fontWeight: 900, letterSpacing: '0.2em', color: '#ffffff' }}>
             THE ONLY TAB
           </div>
-          <div style={{ marginTop: '1vmin', color: '#d1d5db', fontSize: 'clamp(1.05rem, 3.2vmin, 2.1rem)' }}>
-            Pay to put any website on this screen for {TAKEOVER_DURATION_MINUTES} minutes.
+          <div style={{ marginTop: '1vmin', color: '#f3f4f6', fontWeight: 700, fontSize: 'clamp(1.05rem, 3.2vmin, 2.1rem)' }}>
+            Your URL. Live. Right now. Steal the feed for {TAKEOVER_DURATION_MINUTES} minutes.
           </div>
           {showIdleClock && (
             <div
               style={{
                 marginTop: '1.2vmin',
-                color: '#9ca3af',
-                fontSize: 'clamp(0.9rem, 2.4vmin, 1.5rem)',
+                color: '#fcd34d',
+                fontSize: 'clamp(1rem, 2.8vmin, 1.8rem)',
                 letterSpacing: '0.16em',
                 fontWeight: 700,
               }}
             >
-              STAGE EMPTY FOR <span style={{ color: '#fbbf24', fontVariantNumeric: 'tabular-nums' }}>{formatClock(idleSeconds)}</span>
+              STAGE EMPTY FOR <span style={{ color: '#fbbf24', fontWeight: 900, fontVariantNumeric: 'tabular-nums' }}>{formatClock(idleSeconds)}</span>
             </div>
           )}
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(16rem, 1fr))', gap: 'clamp(0.6rem, 1.8vmin, 1.5rem)' }}>
-          <div style={card}>
+          <div style={priceCard}>
             <div style={label}>NEXT STEAL PRICE</div>
             <div style={{ color: '#6ee7b7', fontSize: 'clamp(1.75rem, 6vmin, 4rem)', fontWeight: 800, lineHeight: 1.1 }}>
               ${price}
@@ -271,7 +277,7 @@ export default function HouseDefaultPage() {
             placeItems: 'center',
             fontSize: 'clamp(1.1rem, 3.5vmin, 2.2rem)',
             fontStyle: 'italic',
-            color: '#f3f4f6',
+            color: '#ffffff',
             opacity: visible ? 1 : 0,
             transition: `opacity ${FADE_MS}ms ease-in-out`,
           }}
@@ -280,7 +286,7 @@ export default function HouseDefaultPage() {
         </div>
 
         <div style={{ color: '#6ee7b7', fontSize: 'clamp(0.9rem, 2.3vmin, 1.4rem)', letterSpacing: '0.18em', fontWeight: 800 }}>
-          ▼ HIT STEAL STAGE BELOW ▼
+          ▼ CLAIM YOUR MOMENT · HIT STEAL STAGE ▼
         </div>
       </section>
     </main>
