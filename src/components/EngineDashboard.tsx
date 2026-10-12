@@ -1008,7 +1008,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                 <div className="flex items-center justify-between border-b border-white/10 px-5 py-4 sm:px-6">
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-300/80">Config drawer</p>
-                    <h2 className="mt-1 text-lg font-bold text-white">Prepare your takeover</h2>
+                    <h2 className="mt-1 text-lg font-bold text-white">Set up your takeover</h2>
                   </div>
                   <button
                     type="button"
@@ -1024,8 +1024,8 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                     <div className="flex items-start gap-3">
                       <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" />
                       <div>
-                        <p className="font-semibold text-amber-100">Double-check your destination before checkout.</p>
-                        <p className="mt-1 text-amber-100/70">We will use these exact settings when your session opens, so review the URL, label, and start path carefully.</p>
+                        <p className="font-semibold text-amber-100">Check your details before checkout.</p>
+                        <p className="mt-1 text-amber-100/70">Your URL, name, and start path go live exactly as entered.</p>
                       </div>
                     </div>
                   </div>
@@ -1048,7 +1048,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                         {getFieldIndicator('targetUrl')}
                       </div>
                       <p id="target-url-help" className="text-xs leading-5 text-neutral-400">
-                        Paste the destination you want to control. If you omit the protocol, we will safely prefix it with https://.
+                        The site you want to take over. No protocol? We'll add https:// for you.
                       </p>
                       <input
                         id="target-url-input"
@@ -1073,7 +1073,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                         {getFieldIndicator('displayName')}
                       </div>
                       <p id="display-name-help" className="text-xs leading-5 text-neutral-400">
-                        Optional public name shown while your tab is on stage. Leave blank to appear as Anonymous Takeover.
+                        Optional. Shown publicly while you're on stage. Leave blank to appear as Anonymous Takeover.
                       </p>
                       <input
                         id="display-name-input"
@@ -1097,7 +1097,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                         {getFieldIndicator('startPath')}
                       </div>
                       <p id="start-path-help" className="text-xs leading-5 text-neutral-400">
-                        Optional deep-link hint. Start with <span className="font-semibold text-neutral-200">/</span>, <span className="font-semibold text-neutral-200">?</span>, or <span className="font-semibold text-neutral-200">#</span> to jump to a specific route, query, or anchor.
+                        Optional. Start with <span className="font-semibold text-neutral-200">/</span>, <span className="font-semibold text-neutral-200">?</span>, or <span className="font-semibold text-neutral-200">#</span> to open a specific route, query, or anchor.
                       </p>
                       <input
                         id="start-path-input"
