@@ -4,7 +4,6 @@ export const LINE_ROTATION_MS = 7000;
 export const IDLE_LINES: readonly string[] = [
   'Nobody\'s here. Suspicious.',
   'Still empty. Someone could be famous for 90 minutes.',
-  'This stage has no owner. Awkward.',
   'The stage is ${price} and your ego is free.',
   'Next price: ${price}. Cheaper than most bad decisions.',
   'Somewhere, a website is waiting to be seen.',
@@ -20,8 +19,6 @@ export const IDLE_LINES: readonly string[] = [
   'Whoever takes the stage next becomes the only tab.',
   'Hit SEIZE THE STAGE below. We will pretend we are not watching.',
   '${price} to own the screen. Rent in this city is worse.',
-  'Waiting for someone brave. Or someone bored.',
-  'Dead air has never looked so inviting.',
   'You could be on this screen right now.',
   'Free real estate, ${price} down.',
   'Plot twist: you take the stage.',
@@ -30,8 +27,8 @@ export const IDLE_LINES: readonly string[] = [
   'The only tab is currently the only empty tab.',
   'Fame is just a checkout away.',
   'Ninety seconds of protection once you are live. Use them wisely.',
-  'Somebody has to be first. Why not you?',
-  'The crowd is imaginary. The stage is real.',
+  'Somebody unlocks the potential. Why not you?',
+  'The crowd is there. The stage is real.',
 ];
 
 export function getIdleLine(index: number, price: string = DEFAULT_STEAL_PRICE): string {
