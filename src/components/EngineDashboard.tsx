@@ -5,7 +5,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   AlertTriangle,
   CheckCircle2,
-  Clock3,
   Copy,
   ExternalLink,
   Flag,
@@ -100,7 +99,6 @@ const isValidTargetUrl = (value: string) => {
 export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: string }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamFrameRef = useRef<HTMLDivElement | null>(null);
-  const statusBarRef = useRef<HTMLDivElement | null>(null);
   const stealStageButtonRef = useRef<HTMLButtonElement | null>(null);
   const embedDialogRef = useRef<HTMLDivElement | null>(null);
   const confirmDialogRef = useRef<HTMLDivElement | null>(null);
@@ -113,8 +111,6 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const [viewerCount, setViewerCount] = useState<number | null>(null);
   const [takeoverAlert, setTakeoverAlert] = useState<string | null>(null);
   const lastTakeoverRef = useRef<string | null>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEmbedOpen, setIsEmbedOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -951,7 +947,6 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
     },
   }[socketStatus];
 
-  const ConnectionIcon = connectionStatusMeta.Icon;
   const stageUrl = stripProtocol(slot?.currentUrl) || 'SYSTEM_IDLE';
   const liveSiteUrl =
     hasFrames && slot && slot.id !== 'house-default-id' && Number.parseFloat(slot.current_bid || '0') > 0
@@ -959,114 +954,6 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       : null;
   const currentStake = slot?.current_bid || '0.00';
   const stageOwner = slot?.displayName || 'SYSTEM IDLE';
-
-  useEffect(() => {
-    const statusBar = statusBarRef.current;
-    if (!statusBar) return undefined;
-
-    const updateOverflow = () => {
-      setCanScrollLeft(statusBar.scrollLeft > 1);
-      setCanScrollRight(statusBar.scrollLeft + statusBar.clientWidth < statusBar.scrollWidth - 1);
-    };
-
-    statusBar.addEventListener('scroll', updateOverflow, { passive: true });
-    window.addEventListener('resize', updateOverflow);
-    const resizeObserver = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(updateOverflow) : null;
-    resizeObserver?.observe(statusBar);
-    if (statusBar.firstElementChild) resizeObserver?.observe(statusBar.firstElementChild);
-    updateOverflow();
-
-    return () => {
-      statusBar.removeEventListener('scroll', updateOverflow);
-      window.removeEventListener('resize', updateOverflow);
-      resizeObserver?.disconnect();
-    };
-  }, [stageUrl, currentStake, stealPrice, isProtected, protectionTimer, socketStatus, isStealPriceCapped]);
-
-  useEffect(() => {
-    const statusBar = statusBarRef.current;
-    if (!statusBar || typeof window === 'undefined') return undefined;
-    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return undefined;
-
-    const SPEED = 18; // px per second
-    const RESUME_DELAY = 2500;
-    const END_PAUSE = 1200;
-    let position = statusBar.scrollLeft;
-    let direction = 1;
-    let paused = false;
-    let resumeAt = 0;
-    let holdUntil = 0;
-    let lastTime = 0;
-    let frame = 0;
-    let resumeTimer: number | undefined;
-
-    const pause = () => {
-      paused = true;
-      window.clearTimeout(resumeTimer);
-    };
-    const scheduleResume = () => {
-      window.clearTimeout(resumeTimer);
-      resumeAt = performance.now() + RESUME_DELAY;
-      resumeTimer = window.setTimeout(() => {
-        position = statusBar.scrollLeft;
-        paused = false;
-      }, RESUME_DELAY);
-    };
-    const onUserScroll = () => {
-      if (Math.abs(statusBar.scrollLeft - position) > 2) {
-        pause();
-        scheduleResume();
-      }
-    };
-
-    const tick = (now: number) => {
-      const dt = lastTime ? Math.min(now - lastTime, 100) : 0;
-      lastTime = now;
-      const max = statusBar.scrollWidth - statusBar.clientWidth;
-      if (!paused && max > 1 && now >= holdUntil && now >= resumeAt) {
-        position += direction * SPEED * (dt / 1000);
-        if (position >= max) {
-          position = max;
-          direction = -1;
-          holdUntil = now + END_PAUSE;
-        } else if (position <= 0) {
-          position = 0;
-          direction = 1;
-          holdUntil = now + END_PAUSE;
-        }
-        statusBar.scrollLeft = position;
-      }
-      frame = window.requestAnimationFrame(tick);
-    };
-
-    const onHold = () => {
-      pause();
-    };
-    const onRelease = () => {
-      scheduleResume();
-    };
-
-    statusBar.addEventListener('touchstart', onHold, { passive: true });
-    statusBar.addEventListener('touchend', onRelease, { passive: true });
-    statusBar.addEventListener('touchcancel', onRelease, { passive: true });
-    statusBar.addEventListener('mouseenter', onHold);
-    statusBar.addEventListener('mouseleave', onRelease);
-    statusBar.addEventListener('wheel', onUserScroll, { passive: true });
-    statusBar.addEventListener('scroll', onUserScroll, { passive: true });
-    frame = window.requestAnimationFrame(tick);
-
-    return () => {
-      window.cancelAnimationFrame(frame);
-      window.clearTimeout(resumeTimer);
-      statusBar.removeEventListener('touchstart', onHold);
-      statusBar.removeEventListener('touchend', onRelease);
-      statusBar.removeEventListener('touchcancel', onRelease);
-      statusBar.removeEventListener('mouseenter', onHold);
-      statusBar.removeEventListener('mouseleave', onRelease);
-      statusBar.removeEventListener('wheel', onUserScroll);
-      statusBar.removeEventListener('scroll', onUserScroll);
-    };
-  }, []);
 
   return (
     <div className="fixed inset-0 h-[100dvh] w-screen overflow-x-hidden overflow-y-auto bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.15),_transparent_30%),radial-gradient(circle_at_right,_rgba(251,191,36,0.08),_transparent_28%),linear-gradient(180deg,_#08090d_0%,_#050507_100%)] px-3 pb-3 pt-14 text-neutral-100 sm:px-4 sm:pb-4 sm:pt-16 lg:h-screen lg:overflow-y-auto lg:px-6 lg:pb-5 lg:pt-16">
@@ -1308,71 +1195,12 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
               </div>
             )}
 
-            <div className="relative min-w-0 max-w-full">
-              <div
-                ref={statusBarRef}
-                className="scrollbar-hide min-w-0 max-w-full touch-pan-x overflow-x-auto overflow-y-hidden overscroll-x-contain rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] font-medium text-neutral-300 shadow-[0_16px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/5 [-webkit-overflow-scrolling:touch] sm:px-4 lg:overflow-x-visible"
-              >
-                <div className="inline-flex w-max min-w-full flex-nowrap items-center gap-2 whitespace-nowrap sm:gap-3 lg:flex lg:w-full lg:flex-wrap lg:whitespace-normal">
-                <span className="max-w-none shrink-0 lg:max-w-[45%] lg:truncate">
-                  <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Stage</span>{' '}
-                  <span className="text-white">{stageUrl}</span>
-                </span>
-                {viewerCount !== null && viewerCount >= 20 && socketStatus === 'connected' && (
-                  <>
-                    <span className="shrink-0 text-white/20">|</span>
-                    <span className="inline-flex shrink-0 items-center gap-1.5" aria-live="polite">
-                      <span className="h-2 w-2 rounded-full bg-rose-400 animate-pulse" />
-                      <span className="text-sm font-bold text-white">{viewerCount.toLocaleString()} watching</span>
-                    </span>
-                  </>
-                )}
-                <span className="shrink-0 text-white/20">|</span>
-                <span className="shrink-0">
-                  <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Stake</span>{' '}
-                  <span className="text-white">${currentStake}</span>
-                </span>
-                <span className="shrink-0 text-white/20">|</span>
-                <span className="shrink-0">
-                  <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Next</span>{' '}
-                  <span className="text-amber-200">${stealPrice}{crowdPercent > 0 ? ` (+${crowdPercent}% crowd)` : ''}</span>
-                  {isStealPriceCapped && (
-                    <span className="ml-1.5 inline-flex items-center rounded-full border border-amber-300/40 bg-amber-300/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.18em] text-amber-200">
-                      Capped at $299
-                    </span>
-                  )}
-                </span>
-                <span className="shrink-0 text-white/20">|</span>
-                <span className="inline-flex shrink-0 items-center gap-1.5">
-                  <Clock3 className={`h-3.5 w-3.5 ${isProtected ? 'text-rose-300' : 'text-emerald-300'}`} />
-                  <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Protection</span>{' '}
-                  <span className={isProtected ? 'text-rose-200' : 'text-emerald-200'}>{isProtected ? formatClock(protectionTimer) : 'OPEN'}</span>
-                </span>
-                <span className="shrink-0 text-white/20">|</span>
-                <span
-                  className="inline-flex shrink-0 items-center gap-1.5"
-                  aria-label={`Canvas connection is currently ${connectionStatusMeta.label}`}
-                >
-                  <span className={`h-2 w-2 rounded-full ${connectionStatusMeta.accent} ${socketStatus !== 'disconnected' ? 'animate-pulse' : ''}`} />
-                  <ConnectionIcon className="h-3.5 w-3.5" />
-                  <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Link</span>{' '}
-                  <span className="text-white">{connectionStatusMeta.label}</span>
-                </span>
-                </div>
+            {viewerCount !== null && viewerCount >= 20 && socketStatus === 'connected' && (
+              <div className="inline-flex items-center gap-1.5 self-start" aria-live="polite">
+                <span className="h-2 w-2 rounded-full bg-rose-400 animate-pulse" />
+                <span className="text-sm font-bold text-white">{viewerCount.toLocaleString()} watching</span>
               </div>
-              {canScrollLeft && (
-                <div
-                  className="pointer-events-none absolute inset-y-0 left-0 w-8 rounded-l-2xl bg-gradient-to-r from-[#0b0d12]/95 to-transparent sm:hidden"
-                  aria-hidden="true"
-                />
-              )}
-              {canScrollRight && (
-                <div
-                  className="pointer-events-none absolute inset-y-0 right-0 w-8 rounded-r-2xl bg-gradient-to-l from-[#0b0d12]/95 to-transparent sm:hidden"
-                  aria-hidden="true"
-                />
-              )}
-            </div>
+            )}
 
             <div className="flex min-w-0 max-w-full flex-col gap-3 sm:gap-4 lg:min-h-0 lg:flex-1">
               <div
