@@ -15,8 +15,6 @@ export const IDLE_LINES: readonly string[] = [
   'You could be on this screen right now.',
   'Free real estate, ${price} down.',
   'Plot twist: you take the stage.',
-  'Our stage manager is on a coffee break. Forever.',
-  'The only tab is currently the only empty tab.',
   'Fame is just a checkout away.',
   'Somebody unlocks the potential. Why not you?',
   'The crowd is there. The stage is yours.',
