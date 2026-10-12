@@ -11,6 +11,7 @@ import {
   Heart,
   Loader2,
   Maximize2,
+  Minimize2,
   Share2,
   ShieldCheck,
   Smile,
@@ -1205,18 +1206,17 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
             <div className="flex min-w-0 max-w-full flex-col gap-3 sm:gap-4 lg:min-h-0 lg:flex-1">
               <div
                 ref={streamFrameRef}
-                className={`relative flex w-full shrink-0 overflow-hidden border border-white/10 bg-[linear-gradient(180deg,_rgba(15,18,25,0.98),_rgba(8,9,13,0.98))] shadow-[0_30px_100px_rgba(0,0,0,0.45)] ring-1 ring-white/5 lg:min-h-[350px] lg:flex-1 ${isFullscreen ? 'rounded-none p-0' : 'aspect-video rounded-[1.75rem] p-2 sm:p-3 lg:aspect-auto lg:p-4'} ${isFullscreen && isCursorIdle && !isTouchDevice ? 'cursor-none' : ''}`}
+                className={`group/stream relative flex w-full shrink-0 overflow-hidden border border-white/10 bg-[linear-gradient(180deg,_rgba(15,18,25,0.98),_rgba(8,9,13,0.98))] shadow-[0_30px_100px_rgba(0,0,0,0.45)] ring-1 ring-white/5 lg:min-h-[350px] lg:flex-1 ${isFullscreen ? 'rounded-none p-0' : 'aspect-video rounded-[1.75rem] p-2 sm:p-3 lg:aspect-auto lg:p-4'} ${isFullscreen && isCursorIdle && !isTouchDevice ? 'cursor-none' : ''}`}
               >
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.06),_transparent_28%)]" aria-hidden="true" />
                 <button
                   type="button"
                   onClick={toggleFullscreen}
-                  className={`absolute right-4 top-4 z-10 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/45 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white/90 backdrop-blur transition-colors transition-opacity duration-500 hover:border-white/25 hover:bg-black/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${isFullscreen && isCursorIdle ? 'pointer-events-none opacity-0' : 'opacity-100'}`}
+                  className={`absolute bottom-4 right-4 z-10 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-black/45 text-white/90 backdrop-blur transition-colors transition-opacity duration-500 hover:border-white/25 hover:bg-black/60 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${isFullscreen && isCursorIdle ? 'pointer-events-none opacity-0' : isTouchDevice ? 'opacity-100' : 'opacity-0 group-hover/stream:opacity-100'}`}
                   aria-label={isFullscreen ? 'Exit fullscreen stream' : 'Enter fullscreen stream'}
                   aria-pressed={isFullscreen}
                 >
-                  <Maximize2 className="h-4 w-4" />
-                  <span>{isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}</span>
+                  {isFullscreen ? <Minimize2 aria-hidden="true" className="h-4 w-4" /> : <Maximize2 aria-hidden="true" className="h-4 w-4" />}
                 </button>
                 {isFullscreen && (
                   <div className={`absolute bottom-4 left-1/2 z-10 -translate-x-1/2 rounded-full border border-white/10 bg-black/45 px-3 py-1.5 text-[11px] font-medium text-white/80 backdrop-blur transition-opacity duration-500 ${isFullscreen && isCursorIdle ? 'pointer-events-none opacity-0' : 'opacity-100'}`}>
@@ -1246,7 +1246,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                       aria-label={`Open streamed site ${stageUrl} in a new tab`}
                       className="group absolute inset-0 z-[1] rounded-[inherit] bg-transparent transition-colors hover:bg-white/[0.035] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-300/80"
                     >
-                      <span className="pointer-events-none absolute bottom-4 right-4 rounded-full border border-white/15 bg-black/60 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg backdrop-blur transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                      <span className="pointer-events-none absolute bottom-4 left-4 rounded-full border border-white/15 bg-black/60 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg backdrop-blur transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
                         Visit site ↗
                       </span>
                     </a>
