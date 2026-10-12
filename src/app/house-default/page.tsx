@@ -27,7 +27,7 @@ const card = {
   border: '1px solid rgba(255,255,255,0.14)',
   background: 'linear-gradient(135deg, rgba(16,185,129,0.10) 0%, rgba(255,255,255,0.03) 60%)',
   borderRadius: '1.2vmin',
-  padding: 'clamp(0.75rem, 2vmin, 1.5rem) clamp(1rem, 2.6vmin, 2rem)',
+  padding: 'clamp(0.4rem, 1.1vmin, 0.9rem) clamp(0.75rem, 2vmin, 1.5rem)',
   textAlign: 'left' as const,
   minWidth: 0,
 };
@@ -38,12 +38,12 @@ const priceCard = {
 };
 const label = {
   color: '#a7f3d0',
-  fontSize: 'clamp(0.75rem, 1.9vmin, 1.15rem)',
+  fontSize: 'clamp(0.7rem, 1.7vmin, 1rem)',
   letterSpacing: '0.18em',
   fontWeight: 700,
 };
 const cardValue = {
-  fontSize: 'clamp(1rem, 2.7vmin, 1.7rem)',
+  fontSize: 'clamp(0.9rem, 2.4vmin, 1.4rem)',
   fontWeight: 700,
   color: '#f5f5f5',
   overflowWrap: 'anywhere' as const,
@@ -153,9 +153,10 @@ export default function HouseDefaultPage() {
   return (
     <main
       style={{
-        minHeight: '100vh',
+        height: '100vh',
+        overflow: 'hidden',
         boxSizing: 'border-box',
-        padding: '2.5vmin',
+        padding: '1.5vmin',
         display: 'grid',
         placeItems: 'center',
         background: '#060608',
@@ -170,7 +171,7 @@ export default function HouseDefaultPage() {
           width: '100%',
           maxWidth: 'min(96vw, 90rem)',
           display: 'grid',
-          gap: 'clamp(1rem, 3.4vmin, 2.6rem)',
+          gap: 'clamp(0.4rem, 1.8vmin, 1.4rem)',
         }}
       >
         <div>
@@ -179,7 +180,7 @@ export default function HouseDefaultPage() {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '1.4vmin',
-              marginBottom: '1.2vmin',
+              marginBottom: '0.8vmin',
               padding: '0.6vmin 1.8vmin',
               border: '1px solid rgba(110,231,183,0.6)',
               boxShadow: '0 0 1.6vmin rgba(110,231,183,0.25)',
@@ -205,18 +206,18 @@ export default function HouseDefaultPage() {
             />
             LIVE · STAGE OPEN
           </div>
-          <div style={{ fontSize: 'clamp(2rem, 8vmin, 5.5rem)', fontWeight: 900, letterSpacing: '0.2em', color: '#ffffff' }}>
+          <div style={{ fontSize: 'clamp(1.75rem, 6.5vmin, 4rem)', fontWeight: 900, letterSpacing: '0.2em', color: '#ffffff' }}>
             THE ONLY TAB
           </div>
-          <div style={{ marginTop: '1vmin', color: '#f3f4f6', fontWeight: 700, fontSize: 'clamp(1.05rem, 3.2vmin, 2.1rem)' }}>
-            Your URL. Live. Right now. Steal the feed for {TAKEOVER_DURATION_MINUTES} minutes.
+          <div style={{ marginTop: '0.6vmin', color: '#f3f4f6', fontWeight: 700, fontSize: 'clamp(0.95rem, 2.8vmin, 1.7rem)' }}>
+            Your URL. Live. Right now. Take the feed for {TAKEOVER_DURATION_MINUTES} minutes.
           </div>
           {showIdleClock && (
             <div
               style={{
-                marginTop: '1.2vmin',
+                marginTop: '0.8vmin',
                 color: '#fcd34d',
-                fontSize: 'clamp(1rem, 2.8vmin, 1.8rem)',
+                fontSize: 'clamp(0.9rem, 2.4vmin, 1.4rem)',
                 letterSpacing: '0.16em',
                 fontWeight: 700,
               }}
@@ -226,10 +227,10 @@ export default function HouseDefaultPage() {
           )}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(16rem, 1fr))', gap: 'clamp(0.6rem, 1.8vmin, 1.5rem)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(16rem, 1fr))', gap: 'clamp(0.4rem, 1.2vmin, 1rem)' }}>
           <div style={priceCard}>
-            <div style={label}>NEXT STEAL PRICE</div>
-            <div style={{ color: '#6ee7b7', fontSize: 'clamp(1.75rem, 6vmin, 4rem)', fontWeight: 800, lineHeight: 1.1 }}>
+            <div style={label}>NEXT PRICE</div>
+            <div style={{ color: '#6ee7b7', fontSize: 'clamp(1.5rem, 5vmin, 3rem)', fontWeight: 800, lineHeight: 1.1 }}>
               ${price}
             </div>
           </div>
@@ -256,15 +257,15 @@ export default function HouseDefaultPage() {
             padding: 0,
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(16rem, 1fr))',
-            gap: 'clamp(0.6rem, 1.8vmin, 1.5rem)',
+            gap: 'clamp(0.4rem, 1.2vmin, 1rem)',
           }}
         >
           {steps.map(([n, title, sub]) => (
             <li key={n} style={card}>
-              <div style={{ color: '#6ee7b7', fontWeight: 800, letterSpacing: '0.12em', fontSize: 'clamp(1rem, 2.7vmin, 1.7rem)' }}>
+              <div style={{ color: '#6ee7b7', fontWeight: 800, letterSpacing: '0.12em', fontSize: 'clamp(0.9rem, 2.4vmin, 1.4rem)' }}>
                 {n}. {title}
               </div>
-              <div style={{ color: '#d1d5db', fontSize: 'clamp(0.85rem, 2.1vmin, 1.3rem)', marginTop: '0.6vmin' }}>{sub}</div>
+              <div style={{ color: '#d1d5db', fontSize: 'clamp(0.75rem, 1.9vmin, 1.1rem)', marginTop: '0.4vmin' }}>{sub}</div>
             </li>
           ))}
         </ol>
@@ -272,10 +273,10 @@ export default function HouseDefaultPage() {
         <div
           aria-live="off"
           style={{
-            minHeight: '4rem',
+            minHeight: '2.5rem',
             display: 'grid',
             placeItems: 'center',
-            fontSize: 'clamp(1.1rem, 3.5vmin, 2.2rem)',
+            fontSize: 'clamp(1rem, 2.9vmin, 1.8rem)',
             fontStyle: 'italic',
             color: '#ffffff',
             opacity: visible ? 1 : 0,
@@ -285,8 +286,8 @@ export default function HouseDefaultPage() {
           “{getIdleLine(lineIndex, price)}”
         </div>
 
-        <div style={{ color: '#6ee7b7', fontSize: 'clamp(0.9rem, 2.3vmin, 1.4rem)', letterSpacing: '0.18em', fontWeight: 800 }}>
-          ▼ CLAIM YOUR MOMENT · HIT STEAL STAGE ▼
+        <div style={{ color: '#6ee7b7', fontSize: 'clamp(0.85rem, 2vmin, 1.2rem)', letterSpacing: '0.18em', fontWeight: 800 }}>
+          ▼ SEIZE THE STAGE BELOW ▼
         </div>
       </section>
     </main>
