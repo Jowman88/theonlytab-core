@@ -139,6 +139,9 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [recentReactions, setRecentReactions] = useState<string[]>([]);
   const pickerContainerRef = useRef<HTMLDivElement | null>(null);
+  const [isReactionMenuOpen, setIsReactionMenuOpen] = useState(false);
+  const reactionMenuRef = useRef<HTMLDivElement | null>(null);
+  const reactionTriggerRef = useRef<HTMLButtonElement | null>(null);
   const [isShareMenuOpen, setIsShareMenuOpen] = useState(false);
   const [shareCopyFeedback, setShareCopyFeedback] = useState('Copy link');
   const socketRef = useRef<ReturnType<typeof io> | null>(null);
@@ -629,6 +632,12 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
     };
   }, [isPickerOpen]);
 
+  const wasPickerOpenRef = useRef(false);
+  useEffect(() => {
+    if (wasPickerOpenRef.current && !isPickerOpen) reactionTriggerRef.current?.focus();
+    wasPickerOpenRef.current = isPickerOpen;
+  }, [isPickerOpen]);
+
   const handleSendReaction = (emoji: string) => {
     if (isReactionCoolingDown || !socketRef.current?.connected) return;
     setRecentReactions((current) => {
@@ -645,6 +654,35 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
     window.setTimeout(() => setIsReactionCoolingDown(false), REACTION_COOLDOWN_MS);
   };
   handleSendReactionRef.current = handleSendReaction;
+
+  const sendFromMenu = (emoji: string) => {
+    handleSendReaction(emoji);
+    setIsReactionMenuOpen(false);
+    reactionTriggerRef.current?.focus();
+  };
+
+  useEffect(() => {
+    if (!isReactionMenuOpen) return;
+    const onPointerDown = (event: MouseEvent | TouchEvent) => {
+      if (reactionMenuRef.current && !reactionMenuRef.current.contains(event.target as Node)) {
+        setIsReactionMenuOpen(false);
+      }
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsReactionMenuOpen(false);
+        reactionTriggerRef.current?.focus();
+      }
+    };
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('touchstart', onPointerDown);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('touchstart', onPointerDown);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [isReactionMenuOpen]);
 
   const stageShareUrl = shareSiteUrl;
   const stageShareDescription = slot && slot.id !== 'house-default-id' && slot.currentUrl
@@ -1491,30 +1529,68 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                   {isReporting ? 'Reporting…' : reportedSlotIds.includes(slot?.id || '') ? 'Reported' : 'Report'}
                 </button>
                 </div>
-                <div role="group" aria-label="Send a reaction" className="order-4 col-span-2 flex min-w-0 flex-wrap items-center gap-2 border-t border-white/10 pt-3 lg:order-2 lg:col-span-1 lg:shrink-0 lg:flex-nowrap lg:border-t-0 lg:pt-0">
-                  <Smile aria-hidden="true" className="h-4 w-4 text-neutral-500" />
-                  {REACTION_EMOJIS.map((emoji) => (
-                    <button
-                      key={emoji}
-                      type="button"
-                      onClick={() => handleSendReaction(emoji)}
-                      disabled={socketStatus !== 'connected' || isReactionCoolingDown}
-                      aria-label={`React with ${emoji}`}
-                      className="rounded-xl border border-white/10 bg-white/[0.03] px-2.5 py-1.5 text-lg transition hover:scale-110 hover:border-emerald-300/50 hover:shadow-[0_0_14px_rgba(16,185,129,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
-                    >
-                      {emoji}
-                    </button>
-                  ))}
+                <div ref={reactionMenuRef} className="relative order-4 col-span-2 min-w-0 border-t border-white/10 pt-3 lg:order-2 lg:col-span-1 lg:shrink-0 lg:border-t-0 lg:pt-0">
                   <button
+                    ref={reactionTriggerRef}
                     type="button"
-                    onClick={() => setIsPickerOpen(true)}
+                    onClick={() => setIsReactionMenuOpen((open) => !open)}
                     disabled={socketStatus !== 'connected'}
-                    aria-label="Choose another emoji"
-                    aria-haspopup="dialog"
-                    className="rounded-xl border border-white/10 bg-white/[0.03] px-2.5 py-1.5 text-lg font-semibold text-neutral-300 transition hover:scale-110 hover:border-emerald-300/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
+                    aria-haspopup="true"
+                    aria-expanded={isReactionMenuOpen}
+                    aria-label="Send a reaction"
+                    title="Send a reaction"
+                    className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-2 py-2 text-xs font-semibold text-neutral-300 transition hover:border-emerald-300/50 hover:bg-emerald-500/10 hover:text-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 disabled:cursor-not-allowed disabled:opacity-40 lg:w-auto lg:min-h-0 lg:px-3"
                   >
-                    +
+                    <Smile aria-hidden="true" className="h-4 w-4" />
+                    React
                   </button>
+                  {isReactionMenuOpen && (
+                    <div role="group" aria-label="Choose a reaction" className="dashboard-fade-in absolute bottom-full left-1/2 z-20 mb-2 w-[min(18rem,calc(100vw-2rem))] -translate-x-1/2 lg:left-0 lg:w-72 lg:translate-x-0 rounded-2xl border border-emerald-400/25 bg-[#0b0e13] p-3 shadow-[0_16px_50px_rgba(0,0,0,0.6)]">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {REACTION_EMOJIS.map((emoji) => (
+                          <button
+                            key={emoji}
+                            type="button"
+                            onClick={() => sendFromMenu(emoji)}
+                            disabled={socketStatus !== 'connected' || isReactionCoolingDown}
+                            aria-label={`React with ${emoji}`}
+                            className="rounded-xl border border-white/10 bg-white/[0.03] px-2.5 py-1.5 text-lg transition hover:scale-110 hover:border-emerald-300/50 hover:shadow-[0_0_14px_rgba(16,185,129,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                      {recentReactions.length > 0 && (
+                        <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-white/10 pt-2">
+                          <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-500">Recent</span>
+                          {recentReactions.map((emoji) => (
+                            <button
+                              key={emoji}
+                              type="button"
+                              onClick={() => sendFromMenu(emoji)}
+                              disabled={socketStatus !== 'connected' || isReactionCoolingDown}
+                              aria-label={`React with ${emoji}`}
+                              className="rounded-xl border border-white/10 bg-white/[0.03] px-2 py-1 text-xl transition hover:scale-110 hover:border-emerald-300/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
+                            >
+                              {emoji}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsReactionMenuOpen(false);
+                          setIsPickerOpen(true);
+                        }}
+                        aria-haspopup="dialog"
+                        aria-label="More emoji"
+                        className="mt-2 w-full rounded-xl border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-semibold text-neutral-300 transition hover:border-emerald-300/50 hover:bg-emerald-500/10 hover:text-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+                      >
+                        More…
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <div className="order-2 min-w-0 lg:order-4 lg:shrink-0 lg:min-w-[7rem]">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-500">Time on stage</p>
