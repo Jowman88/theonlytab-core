@@ -686,8 +686,8 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
 
   const stageShareUrl = shareSiteUrl;
   const stageShareDescription = slot && slot.id !== 'house-default-id' && slot.currentUrl
-    ? `${slot.displayName || 'Someone'} is on The Only Tab stage right now, streaming ${stripProtocol(slot.currentUrl)}. Come watch and try to steal the stage! 👀`
-    : 'Watch the live stage on The Only Tab and try to steal it! 👀';
+    ? `${slot.displayName || 'Someone'} is on The Only Tab stage right now, streaming ${stripProtocol(slot.currentUrl)}. Come watch and try to seize the stage! 👀`
+    : 'Watch the live stage on The Only Tab and try to seize it! 👀';
 
   const handleShareStage = (platform: 'x' | 'whatsapp') => {
     const intentUrl = platform === 'x'
@@ -1068,7 +1068,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   }, []);
 
   return (
-    <div className="fixed inset-0 h-[100dvh] w-screen overflow-x-hidden overflow-y-auto bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.15),_transparent_30%),radial-gradient(circle_at_right,_rgba(251,191,36,0.08),_transparent_28%),linear-gradient(180deg,_#08090d_0%,_#050507_100%)] px-3 pb-3 pt-14 text-neutral-100 sm:px-4 sm:pb-4 sm:pt-16 lg:h-screen lg:overflow-y-auto lg:px-6 lg:pb-5 lg:pt-16">
+    <div className="fixed inset-0 h-[100dvh] w-screen overflow-x-hidden overflow-y-auto bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.15),_transparent_30%),radial-gradient(circle_at_right,_rgba(251,191,36,0.12),_transparent_26%),linear-gradient(180deg,_#07090d_0%,_#050507_100%)] text-white">
       <div className="dashboard-grid pointer-events-none absolute inset-0 opacity-40" aria-hidden="true" />
 
       {statusNotice && (
@@ -1093,9 +1093,9 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
       <Link
         href="/"
         aria-label="Return to The Only Tab dashboard"
-        className="group absolute left-4 top-4 z-20 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.2em] whitespace-nowrap text-white/45 transition-colors hover:text-emerald-300 focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 sm:left-5 sm:top-5 sm:gap-2 sm:px-3.5 sm:py-2 sm:text-[10px] sm:tracking-[0.28em]"
+        className="group absolute left-4 top-4 z-20 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.2em] whitespace-nowrap text-white/45 transition-colors hover:text-white/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70"
       >
-        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)] transition-shadow duration-200 group-hover:shadow-[0_0_14px_rgba(52,211,153,1)] sm:shadow-[0_0_12px_rgba(52,211,153,0.8)] sm:group-hover:shadow-[0_0_16px_rgba(52,211,153,1)]" />
+        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)] transition-shadow duration-200 group-hover:shadow-[0_0_14px_rgba(52,211,153,1)]" />
         <span>THE ONLY TAB</span>
       </Link>
 
@@ -1113,7 +1113,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
           {isFormOpen && (
             <aside
               id="steal-stage-panel"
-              className="dashboard-slide-up fixed inset-x-3 bottom-3 top-24 z-40 overflow-hidden rounded-3xl border border-white/10 bg-[linear-gradient(180deg,_rgba(13,16,22,0.98),_rgba(7,9,13,0.98))] shadow-[0_30px_120px_rgba(0,0,0,0.55)] ring-1 ring-white/5 lg:static lg:inset-auto lg:z-10 lg:w-[25rem] lg:shrink-0"
+              className="dashboard-slide-up fixed inset-x-3 bottom-3 top-24 z-40 overflow-hidden rounded-3xl border border-white/10 bg-[linear-gradient(180deg,_rgba(13,16,22,0.98),_rgba(7,9,13,0.98))] shadow-[0_30px_80px_rgba(0,0,0,0.65)] lg:static lg:inset-auto lg:top-auto lg:bottom-auto lg:h-full lg:w-[26rem] lg:max-w-[26rem]"
             >
               <form onSubmit={handleAcquireTabSubmit} className="flex h-full flex-col">
                 <div className="flex items-center justify-between border-b border-white/10 px-5 py-4 sm:px-6">
@@ -1124,7 +1124,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                   <button
                     type="button"
                     onClick={() => setIsFormOpen(false)}
-                    className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300 transition hover:border-white/20 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+                    className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300 transition hover:border-white/20 hover:bg-white/10"
                   >
                     Close
                   </button>
@@ -1208,7 +1208,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                         {getFieldIndicator('startPath')}
                       </div>
                       <p id="start-path-help" className="text-xs leading-5 text-neutral-400">
-                        Optional deep-link hint. Start with <span className="font-semibold text-neutral-200">/</span>, <span className="font-semibold text-neutral-200">?</span>, or <span className="font-semibold text-neutral-200">#</span> to jump to a specific route, query, or anchor.
+                        Optional deep-link hint. Start with <span className="font-semibold text-neutral-200">/</span>, <span className="font-semibold text-neutral-200">?</span>, or <span className="font-semibold text-neutral-200">#</span> when desired.
                       </p>
                       <input
                         id="start-path-input"
@@ -1251,21 +1251,21 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                         This confirms you understand the takeover fee is final once checkout starts and that the selected destination must comply with the{' '}
                         <Link
                           href="/platform-rules"
-                          className="font-semibold text-emerald-300 underline decoration-emerald-300/60 underline-offset-2 transition hover:text-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#090b10]"
+                          className="font-semibold text-emerald-300 underline decoration-emerald-300/60 underline-offset-2 transition hover:text-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70"
                         >
                           platform rules
                         </Link>
                         . For help or to submit a report, visit the{' '}
                         <Link
                           href="/contact"
-                          className="font-semibold text-emerald-300 underline decoration-emerald-300/60 underline-offset-2 transition hover:text-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#090b10]"
+                          className="font-semibold text-emerald-300 underline decoration-emerald-300/60 underline-offset-2 transition hover:text-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70"
                         >
                           contact page
                         </Link>
                         . See the{' '}
                         <Link
                           href="/hall-of-fame"
-                          className="font-semibold text-emerald-300 underline decoration-emerald-300/60 underline-offset-2 transition hover:text-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#090b10]"
+                          className="font-semibold text-emerald-300 underline decoration-emerald-300/60 underline-offset-2 transition hover:text-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70"
                         >
                           Hall of Fame
                         </Link>
@@ -1279,14 +1279,14 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                   <button
                     type="submit"
                     disabled={isSubmitting || isProtected}
-                    className={`group flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-4 text-sm font-black uppercase tracking-[0.22em] transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#090b10] sm:text-base ${
+                    className={`group flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-4 text-sm font-black uppercase tracking-[0.22em] transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 ${
                       isProtected
                         ? 'cursor-not-allowed border border-rose-400/20 bg-rose-500/10 text-rose-200'
-                        : 'border border-emerald-300/25 bg-[linear-gradient(135deg,_rgba(52,211,153,0.96),_rgba(251,191,36,0.92))] text-slate-950 shadow-[0_0_35px_rgba(16,185,129,0.3)] hover:-translate-y-0.5 hover:shadow-[0_0_45px_rgba(16,185,129,0.45)]'
+                        : 'border border-emerald-300/25 bg-[linear-gradient(135deg,_rgba(52,211,153,0.96),_rgba(251,191,36,0.92))] text-slate-950 shadow-[0_0_35px_rgba(16,185,129,0.3)] hover:-translate-y-0.5'
                     }`}
                   >
                     {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <ExternalLink className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />}
-                    {isSubmitting ? 'OPENING CHECKOUT…' : isProtected ? `PROTECTED · ${formatClock(protectionTimer)}` : `STEAL FOR \$${stealPrice}`}
+                    {isSubmitting ? 'OPENING CHECKOUT…' : isProtected ? `PROTECTED · ${formatClock(protectionTimer)}` : `SEIZE FOR \$${stealPrice}`}
                   </button>
                   <p className="mt-3 text-center text-xs leading-5 text-neutral-400">
                     Press <span className="font-semibold text-neutral-200">Enter</span> to review checkout details, then confirm when ready.
@@ -1301,7 +1301,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
               <div
                 role="status"
                 aria-live="polite"
-                className="dashboard-slide-up pointer-events-none fixed left-1/2 top-4 z-50 max-w-[90vw] -translate-x-1/2 truncate rounded-full border border-amber-300/30 bg-black/85 px-4 py-2 text-sm font-semibold text-amber-100 shadow-[0_16px_50px_rgba(0,0,0,0.45)] ring-1 ring-white/10 backdrop-blur"
+                className="dashboard-slide-up pointer-events-none fixed left-1/2 top-4 z-50 max-w-[90vw] -translate-x-1/2 truncate rounded-full border border-amber-300/30 bg-black/85 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-amber-100 shadow-[0_10px_30px_rgba(0,0,0,0.35)]"
               >
                 {takeoverAlert}
               </div>
@@ -1310,53 +1310,53 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
             <div className="relative min-w-0 max-w-full">
               <div
                 ref={statusBarRef}
-                className="scrollbar-hide min-w-0 max-w-full touch-pan-x overflow-x-auto overflow-y-hidden overscroll-x-contain rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] font-medium text-neutral-300 shadow-[0_16px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/5 [-webkit-overflow-scrolling:touch] sm:px-4 lg:overflow-x-visible"
+                className="scrollbar-hide min-w-0 max-w-full touch-pan-x overflow-x-auto overflow-y-hidden overscroll-x-contain rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] font-medium text-neutral-200 sm:text-xs"
               >
                 <div className="inline-flex w-max min-w-full flex-nowrap items-center gap-2 whitespace-nowrap sm:gap-3 lg:flex lg:w-full lg:flex-wrap lg:whitespace-normal">
-                <span className="max-w-none shrink-0 lg:max-w-[45%] lg:truncate">
-                  <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Stage</span>{' '}
-                  <span className="text-white">{stageUrl}</span>
-                </span>
-                {viewerCount !== null && viewerCount >= 20 && socketStatus === 'connected' && (
-                  <>
-                    <span className="shrink-0 text-white/20">|</span>
-                    <span className="inline-flex shrink-0 items-center gap-1.5" aria-live="polite">
-                      <span className="h-2 w-2 rounded-full bg-rose-400 animate-pulse" />
-                      <span className="text-sm font-bold text-white">{viewerCount.toLocaleString()} watching</span>
-                    </span>
-                  </>
-                )}
-                <span className="shrink-0 text-white/20">|</span>
-                <span className="shrink-0">
-                  <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Stake</span>{' '}
-                  <span className="text-white">${currentStake}</span>
-                </span>
-                <span className="shrink-0 text-white/20">|</span>
-                <span className="shrink-0">
-                  <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Next</span>{' '}
-                  <span className="text-amber-200">${stealPrice}{crowdPercent > 0 ? ` (+${crowdPercent}% crowd)` : ''}</span>
-                  {isStealPriceCapped && (
-                    <span className="ml-1.5 inline-flex items-center rounded-full border border-amber-300/40 bg-amber-300/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.18em] text-amber-200">
-                      Capped at $299
-                    </span>
+                  <span className="max-w-none shrink-0 lg:max-w-[45%] lg:truncate">
+                    <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Stage</span>{' '}
+                    <span className="text-white">{stageUrl}</span>
+                  </span>
+                  {viewerCount !== null && viewerCount >= 20 && socketStatus === 'connected' && (
+                    <>
+                      <span className="shrink-0 text-white/20">|</span>
+                      <span className="inline-flex shrink-0 items-center gap-1.5" aria-live="polite">
+                        <span className="h-2 w-2 rounded-full bg-rose-400 animate-pulse" />
+                        <span className="text-sm font-bold text-white">{viewerCount.toLocaleString()} watching</span>
+                      </span>
+                    </>
                   )}
-                </span>
-                <span className="shrink-0 text-white/20">|</span>
-                <span className="inline-flex shrink-0 items-center gap-1.5">
-                  <Clock3 className={`h-3.5 w-3.5 ${isProtected ? 'text-rose-300' : 'text-emerald-300'}`} />
-                  <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Protection</span>{' '}
-                  <span className={isProtected ? 'text-rose-200' : 'text-emerald-200'}>{isProtected ? formatClock(protectionTimer) : 'OPEN'}</span>
-                </span>
-                <span className="shrink-0 text-white/20">|</span>
-                <span
-                  className="inline-flex shrink-0 items-center gap-1.5"
-                  aria-label={`Canvas connection is currently ${connectionStatusMeta.label}`}
-                >
-                  <span className={`h-2 w-2 rounded-full ${connectionStatusMeta.accent} ${socketStatus !== 'disconnected' ? 'animate-pulse' : ''}`} />
-                  <ConnectionIcon className="h-3.5 w-3.5" />
-                  <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Link</span>{' '}
-                  <span className="text-white">{connectionStatusMeta.label}</span>
-                </span>
+                  <span className="shrink-0 text-white/20">|</span>
+                  <span className="shrink-0">
+                    <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Stake</span>{' '}
+                    <span className="text-white">${currentStake}</span>
+                  </span>
+                  <span className="shrink-0 text-white/20">|</span>
+                  <span className="shrink-0">
+                    <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Next</span>{' '}
+                    <span className="text-amber-200">${stealPrice}{crowdPercent > 0 ? ` (+${crowdPercent}% crowd)` : ''}</span>
+                    {isStealPriceCapped && (
+                      <span className="ml-1.5 inline-flex items-center rounded-full border border-amber-300/40 bg-amber-300/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.18em] text-amber-200">
+                        Capped at $299
+                      </span>
+                    )}
+                  </span>
+                  <span className="shrink-0 text-white/20">|</span>
+                  <span className="inline-flex shrink-0 items-center gap-1.5">
+                    <Clock3 className={`h-3.5 w-3.5 ${isProtected ? 'text-rose-300' : 'text-emerald-300'}`} />
+                    <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Protection</span>{' '}
+                    <span className={isProtected ? 'text-rose-200' : 'text-emerald-200'}>{isProtected ? formatClock(protectionTimer) : 'OPEN'}</span>
+                  </span>
+                  <span className="shrink-0 text-white/20">|</span>
+                  <span
+                    className="inline-flex shrink-0 items-center gap-1.5"
+                    aria-label={`Canvas connection is currently ${connectionStatusMeta.label}`}
+                  >
+                    <span className={`h-2 w-2 rounded-full ${connectionStatusMeta.accent} ${socketStatus !== 'disconnected' ? 'animate-pulse' : ''}`} />
+                    <ConnectionIcon className="h-3.5 w-3.5" />
+                    <span className="font-semibold uppercase tracking-[0.22em] text-neutral-500">Link</span>{' '}
+                    <span className="text-white">{connectionStatusMeta.label}</span>
+                  </span>
                 </div>
               </div>
               {canScrollLeft && (
@@ -1376,13 +1376,13 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
             <div className="flex min-w-0 max-w-full flex-col gap-3 sm:gap-4 lg:min-h-0 lg:flex-1">
               <div
                 ref={streamFrameRef}
-                className={`relative flex w-full shrink-0 overflow-hidden border border-white/10 bg-[linear-gradient(180deg,_rgba(15,18,25,0.98),_rgba(8,9,13,0.98))] shadow-[0_30px_100px_rgba(0,0,0,0.45)] ring-1 ring-white/5 lg:min-h-[350px] lg:flex-1 ${isFullscreen ? 'rounded-none p-0' : 'aspect-video rounded-[1.75rem] p-2 sm:p-3 lg:aspect-auto lg:p-4'} ${isFullscreen && isCursorIdle && !isTouchDevice ? 'cursor-none' : ''}`}
+                className="relative flex w-full shrink-0 overflow-hidden rounded-[1.5rem] border border-white/10 bg-[linear-gradient(180deg,_rgba(15,18,25,0.98),_rgba(8,9,13,0.98))] shadow-[0_30px_100px_rgba(0,0,0,0.4)]"
               >
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.06),_transparent_28%)]" aria-hidden="true" />
                 <button
                   type="button"
                   onClick={toggleFullscreen}
-                  className={`absolute right-4 top-4 z-10 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/45 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white/90 backdrop-blur transition-colors transition-opacity duration-500 hover:border-white/25 hover:bg-black/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${isFullscreen && isCursorIdle ? 'pointer-events-none opacity-0' : 'opacity-100'}`}
+                  className="absolute right-4 top-4 z-10 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/45 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/80 backdrop-blur-sm transition hover:border-white/25 hover:bg-black/55"
                   aria-label={isFullscreen ? 'Exit fullscreen stream' : 'Enter fullscreen stream'}
                   aria-pressed={isFullscreen}
                 >
@@ -1390,11 +1390,11 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                   <span>{isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}</span>
                 </button>
                 {isFullscreen && (
-                  <div className={`absolute bottom-4 left-1/2 z-10 -translate-x-1/2 rounded-full border border-white/10 bg-black/45 px-3 py-1.5 text-[11px] font-medium text-white/80 backdrop-blur transition-opacity duration-500 ${isFullscreen && isCursorIdle ? 'pointer-events-none opacity-0' : 'opacity-100'}`}>
+                  <div className="absolute bottom-4 left-1/2 z-10 -translate-x-1/2 rounded-full border border-white/10 bg-black/45 px-3 py-1.5 text-[11px] font-medium text-white/80 backdrop-blur-sm">
                     Press Esc or tap Exit fullscreen
                   </div>
                 )}
-                <div className={`relative flex h-full w-full items-center justify-center overflow-hidden border border-white/10 bg-[#040507] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.03),0_20px_70px_rgba(0,0,0,0.55)] ${isFullscreen ? 'rounded-none' : 'rounded-[1.35rem]'}`}>
+                <div className="relative flex h-full w-full items-center justify-center overflow-hidden border border-white/10 bg-[#040507] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.03),0_20px_80px_rgba(0,0,0,0.45)]">
                   <canvas ref={canvasRef} className={`h-full w-full object-contain transition duration-500 ${!hasFrames ? 'opacity-0' : 'opacity-100'}`} />
 
                   <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-[2] overflow-hidden">
@@ -1415,9 +1415,9 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                       target="_blank"
                       rel="noopener noreferrer sponsored"
                       aria-label={`Open streamed site ${stageUrl} in a new tab`}
-                      className="group absolute inset-0 z-[1] rounded-[inherit] bg-transparent transition-colors hover:bg-white/[0.035] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-300/80"
+                      className="group absolute inset-0 z-[1] rounded-[inherit] bg-transparent transition-colors hover:bg-white/[0.035] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70"
                     >
-                      <span className="pointer-events-none absolute bottom-4 right-4 rounded-full border border-white/15 bg-black/60 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg backdrop-blur transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                      <span className="pointer-events-none absolute bottom-4 right-4 rounded-full border border-white/15 bg-black/60 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-[0_10px_25px_rgba(0,0,0,0.45)] transition-opacity group-hover:opacity-100">
                         Visit site ↗
                       </span>
                     </a>
@@ -1468,66 +1468,66 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                   ref={stealStageButtonRef}
                   aria-controls="steal-stage-panel"
                   aria-expanded={isFormOpen}
-                  className="group inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-emerald-300/25 bg-[linear-gradient(135deg,_rgba(52,211,153,0.95),_rgba(6,182,212,0.88))] px-5 py-3 text-xs font-black uppercase tracking-[0.2em] text-slate-950 shadow-[0_0_30px_rgba(16,185,129,0.35)] animate-pulse motion-reduce:animate-none transition duration-200 hover:-translate-y-0.5 hover:animate-none hover:shadow-[0_0_45px_rgba(16,185,129,0.6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07080c] sm:w-auto"
+                  className="group inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-emerald-300/25 bg-[linear-gradient(135deg,_rgba(52,211,153,0.95),_rgba(6,182,212,0.9))] px-4 py-3 text-sm font-black uppercase tracking-[0.22em] text-slate-950 shadow-[0_0_35px_rgba(16,185,129,0.3)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_40px_rgba(16,185,129,0.4)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70"
                 >
                   <Zap className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
-                  STEAL STAGE
+                  SEIZE THE STAGE
                 </button>
               </div>
 
-              <div className="grid shrink-0 grid-cols-2 gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm shadow-[0_16px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/5 lg:flex lg:flex-wrap lg:items-center lg:gap-x-4 lg:gap-y-2 lg:py-2">
+              <div className="grid shrink-0 grid-cols-2 gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm shadow-[0_16px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/5 lg:flex lg:items-center lg:justify-between">
                 <div className="order-1 min-w-0 lg:order-1 lg:min-w-[8rem] lg:max-w-[14rem]">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-500">Stage owner</p>
                   <p className="truncate text-sm font-semibold text-white sm:text-base">{stageOwner}</p>
                 </div>
                 <div className="order-3 col-span-2 grid grid-cols-3 gap-2 lg:order-3 lg:ml-auto lg:flex lg:items-center lg:gap-3">
-                <button
-                  type="button"
-                  onClick={handleLikeStage}
-                  disabled={!slot || slot.id === 'house-default-id' || slot.isReported || likedSlotIds.includes(slot.id) || isLiking}
-                  title="Like this stage to raise its steal price"
-                  aria-label={`Like this stage. ${activeLikes} active likes`}
-                  className="inline-flex min-h-11 w-full min-w-0 items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.03] px-2 py-2 text-xs lg:w-auto lg:min-h-0 lg:shrink-0 lg:px-3 font-semibold text-neutral-300 transition hover:border-pink-300/40 hover:bg-pink-500/10 hover:text-pink-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-300 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  <Heart aria-hidden="true" className={`h-4 w-4 ${slot && likedSlotIds.includes(slot.id) ? 'fill-pink-300 text-pink-300' : ''}`} />
-                  {activeLikes} {likedSlotIds.includes(slot?.id || '') ? 'Liked' : 'Like'}
-                </button>
-                <div className="relative min-w-0 lg:shrink-0">
                   <button
                     type="button"
-                    onClick={() => setIsShareMenuOpen((open) => !open)}
-                    aria-haspopup="true"
-                    aria-expanded={isShareMenuOpen}
-                    aria-label="Share this stage"
-                    title="Share this stage"
-                    className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.03] px-2 py-2 text-xs lg:w-auto lg:min-h-0 lg:px-3 font-semibold text-neutral-300 transition hover:border-emerald-300/40 hover:bg-emerald-500/10 hover:text-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+                    onClick={handleLikeStage}
+                    disabled={!slot || slot.id === 'house-default-id' || slot.isReported || likedSlotIds.includes(slot.id) || isLiking}
+                    title="Like this stage to raise its steal price"
+                    aria-label={`Like this stage. ${activeLikes} active likes`}
+                    className="inline-flex min-h-11 w-full min-w-0 items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.03] px-2 py-2 text-xs lg:w-auto lg:min-h-0 lg:shrink-0 lg:px-3 font-semibold text-neutral-200 transition hover:border-white/20 hover:bg-white/[0.06] disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    <Share2 aria-hidden="true" className="h-4 w-4" />
-                    Share
+                    <Heart aria-hidden="true" className={`h-4 w-4 ${slot && likedSlotIds.includes(slot.id) ? 'fill-pink-300 text-pink-300' : ''}`} />
+                    {activeLikes} {likedSlotIds.includes(slot?.id || '') ? 'Liked' : 'Like'}
                   </button>
-                  {isShareMenuOpen && (
-                    <div role="menu" aria-label="Share this stage" className="dashboard-fade-in absolute bottom-full left-1/2 z-20 mb-2 w-[min(16rem,calc(100vw-2rem))] -translate-x-1/2 lg:left-0 lg:w-64 lg:translate-x-0 rounded-2xl border border-emerald-400/25 bg-[#0b0e13] p-3 shadow-[0_16px_50px_rgba(0,0,0,0.6)]">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-500">You&apos;re sharing</p>
-                      <p className="mt-1 text-xs leading-5 text-neutral-200">{stageShareDescription}</p>
-                      <div className="mt-3 grid gap-2">
-                        <button type="button" role="menuitem" onClick={() => handleShareStage('x')} className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-left text-xs font-semibold text-white transition hover:border-emerald-300/40 hover:bg-emerald-500/10">Share to X</button>
-                        <button type="button" role="menuitem" onClick={() => handleShareStage('whatsapp')} className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-left text-xs font-semibold text-white transition hover:border-emerald-300/40 hover:bg-emerald-500/10">Share to WhatsApp</button>
-                        <button type="button" role="menuitem" onClick={handleCopyStageLink} className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-left text-xs font-semibold text-white transition hover:border-emerald-300/40 hover:bg-emerald-500/10">{shareCopyFeedback}</button>
+                  <div className="relative min-w-0 lg:shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setIsShareMenuOpen((open) => !open)}
+                      aria-haspopup="true"
+                      aria-expanded={isShareMenuOpen}
+                      aria-label="Share this stage"
+                      title="Share this stage"
+                      className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.03] px-2 py-2 text-xs lg:w-auto lg:min-h-0 lg:px-3 font-semibold text-neutral-200 transition hover:border-white/20 hover:bg-white/[0.06]"
+                    >
+                      <Share2 aria-hidden="true" className="h-4 w-4" />
+                      Share
+                    </button>
+                    {isShareMenuOpen && (
+                      <div role="menu" aria-label="Share this stage" className="dashboard-fade-in absolute bottom-full left-1/2 z-20 mb-2 w-[min(16rem,calc(100vw-2rem))] -translate-x-1/2 rounded-2xl border border-white/10 bg-[#0d1117]/95 p-3 shadow-2xl lg:left-0 lg:-translate-x-0">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-500">You&apos;re sharing</p>
+                        <p className="mt-1 text-xs leading-5 text-neutral-200">{stageShareDescription}</p>
+                        <div className="mt-3 grid gap-2">
+                          <button type="button" role="menuitem" onClick={() => handleShareStage('x')} className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-left text-xs font-semibold text-neutral-200 transition hover:border-white/20 hover:bg-white/[0.06]">Share to X</button>
+                          <button type="button" role="menuitem" onClick={() => handleShareStage('whatsapp')} className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-left text-xs font-semibold text-neutral-200 transition hover:border-white/20 hover:bg-white/[0.06]">Share to WhatsApp</button>
+                          <button type="button" role="menuitem" onClick={handleCopyStageLink} className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-left text-xs font-semibold text-neutral-200 transition hover:border-white/20 hover:bg-white/[0.06]">Copy link</button>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={handleReportStage}
-                  disabled={!slot || slot.id === 'house-default-id' || reportedSlotIds.includes(slot.id) || isReporting}
-                  title="Report this stage for malicious/NSFW content"
-                  aria-label="Report this stage for malicious or NSFW content"
-                  className="inline-flex min-h-11 w-full min-w-0 items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.03] px-2 py-2 text-xs lg:w-auto lg:min-h-0 lg:shrink-0 lg:px-3 font-semibold text-neutral-300 transition hover:border-rose-300/40 hover:bg-rose-500/10 hover:text-rose-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  <Flag aria-hidden="true" className="h-4 w-4" />
-                  {isReporting ? 'Reporting…' : reportedSlotIds.includes(slot?.id || '') ? 'Reported' : 'Report'}
-                </button>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleReportStage}
+                    disabled={!slot || slot.id === 'house-default-id' || reportedSlotIds.includes(slot.id) || isReporting}
+                    title="Report this stage for malicious/NSFW content"
+                    aria-label="Report this stage for malicious or NSFW content"
+                    className="inline-flex min-h-11 w-full min-w-0 items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.03] px-2 py-2 text-xs lg:w-auto lg:min-h-0 lg:shrink-0 lg:px-3 font-semibold text-neutral-200 transition hover:border-white/20 hover:bg-white/[0.06] disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <Flag aria-hidden="true" className="h-4 w-4" />
+                    {isReporting ? 'Reporting…' : reportedSlotIds.includes(slot?.id || '') ? 'Reported' : 'Report'}
+                  </button>
                 </div>
                 <div ref={reactionMenuRef} className="relative order-4 col-span-2 min-w-0 border-t border-white/10 pt-3 lg:order-2 lg:col-span-1 lg:shrink-0 lg:border-t-0 lg:pt-0">
                   <button
@@ -1539,13 +1539,13 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                     aria-expanded={isReactionMenuOpen}
                     aria-label="Send a reaction"
                     title="Send a reaction"
-                    className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-2 py-2 text-xs font-semibold text-neutral-300 transition hover:border-emerald-300/50 hover:bg-emerald-500/10 hover:text-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 disabled:cursor-not-allowed disabled:opacity-40 lg:w-auto lg:min-h-0 lg:px-3"
+                    className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-2 py-2 text-xs font-semibold text-neutral-300 transition hover:border-emerald-300/50 hover:bg-emerald-500/10 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <Smile aria-hidden="true" className="h-4 w-4" />
                     React
                   </button>
                   {isReactionMenuOpen && (
-                    <div role="group" aria-label="Choose a reaction" className="dashboard-fade-in absolute bottom-full left-1/2 z-20 mb-2 w-[min(18rem,calc(100vw-2rem))] -translate-x-1/2 lg:left-0 lg:w-72 lg:translate-x-0 rounded-2xl border border-emerald-400/25 bg-[#0b0e13] p-3 shadow-[0_16px_50px_rgba(0,0,0,0.6)]">
+                    <div role="group" aria-label="Choose a reaction" className="dashboard-fade-in absolute bottom-full left-1/2 z-20 mb-2 w-[min(18rem,calc(100vw-2rem))] -translate-x-1/2 rounded-2xl border border-white/10 bg-[#0d1117]/95 p-3 shadow-2xl lg:left-0 lg:-translate-x-0">
                       <div className="flex flex-wrap items-center gap-2">
                         {REACTION_EMOJIS.map((emoji) => (
                           <button
@@ -1554,7 +1554,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                             onClick={() => sendFromMenu(emoji)}
                             disabled={socketStatus !== 'connected' || isReactionCoolingDown}
                             aria-label={`React with ${emoji}`}
-                            className="rounded-xl border border-white/10 bg-white/[0.03] px-2.5 py-1.5 text-lg transition hover:scale-110 hover:border-emerald-300/50 hover:shadow-[0_0_14px_rgba(16,185,129,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
+                            className="rounded-xl border border-white/10 bg-white/[0.03] px-2.5 py-1.5 text-lg transition hover:scale-110 hover:border-emerald-300/50 hover:shadow-[0_0_14px_rgba(16,185,129,0.22)] disabled:cursor-not-allowed disabled:opacity-40"
                           >
                             {emoji}
                           </button>
@@ -1570,7 +1570,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                               onClick={() => sendFromMenu(emoji)}
                               disabled={socketStatus !== 'connected' || isReactionCoolingDown}
                               aria-label={`React with ${emoji}`}
-                              className="rounded-xl border border-white/10 bg-white/[0.03] px-2 py-1 text-xl transition hover:scale-110 hover:border-emerald-300/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
+                              className="rounded-xl border border-white/10 bg-white/[0.03] px-2 py-1 text-xl transition hover:scale-110 hover:border-emerald-300/50 disabled:cursor-not-allowed disabled:opacity-40"
                             >
                               {emoji}
                             </button>
@@ -1585,7 +1585,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                         }}
                         aria-haspopup="dialog"
                         aria-label="More emoji"
-                        className="mt-2 w-full rounded-xl border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-semibold text-neutral-300 transition hover:border-emerald-300/50 hover:bg-emerald-500/10 hover:text-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+                        className="mt-2 w-full rounded-xl border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-semibold text-neutral-300 transition hover:border-emerald-300/50 hover:bg-emerald-500/10"
                       >
                         More…
                       </button>
@@ -1634,7 +1634,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
               )}
             </div>
 
-            <div className="min-w-0 w-full shrink-0 overflow-hidden rounded-3xl border border-white/10 bg-[linear-gradient(180deg,_rgba(17,20,27,0.94),_rgba(8,10,14,0.98))] px-3 py-3 shadow-[0_16px_50px_rgba(0,0,0,0.25)] ring-1 ring-white/5 sm:px-5 sm:py-4">
+            <div className="min-w-0 w-full shrink-0 overflow-hidden rounded-3xl border border-white/10 bg-[linear-gradient(180deg,_rgba(17,20,27,0.94),_rgba(8,10,14,0.98))] px-3 py-3 shadow-[0_1px_0_rgba(255,255,255,0.02)]">
               <div className="mb-2 flex items-center justify-between gap-3 sm:mb-3">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-neutral-400">History ticker</p>
@@ -1644,11 +1644,13 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                   <Link
                     href="/hall-of-fame"
                     title="See the longest reigns and top takeovers"
-                    className="rounded-full border border-amber-400/20 bg-amber-500/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-amber-200 transition hover:border-amber-300/40 hover:bg-amber-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 sm:px-3 sm:py-1 sm:text-xs sm:tracking-[0.18em]"
+                    className="rounded-full border border-amber-400/20 bg-amber-500/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-amber-200 transition hover:border-amber-300/40 hover:bg-amber-500/15"
                   >
                     🏆 Hall of Fame
                   </Link>
-                  <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-neutral-300 sm:px-3 sm:py-1 sm:text-xs sm:tracking-[0.18em]">Live ledger</span>
+                  <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-neutral-300 sm:px-3 sm:py-1 sm:text-xs">
+                    {historyList.length} Recent
+                  </span>
                 </div>
               </div>
 
@@ -1656,10 +1658,10 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                 <div className="min-h-[3.625rem] min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-black/20 px-2 py-2 sm:px-3 sm:py-3">
                   <div className="dashboard-marquee-track flex min-w-max items-center gap-3 whitespace-nowrap px-2 sm:gap-6 sm:px-4">
                     {historyTickerItems.map((item, idx) => (
-                      <div key={`${item.displayName || 'history'}-${idx}`} className="flex items-center gap-1.5 rounded-2xl border border-white/10 bg-white/[0.04] px-2 py-1 text-xs shadow-[0_8px_30px_rgba(0,0,0,0.2)] sm:gap-2 sm:px-4 sm:py-2 sm:text-sm">
+                      <div key={`${item.displayName || 'history'}-${idx}`} className="flex items-center gap-1.5 rounded-2xl border border-white/10 bg-white/[0.04] px-2 py-1 text-xs shadow-[0_8px_20px_rgba(0,0,0,0.15)]">
                         <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-xs text-emerald-200 sm:h-7 sm:w-7 sm:text-base">↗</span>
                         <span className="max-w-[120px] truncate font-semibold text-white">{item.displayName || 'Anonymous Takeover'}</span>
-                        <span className="max-w-[120px] truncate rounded-full border border-white/10 bg-black/30 px-2 py-0.5 text-[10px] text-neutral-300 sm:px-2.5 sm:py-1 sm:text-xs">{stripProtocol(item.currentUrl) || 'standby'}</span>
+                        <span className="max-w-[120px] truncate rounded-full border border-white/10 bg-black/30 px-2 py-0.5 text-[10px] text-neutral-300 sm:px-2.5 sm:py-1 sm:text-xs">{stripProtocol(item.currentUrl || '')}</span>
                         <span className="rounded-full border border-amber-400/20 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-200 sm:px-2.5 sm:py-1 sm:text-xs">${item.currentBid || '0.00'}</span>
                       </div>
                     ))}
@@ -1688,100 +1690,100 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
             <div
               ref={embedDialogRef}
               tabIndex={-1}
-              className="dashboard-slide-up relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-[2rem] border border-emerald-400/25 bg-[linear-gradient(180deg,_rgba(12,18,16,0.98),_rgba(7,10,12,0.98))] p-6 shadow-[0_30px_120px_rgba(0,0,0,0.6)] ring-1 ring-white/5 focus:outline-none sm:p-7"
+              className="dashboard-slide-up relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-[2rem] border border-emerald-400/25 bg-[linear-gradient(180deg,_rgba(12,18,16,0.98),_rgba(7,9,13,0.98))] p-5 shadow-[0_25px_80px_rgba(0,0,0,0.45)] sm:p-6"
               role="dialog"
               aria-modal="true"
               aria-labelledby="takeover-success-title"
             >
-            <button
-              type="button"
-              onClick={() => setIsEmbedOpen(false)}
-              className="absolute right-4 top-4 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300 transition hover:border-white/20 hover:bg-white/10 hover:text-white"
-            >
-              Close
-            </button>
-            <div className="max-w-xl">
-              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-500/12 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-emerald-200">
-                <CheckCircle2 className="h-4 w-4" />
-                Takeover successful
+              <button
+                type="button"
+                onClick={() => setIsEmbedOpen(false)}
+                className="absolute right-4 top-4 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300 transition hover:border-white/20 hover:bg-white/10"
+              >
+                Close
+              </button>
+              <div className="max-w-xl">
+                <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-500/12 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-emerald-200">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Takeover successful
+                </div>
+                <h2 id="takeover-success-title" className="mt-4 text-2xl font-black text-white sm:text-3xl">Your stage widget is ready.</h2>
+                <p className="mt-3 text-sm leading-7 text-neutral-300 sm:text-base">
+                  Drop this embed into your blog, landing page, or community dashboard so your audience can track your control of the stage in real time.
+                </p>
               </div>
-              <h2 id="takeover-success-title" className="mt-4 text-2xl font-black text-white sm:text-3xl">Your stage widget is ready.</h2>
-              <p className="mt-3 text-sm leading-7 text-neutral-300 sm:text-base">
-                Drop this embed into your blog, landing page, or community dashboard so your audience can track your control of the stage in real time.
-              </p>
-            </div>
 
-            <div className="mt-6 rounded-3xl border border-white/10 bg-black/25 p-4">
-              <textarea
-                readOnly
-                onClick={(e) => (e.target as HTMLTextAreaElement).select()}
-                value={embedCode}
-                className="h-28 w-full resize-none rounded-2xl border border-white/10 bg-black/35 p-4 font-mono text-base leading-6 text-emerald-200 outline-none sm:text-sm"
-              />
-              <div className="mt-4 rounded-2xl border border-amber-300/25 bg-amber-400/[0.08] px-4 py-3 text-sm leading-6 text-amber-100">
-                <p className="font-semibold">⏱ Your free protection expires in {formatClock(protectionTimer)} — after that, anyone can steal your stage for ${stealPrice}.</p>
-                <p className="mt-1 text-xs leading-5 text-amber-100/75">Share now while you&apos;re still the one on stage.</p>
+              <div className="mt-6 rounded-3xl border border-white/10 bg-black/25 p-4">
+                <textarea
+                  readOnly
+                  onClick={(e) => (e.target as HTMLTextAreaElement).select()}
+                  value={embedCode}
+                  className="h-28 w-full resize-none rounded-2xl border border-white/10 bg-black/35 p-4 font-mono text-base leading-6 text-emerald-200 outline-none sm:text-sm"
+                />
+                <div className="mt-4 rounded-2xl border border-amber-300/25 bg-amber-400/[0.08] px-4 py-3 text-sm leading-6 text-amber-100">
+                  <p className="font-semibold">⏱ Your free protection expires in {formatClock(protectionTimer)} — after that, anyone can seize the stage for ${stealPrice}.</p>
+                  <p className="mt-1 text-xs leading-5 text-amber-100/75">Share now while you&apos;re still the one on stage.</p>
+                </div>
+                <div role="group" aria-label="Share your takeover" className="mt-4 flex flex-wrap items-center gap-2">
+                  <span className="mr-1 text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">Share</span>
+                  <button
+                    type="button"
+                    title="Share to X"
+                    aria-label="Share to X"
+                    onClick={() => handleSocialShare('x')}
+                    className="group inline-flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-400/25 bg-emerald-500/10 text-emerald-100 transition hover:border-emerald-300/50 hover:bg-emerald-500/15"
+                  >
+                    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-current transition-transform group-hover:scale-110"><path d="M18.9 2H22l-6.8 7.8L23.2 22h-6.3L12 14.6 5.6 22H2.5l7.1-8.2L1 2h6.5l5 6.8L18.9 2Zm-1.8 18h1.8L7.1 3.9H5.2L17.1 20Z"/></svg>
+                  </button>
+                  <button
+                    type="button"
+                    title="Share to Facebook"
+                    aria-label="Share to Facebook"
+                    onClick={() => handleSocialShare('facebook')}
+                    className="group inline-flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-400/25 bg-emerald-500/10 text-emerald-100 transition hover:border-emerald-300/50 hover:bg-emerald-500/15"
+                  >
+                    <span aria-hidden="true" className="text-xl font-black leading-none transition-transform group-hover:scale-110">f</span>
+                  </button>
+                  <button
+                    type="button"
+                    title="Share to LinkedIn"
+                    aria-label="Share to LinkedIn"
+                    onClick={() => handleSocialShare('linkedin')}
+                    className="group inline-flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-400/25 bg-emerald-500/10 text-emerald-100 transition hover:border-emerald-300/50 hover:bg-emerald-500/15"
+                  >
+                    <span aria-hidden="true" className="text-sm font-black leading-none transition-transform group-hover:scale-110">in</span>
+                  </button>
+                  <button
+                    type="button"
+                    title="Share to Reddit"
+                    aria-label="Share to Reddit"
+                    onClick={() => handleSocialShare('reddit')}
+                    className="group inline-flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-400/25 bg-emerald-500/10 text-emerald-100 transition hover:border-emerald-300/50 hover:bg-emerald-500/15"
+                  >
+                    <span aria-hidden="true" className="text-sm font-black leading-none transition-transform group-hover:scale-110">r/</span>
+                  </button>
+                  <button
+                    type="button"
+                    title="Share with another app"
+                    aria-label="Share with another app"
+                    onClick={handleNativeShare}
+                    className="group inline-flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-400/25 bg-emerald-500/10 text-emerald-100 transition hover:border-emerald-300/50 hover:bg-emerald-500/15"
+                  >
+                    <Share2 aria-hidden="true" className="h-4 w-4 transition-transform group-hover:scale-110" />
+                  </button>
+                </div>
+                <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-xs leading-5 text-neutral-400">Tip: click inside the code block to select it, or use the copy button for one-tap clipboard access.</p>
+                  <button
+                    type="button"
+                    onClick={handleCopyEmbed}
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-400/25 bg-emerald-500/12 px-4 py-2.5 text-sm font-semibold text-emerald-100 transition hover:border-emerald-300/40 hover:bg-emerald-500/18"
+                  >
+                    <Copy className="h-4 w-4" />
+                    {copyFeedback}
+                  </button>
+                </div>
               </div>
-              <div role="group" aria-label="Share your takeover" className="mt-4 flex flex-wrap items-center gap-2">
-                <span className="mr-1 text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">Share</span>
-                <button
-                  type="button"
-                  title="Share to X"
-                  aria-label="Share to X"
-                  onClick={() => handleSocialShare('x')}
-                  className="group inline-flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-400/25 bg-emerald-500/10 text-emerald-100 transition hover:border-emerald-300/50 hover:bg-emerald-500/20 hover:shadow-[0_0_18px_rgba(16,185,129,0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
-                >
-                  <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-current transition-transform group-hover:scale-110"><path d="M18.9 2H22l-6.8 7.8L23.2 22h-6.3L12 14.6 5.6 22H2.4l7.3-8.4L1.9 2h6.5l4.5 6.8L18.9 2Zm-1.1 18h1.7L7.4 3.9H5.6L17.8 20Z" /></svg>
-                </button>
-                <button
-                  type="button"
-                  title="Share to Facebook"
-                  aria-label="Share to Facebook"
-                  onClick={() => handleSocialShare('facebook')}
-                  className="group inline-flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-400/25 bg-emerald-500/10 text-emerald-100 transition hover:border-emerald-300/50 hover:bg-emerald-500/20 hover:shadow-[0_0_18px_rgba(16,185,129,0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
-                >
-                  <span aria-hidden="true" className="text-xl font-black leading-none transition-transform group-hover:scale-110">f</span>
-                </button>
-                <button
-                  type="button"
-                  title="Share to LinkedIn"
-                  aria-label="Share to LinkedIn"
-                  onClick={() => handleSocialShare('linkedin')}
-                  className="group inline-flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-400/25 bg-emerald-500/10 text-emerald-100 transition hover:border-emerald-300/50 hover:bg-emerald-500/20 hover:shadow-[0_0_18px_rgba(16,185,129,0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
-                >
-                  <span aria-hidden="true" className="text-sm font-black leading-none transition-transform group-hover:scale-110">in</span>
-                </button>
-                <button
-                  type="button"
-                  title="Share to Reddit"
-                  aria-label="Share to Reddit"
-                  onClick={() => handleSocialShare('reddit')}
-                  className="group inline-flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-400/25 bg-emerald-500/10 text-emerald-100 transition hover:border-emerald-300/50 hover:bg-emerald-500/20 hover:shadow-[0_0_18px_rgba(16,185,129,0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
-                >
-                  <span aria-hidden="true" className="text-sm font-black leading-none transition-transform group-hover:scale-110">r/</span>
-                </button>
-                <button
-                  type="button"
-                  title="Share with another app"
-                  aria-label="Share with another app"
-                  onClick={handleNativeShare}
-                  className="group inline-flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-400/25 bg-emerald-500/10 text-emerald-100 transition hover:border-emerald-300/50 hover:bg-emerald-500/20 hover:shadow-[0_0_18px_rgba(16,185,129,0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
-                >
-                  <Share2 aria-hidden="true" className="h-4 w-4 transition-transform group-hover:scale-110" />
-                </button>
-              </div>
-              <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-xs leading-5 text-neutral-400">Tip: click inside the code block to select it, or use the copy button for one-tap clipboard access.</p>
-                <button
-                  type="button"
-                  onClick={handleCopyEmbed}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-400/25 bg-emerald-500/12 px-4 py-2.5 text-sm font-semibold text-emerald-100 transition hover:border-emerald-300/40 hover:bg-emerald-500/18"
-                >
-                  <Copy className="h-4 w-4" />
-                  {copyFeedback}
-                </button>
-              </div>
-            </div>
             </div>
           </div>
         </>
@@ -1796,64 +1798,64 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
             onClick={() => setIsConfirmOpen(false)}
           />
           <div className="dashboard-fade-in absolute inset-0 z-[70] flex items-center justify-center p-4">
-            <div ref={confirmDialogRef} tabIndex={-1} className="dashboard-slide-up relative max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,_rgba(16,19,24,0.98),_rgba(7,9,13,0.98))] p-6 shadow-[0_30px_120px_rgba(0,0,0,0.6)] ring-1 ring-white/5 focus:outline-none sm:p-7" role="dialog" aria-modal="true" aria-labelledby="checkout-confirm-title">
-            <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/25 bg-amber-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-amber-200">
-              <ShieldCheck className="h-4 w-4" />
-              Confirm checkout details
-            </div>
-            <h2 id="checkout-confirm-title" className="mt-4 text-2xl font-black text-white">Review your takeover</h2>
-            <p className="mt-2 text-sm leading-6 text-neutral-300">
-              Checkout will open in a secure Stripe session with the configuration below.
-            </p>
+            <div ref={confirmDialogRef} tabIndex={-1} className="dashboard-slide-up relative max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,_rgba(12,14,18,0.98),_rgba(7,9,13,0.98))] p-5 shadow-[0_25px_80px_rgba(0,0,0,0.45)] sm:p-6">
+              <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/25 bg-amber-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-amber-200">
+                <ShieldCheck className="h-4 w-4" />
+                Confirm checkout details
+              </div>
+              <h2 id="checkout-confirm-title" className="mt-4 text-2xl font-black text-white">Review your takeover</h2>
+              <p className="mt-2 text-sm leading-6 text-neutral-300">
+                Checkout will open in a secure Stripe session with the configuration below.
+              </p>
 
-            <dl className="mt-6 grid gap-3 rounded-3xl border border-white/10 bg-black/20 p-4 text-sm sm:grid-cols-2">
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-400">Target URL</dt>
-                <dd className="mt-2 break-all font-semibold text-white">{normalizedTargetUrl}</dd>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-400">Checkout total</dt>
-                <dd className="mt-2 flex items-center gap-2 text-2xl font-black text-white">
-                  ${stealPrice}
-                  {isStealPriceCapped && (
-                    <span className="inline-flex items-center rounded-full border border-amber-300/40 bg-amber-300/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.18em] text-amber-200">
-                      Capped at $299
-                    </span>
-                  )}
-                </dd>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-400">Display name</dt>
-                <dd className="mt-2 font-semibold text-white">{displayName || 'Anonymous Takeover'}</dd>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:col-span-2">
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-400">Start path</dt>
-                <dd className="mt-2 font-semibold text-white">{startPath || 'No deep link provided'}</dd>
-              </div>
-            </dl>
+              <dl className="mt-6 grid gap-3 rounded-3xl border border-white/10 bg-black/20 p-4 text-sm sm:grid-cols-2">
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                  <dt className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-400">Target URL</dt>
+                  <dd className="mt-2 break-all font-semibold text-white">{normalizedTargetUrl}</dd>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                  <dt className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-400">Checkout total</dt>
+                  <dd className="mt-2 flex items-center gap-2 text-2xl font-black text-white">
+                    ${stealPrice}
+                    {isStealPriceCapped && (
+                      <span className="inline-flex items-center rounded-full border border-amber-300/40 bg-amber-300/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.18em] text-amber-200">
+                        Capped at $299
+                      </span>
+                    )}
+                  </dd>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                  <dt className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-400">Display name</dt>
+                  <dd className="mt-2 font-semibold text-white">{displayName || 'Anonymous Takeover'}</dd>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:col-span-2">
+                  <dt className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-400">Start path</dt>
+                  <dd className="mt-2 font-semibold text-white">{startPath || 'No deep link provided'}</dd>
+                </div>
+              </dl>
 
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
-              <button
-                type="button"
-                onClick={() => setIsConfirmOpen(false)}
-                className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-neutral-200 transition hover:border-white/20 hover:bg-white/10 hover:text-white"
-              >
-                Back to edit
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmCheckout}
-                disabled={!canStartCheckout}
-                className={`inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-black uppercase tracking-[0.18em] transition ${
-                  canStartCheckout
-                    ? 'border border-emerald-300/25 bg-[linear-gradient(135deg,_rgba(52,211,153,0.96),_rgba(251,191,36,0.92))] text-slate-950 shadow-[0_0_30px_rgba(16,185,129,0.25)] hover:-translate-y-0.5'
-                    : 'cursor-not-allowed border border-white/10 bg-white/5 text-neutral-500'
-                }`}
-              >
-                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                {isSubmitting ? 'Opening secure checkout…' : 'Confirm and continue'}
-              </button>
-            </div>
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  onClick={() => setIsConfirmOpen(false)}
+                  className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-neutral-200 transition hover:border-white/20 hover:bg-white/10 hover:text-white"
+                >
+                  Back to edit
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmCheckout}
+                  disabled={!canStartCheckout}
+                  className={`inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-black uppercase tracking-[0.18em] transition ${
+                    canStartCheckout
+                      ? 'border border-emerald-300/25 bg-[linear-gradient(135deg,_rgba(52,211,153,0.96),_rgba(251,191,36,0.92))] text-slate-950 shadow-[0_0_30px_rgba(16,185,129,0.25)] hover:-translate-y-0.5'
+                      : 'cursor-not-allowed border border-white/10 bg-white/5 text-neutral-500'
+                  }`}
+                >
+                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                  {isSubmitting ? 'Opening secure checkout…' : 'Confirm and continue'}
+                </button>
+              </div>
             </div>
           </div>
         </>
