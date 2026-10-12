@@ -21,15 +21,29 @@ interface LastTakeover {
   createdAt: string | null;
 }
 
+// All sizes scale with the smaller viewport dimension (vmin) so the page stays
+// legible once the stream canvas is scaled to fit the dashboard.
 const card = {
-  border: '1px solid rgba(255,255,255,0.1)',
-  background: 'rgba(255,255,255,0.03)',
-  borderRadius: '0.75rem',
-  padding: '0.75rem 1rem',
+  border: '1px solid rgba(255,255,255,0.14)',
+  background: 'rgba(255,255,255,0.04)',
+  borderRadius: '1.2vmin',
+  padding: 'clamp(0.75rem, 2vmin, 1.5rem) clamp(1rem, 2.6vmin, 2rem)',
   textAlign: 'left' as const,
   minWidth: 0,
 };
-const label = { color: '#737373', fontSize: '0.65rem', letterSpacing: '0.18em' };
+const label = {
+  color: '#9ca3af',
+  fontSize: 'clamp(0.75rem, 1.9vmin, 1.15rem)',
+  letterSpacing: '0.18em',
+  fontWeight: 700,
+};
+const cardValue = {
+  fontSize: 'clamp(1rem, 2.7vmin, 1.7rem)',
+  fontWeight: 700,
+  color: '#f5f5f5',
+  overflowWrap: 'anywhere' as const,
+  marginTop: '0.4vmin',
+};
 
 export default function HouseDefaultPage() {
   const [price, setPrice] = useState(DEFAULT_STEAL_PRICE);
@@ -107,7 +121,7 @@ export default function HouseDefaultPage() {
       style={{
         minHeight: '100vh',
         boxSizing: 'border-box',
-        padding: '2vmin',
+        padding: '2.5vmin',
         display: 'grid',
         placeItems: 'center',
         background: '#060608',
@@ -116,42 +130,62 @@ export default function HouseDefaultPage() {
         textAlign: 'center',
       }}
     >
-      <section style={{ width: '100%', maxWidth: '64rem', display: 'grid', gap: 'clamp(0.75rem, 2.5vmin, 1.5rem)' }}>
+      <section
+        style={{
+          width: '100%',
+          maxWidth: 'min(96vw, 90rem)',
+          display: 'grid',
+          gap: 'clamp(0.75rem, 2.6vmin, 2rem)',
+        }}
+      >
         <div>
-          <div style={{ fontSize: 'clamp(1.5rem, 5vmin, 3rem)', fontWeight: 900, letterSpacing: '0.2em' }}>THE ONLY TAB</div>
-          <div style={{ marginTop: '0.5rem', color: '#a3a3a3', fontSize: 'clamp(0.85rem, 2.2vmin, 1.25rem)' }}>
+          <div style={{ fontSize: 'clamp(2rem, 8vmin, 5.5rem)', fontWeight: 900, letterSpacing: '0.2em', color: '#ffffff' }}>
+            THE ONLY TAB
+          </div>
+          <div style={{ marginTop: '1vmin', color: '#d1d5db', fontSize: 'clamp(1.05rem, 3.2vmin, 2.1rem)' }}>
             Pay to put any website on this screen for {TAKEOVER_DURATION_MINUTES} minutes.
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(12rem, 1fr))', gap: '0.75rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(16rem, 1fr))', gap: 'clamp(0.6rem, 1.8vmin, 1.5rem)' }}>
           <div style={card}>
             <div style={label}>NEXT STEAL PRICE</div>
-            <div style={{ color: '#6ee7b7', fontSize: 'clamp(1.25rem, 3.5vmin, 2rem)', fontWeight: 800 }}>${price}</div>
+            <div style={{ color: '#6ee7b7', fontSize: 'clamp(1.75rem, 6vmin, 4rem)', fontWeight: 800, lineHeight: 1.1 }}>
+              ${price}
+            </div>
           </div>
           <div style={card}>
             <div style={label}>LATEST TAKEOVER</div>
-            <div style={{ fontSize: '0.85rem', overflowWrap: 'anywhere' }}>
+            <div style={cardValue}>
               {last ? `${last.displayName} · ${last.url}${last.bid ? ` · $${last.bid}` : ''}${ago ? ` · ${ago}` : ''}` : 'Nobody yet'}
             </div>
           </div>
           {reign && (
             <div style={card}>
               <div style={label}>LONGEST REIGN</div>
-              <div style={{ fontSize: '0.85rem', overflowWrap: 'anywhere' }}>
+              <div style={cardValue}>
                 {reign.name} · {formatDuration(reign.minutes)}
               </div>
             </div>
           )}
         </div>
 
-        <ol style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(12rem, 1fr))', gap: '0.75rem' }}>
+        <ol
+          style={{
+            listStyle: 'none',
+            margin: 0,
+            padding: 0,
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(16rem, 1fr))',
+            gap: 'clamp(0.6rem, 1.8vmin, 1.5rem)',
+          }}
+        >
           {steps.map(([n, title, sub]) => (
             <li key={n} style={card}>
-              <div style={{ color: '#6ee7b7', fontWeight: 800, letterSpacing: '0.12em', fontSize: '0.85rem' }}>
+              <div style={{ color: '#6ee7b7', fontWeight: 800, letterSpacing: '0.12em', fontSize: 'clamp(1rem, 2.7vmin, 1.7rem)' }}>
                 {n}. {title}
               </div>
-              <div style={{ color: '#a3a3a3', fontSize: '0.75rem', marginTop: '0.25rem' }}>{sub}</div>
+              <div style={{ color: '#d1d5db', fontSize: 'clamp(0.85rem, 2.1vmin, 1.3rem)', marginTop: '0.6vmin' }}>{sub}</div>
             </li>
           ))}
         </ol>
@@ -159,12 +193,12 @@ export default function HouseDefaultPage() {
         <div
           aria-live="off"
           style={{
-            minHeight: '3rem',
+            minHeight: '4rem',
             display: 'grid',
             placeItems: 'center',
-            fontSize: 'clamp(0.95rem, 2.6vmin, 1.5rem)',
+            fontSize: 'clamp(1.1rem, 3.5vmin, 2.2rem)',
             fontStyle: 'italic',
-            color: '#d4d4d4',
+            color: '#f3f4f6',
             opacity: visible ? 1 : 0,
             transition: `opacity ${FADE_MS}ms ease-in-out`,
           }}
@@ -172,7 +206,7 @@ export default function HouseDefaultPage() {
           “{getIdleLine(lineIndex, price)}”
         </div>
 
-        <div style={{ color: '#6ee7b7', fontSize: '0.8rem', letterSpacing: '0.18em', fontWeight: 700 }}>
+        <div style={{ color: '#6ee7b7', fontSize: 'clamp(0.9rem, 2.3vmin, 1.4rem)', letterSpacing: '0.18em', fontWeight: 800 }}>
           ▼ HIT STEAL STAGE BELOW ▼
         </div>
       </section>
