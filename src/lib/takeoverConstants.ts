@@ -1,0 +1,2 @@
+export const TAKEOVER_DURATION_MINUTES = 90;
+export const PROTECTION_WINDOW_SECONDS = 90;

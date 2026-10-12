@@ -1,8 +1,8 @@
+import { PROTECTION_WINDOW_SECONDS, TAKEOVER_DURATION_MINUTES } from './takeoverConstants';
 import { calculateStealPriceCents, getBasePrice, PricingSettings } from './pricing';
 
-const PROTECTION_WINDOW_SECONDS = 90;
 const QUOTE_LOCK_MINUTES = 5;
-export const TAKEOVER_DURATION_MINUTES = 90;
+export { TAKEOVER_DURATION_MINUTES };
 export const ACTIVE_SLOT_ORDER_BY_SQL = 'created_at DESC, id DESC';
 
 interface ActiveSlotSnapshot {
