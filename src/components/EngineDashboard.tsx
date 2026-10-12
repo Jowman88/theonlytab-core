@@ -1462,83 +1462,11 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                 </div>
               </div>
 
-              <div className="flex w-full shrink-0 justify-center lg:justify-end">
-                <button
-                  type="button"
-                  onClick={() => setIsFormOpen((current) => !current)}
-                  ref={stealStageButtonRef}
-                  aria-controls="steal-stage-panel"
-                  aria-expanded={isFormOpen}
-                  className="group inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-emerald-300/25 bg-[linear-gradient(135deg,_rgba(52,211,153,0.95),_rgba(6,182,212,0.88))] px-5 py-3 text-xs font-black uppercase tracking-[0.2em] text-slate-950 shadow-[0_0_30px_rgba(16,185,129,0.35)] animate-pulse motion-reduce:animate-none transition duration-200 hover:-translate-y-0.5 hover:animate-none hover:shadow-[0_0_45px_rgba(16,185,129,0.6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07080c] sm:w-auto"
-                >
-                  <Zap className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
-                  SEIZE THE STAGE
-                </button>
-              </div>
-
-              <div className="grid shrink-0 grid-cols-2 gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm shadow-[0_16px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/5 lg:flex lg:flex-wrap lg:items-center lg:gap-x-4 lg:gap-y-2 lg:py-2">
+              <div className="grid shrink-0 grid-cols-2 gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm shadow-[0_16px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/5 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:gap-x-4 lg:py-2">
+                <div className="contents lg:flex lg:items-center lg:justify-start lg:gap-4">
                 <div className="order-1 min-w-0 lg:order-1 lg:min-w-[8rem] lg:max-w-[14rem]">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-500">Stage owner</p>
                   <p className="truncate text-sm font-semibold text-white sm:text-base">{stageOwner}</p>
-                </div>
-                <div className="order-3 col-span-2 grid grid-cols-4 gap-2 lg:order-3 lg:ml-auto lg:flex lg:items-center lg:gap-3">
-                <button
-                  type="button"
-                  onClick={handleLikeStage}
-                  disabled={!slot || slot.id === 'house-default-id' || slot.isReported || likedSlotIds.includes(slot.id) || isLiking}
-                  title="Like this stage to raise its steal price"
-                  aria-label={`Like this stage. ${activeLikes} active likes`}
-                  className="inline-flex min-h-11 w-full min-w-0 items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.03] px-2 py-2 text-xs lg:w-auto lg:min-h-0 lg:shrink-0 lg:px-3 font-semibold text-neutral-300 transition hover:border-pink-300/40 hover:bg-pink-500/10 hover:text-pink-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-300 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  <Heart aria-hidden="true" className={`h-4 w-4 ${slot && likedSlotIds.includes(slot.id) ? 'fill-pink-300 text-pink-300' : ''}`} />
-                  {activeLikes} {likedSlotIds.includes(slot?.id || '') ? 'Liked' : 'Like'}
-                </button>
-                <div className="relative min-w-0 lg:shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => setIsShareMenuOpen((open) => !open)}
-                    aria-haspopup="true"
-                    aria-expanded={isShareMenuOpen}
-                    aria-label="Share this stage"
-                    title="Share this stage"
-                    className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.03] px-2 py-2 text-xs lg:w-auto lg:min-h-0 lg:px-3 font-semibold text-neutral-300 transition hover:border-emerald-300/40 hover:bg-emerald-500/10 hover:text-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
-                  >
-                    <Share2 aria-hidden="true" className="h-4 w-4" />
-                    Share
-                  </button>
-                  {isShareMenuOpen && (
-                    <div role="menu" aria-label="Share this stage" className="dashboard-fade-in absolute bottom-full left-1/2 z-20 mb-2 w-[min(16rem,calc(100vw-2rem))] -translate-x-1/2 lg:left-0 lg:w-64 lg:translate-x-0 rounded-2xl border border-emerald-400/25 bg-[#0b0e13] p-3 shadow-[0_16px_50px_rgba(0,0,0,0.6)]">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-500">You&apos;re sharing</p>
-                      <p className="mt-1 text-xs leading-5 text-neutral-200">{stageShareDescription}</p>
-                      <div className="mt-3 grid gap-2">
-                        <button type="button" role="menuitem" onClick={() => handleShareStage('x')} className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-left text-xs font-semibold text-white transition hover:border-emerald-300/40 hover:bg-emerald-500/10">Share to X</button>
-                        <button type="button" role="menuitem" onClick={() => handleShareStage('whatsapp')} className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-left text-xs font-semibold text-white transition hover:border-emerald-300/40 hover:bg-emerald-500/10">Share to WhatsApp</button>
-                        <button type="button" role="menuitem" onClick={handleCopyStageLink} className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-left text-xs font-semibold text-white transition hover:border-emerald-300/40 hover:bg-emerald-500/10">{shareCopyFeedback}</button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={handleReportStage}
-                  disabled={!slot || slot.id === 'house-default-id' || reportedSlotIds.includes(slot.id) || isReporting}
-                  title="Report this stage for malicious/NSFW content"
-                  aria-label="Report this stage for malicious or NSFW content"
-                  className="inline-flex min-h-11 w-full min-w-0 items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.03] px-2 py-2 text-xs lg:w-auto lg:min-h-0 lg:shrink-0 lg:px-3 font-semibold text-neutral-300 transition hover:border-rose-300/40 hover:bg-rose-500/10 hover:text-rose-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  <Flag aria-hidden="true" className="h-4 w-4" />
-                  {isReporting ? 'Reporting…' : reportedSlotIds.includes(slot?.id || '') ? 'Reported' : 'Report'}
-                </button>
-                <Link
-                  href="/hall-of-fame"
-                  title="See the longest reigns and top takeovers"
-                  aria-label="Hall of Fame"
-                  className="inline-flex min-h-11 w-full min-w-0 items-center justify-center gap-2 rounded-xl border border-amber-400/20 bg-amber-500/10 px-2 py-2 text-xs font-semibold text-amber-200 transition hover:border-amber-300/40 hover:bg-amber-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 lg:w-auto lg:min-h-0 lg:shrink-0 lg:px-3"
-                >
-                  <Trophy aria-hidden="true" className="h-4 w-4" />
-                  <span className="hidden sm:inline">Hall of Fame</span>
-                  <span className="sm:hidden">Fame</span>
-                </Link>
                 </div>
                 <div ref={reactionMenuRef} className="relative order-4 col-span-2 min-w-0 border-t border-white/10 pt-3 lg:order-2 lg:col-span-1 lg:shrink-0 lg:border-t-0 lg:pt-0">
                   <button
@@ -1603,9 +1531,82 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                     </div>
                   )}
                 </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsFormOpen((current) => !current)}
+                  ref={stealStageButtonRef}
+                  aria-controls="steal-stage-panel"
+                  aria-expanded={isFormOpen}
+                  className="group order-5 col-span-2 inline-flex w-full lg:order-none lg:col-span-1 items-center justify-center gap-2 rounded-2xl border border-emerald-300/25 bg-[linear-gradient(135deg,_rgba(52,211,153,0.95),_rgba(6,182,212,0.88))] px-5 py-3 lg:py-1.5 text-xs font-black uppercase tracking-[0.2em] text-slate-950 shadow-[0_0_30px_rgba(16,185,129,0.35)] animate-pulse motion-reduce:animate-none transition duration-200 hover:-translate-y-0.5 hover:animate-none hover:shadow-[0_0_45px_rgba(16,185,129,0.6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07080c] lg:w-auto"
+                >
+                  <Zap className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+                  SEIZE THE STAGE
+                </button>
+                <div className="contents lg:flex lg:items-center lg:justify-end lg:gap-4">
+                <div className="order-3 col-span-2 grid grid-cols-4 gap-2 lg:order-3 lg:flex lg:items-center lg:gap-3">
+                <button
+                  type="button"
+                  onClick={handleLikeStage}
+                  disabled={!slot || slot.id === 'house-default-id' || slot.isReported || likedSlotIds.includes(slot.id) || isLiking}
+                  title="Like this stage to raise its steal price"
+                  aria-label={`Like this stage. ${activeLikes} active likes`}
+                  className="inline-flex min-h-11 w-full min-w-0 items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.03] px-2 py-2 text-xs lg:w-auto lg:min-h-0 lg:shrink-0 lg:px-3 font-semibold text-neutral-300 transition hover:border-pink-300/40 hover:bg-pink-500/10 hover:text-pink-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-300 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <Heart aria-hidden="true" className={`h-4 w-4 ${slot && likedSlotIds.includes(slot.id) ? 'fill-pink-300 text-pink-300' : ''}`} />
+                  {activeLikes} {likedSlotIds.includes(slot?.id || '') ? 'Liked' : 'Like'}
+                </button>
+                <div className="relative min-w-0 lg:shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setIsShareMenuOpen((open) => !open)}
+                    aria-haspopup="true"
+                    aria-expanded={isShareMenuOpen}
+                    aria-label="Share this stage"
+                    title="Share this stage"
+                    className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.03] px-2 py-2 text-xs lg:w-auto lg:min-h-0 lg:px-3 font-semibold text-neutral-300 transition hover:border-emerald-300/40 hover:bg-emerald-500/10 hover:text-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+                  >
+                    <Share2 aria-hidden="true" className="h-4 w-4" />
+                    Share
+                  </button>
+                  {isShareMenuOpen && (
+                    <div role="menu" aria-label="Share this stage" className="dashboard-fade-in absolute bottom-full left-1/2 z-20 mb-2 w-[min(16rem,calc(100vw-2rem))] -translate-x-1/2 lg:left-0 lg:w-64 lg:translate-x-0 rounded-2xl border border-emerald-400/25 bg-[#0b0e13] p-3 shadow-[0_16px_50px_rgba(0,0,0,0.6)]">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-500">You&apos;re sharing</p>
+                      <p className="mt-1 text-xs leading-5 text-neutral-200">{stageShareDescription}</p>
+                      <div className="mt-3 grid gap-2">
+                        <button type="button" role="menuitem" onClick={() => handleShareStage('x')} className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-left text-xs font-semibold text-white transition hover:border-emerald-300/40 hover:bg-emerald-500/10">Share to X</button>
+                        <button type="button" role="menuitem" onClick={() => handleShareStage('whatsapp')} className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-left text-xs font-semibold text-white transition hover:border-emerald-300/40 hover:bg-emerald-500/10">Share to WhatsApp</button>
+                        <button type="button" role="menuitem" onClick={handleCopyStageLink} className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-left text-xs font-semibold text-white transition hover:border-emerald-300/40 hover:bg-emerald-500/10">{shareCopyFeedback}</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={handleReportStage}
+                  disabled={!slot || slot.id === 'house-default-id' || reportedSlotIds.includes(slot.id) || isReporting}
+                  title="Report this stage for malicious/NSFW content"
+                  aria-label="Report this stage for malicious or NSFW content"
+                  className="inline-flex min-h-11 w-full min-w-0 items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.03] px-2 py-2 text-xs lg:w-auto lg:min-h-0 lg:shrink-0 lg:px-3 font-semibold text-neutral-300 transition hover:border-rose-300/40 hover:bg-rose-500/10 hover:text-rose-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <Flag aria-hidden="true" className="h-4 w-4" />
+                  {isReporting ? 'Reporting…' : reportedSlotIds.includes(slot?.id || '') ? 'Reported' : 'Report'}
+                </button>
+                <Link
+                  href="/hall-of-fame"
+                  title="See the longest reigns and top takeovers"
+                  aria-label="Hall of Fame"
+                  className="inline-flex min-h-11 w-full min-w-0 items-center justify-center gap-2 rounded-xl border border-amber-400/20 bg-amber-500/10 px-2 py-2 text-xs font-semibold text-amber-200 transition hover:border-amber-300/40 hover:bg-amber-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 lg:w-auto lg:min-h-0 lg:shrink-0 lg:px-3"
+                >
+                  <Trophy aria-hidden="true" className="h-4 w-4" />
+                  <span className="hidden sm:inline">Hall of Fame</span>
+                  <span className="sm:hidden">Fame</span>
+                </Link>
+                </div>
                 <div className="order-2 min-w-0 lg:order-4 lg:shrink-0 lg:min-w-[7rem]">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-500">Time on stage</p>
                   <p className="text-sm font-semibold text-emerald-200 sm:text-base">{formatClock(stageTimer)}</p>
+                </div>
                 </div>
               </div>
 
@@ -1646,25 +1647,25 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
             </div>
 
             <div
-              className="min-w-0 w-full shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(180deg,_rgba(17,20,27,0.94),_rgba(8,10,14,0.98))] px-2 py-1.5 ring-1 ring-white/5"
+              className="min-w-0 w-full shrink-0 overflow-hidden rounded-xl border border-white/10 bg-[linear-gradient(180deg,_rgba(17,20,27,0.94),_rgba(8,10,14,0.98))] px-2 py-0.5 ring-1 ring-white/5"
               role="region"
               aria-label="History ticker: recent takeovers and bids"
             >
               {historyList.length > 0 ? (
                 <div className="min-w-0 overflow-hidden">
-                  <div className="dashboard-marquee-track flex min-w-max items-center gap-3 whitespace-nowrap px-2 sm:gap-6 sm:px-4">
+                  <div className="dashboard-marquee-track flex min-w-max items-center gap-3 whitespace-nowrap px-2 py-0 sm:gap-6 sm:px-4">
                     {historyTickerItems.map((item, idx) => (
-                      <div key={`${item.displayName || 'history'}-${idx}`} className="flex items-center gap-1.5 rounded-2xl border border-white/10 bg-white/[0.04] px-2 py-1 text-xs shadow-[0_8px_30px_rgba(0,0,0,0.2)] sm:gap-2 sm:px-4 sm:py-2 sm:text-sm">
-                        <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-xs text-emerald-200 sm:h-7 sm:w-7 sm:text-base">↗</span>
+                      <div key={`${item.displayName || 'history'}-${idx}`} className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[11px] sm:gap-2 sm:px-3 sm:text-xs">
+                        <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-[10px] text-emerald-200">↗</span>
                         <span className="max-w-[120px] truncate font-semibold text-white">{item.displayName || 'Anonymous Takeover'}</span>
-                        <span className="max-w-[120px] truncate rounded-full border border-white/10 bg-black/30 px-2 py-0.5 text-[10px] text-neutral-300 sm:px-2.5 sm:py-1 sm:text-xs">{stripProtocol(item.currentUrl) || 'standby'}</span>
-                        <span className="rounded-full border border-amber-400/20 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-200 sm:px-2.5 sm:py-1 sm:text-xs">${item.currentBid || '0.00'}</span>
+                        <span className="max-w-[120px] truncate rounded-full border border-white/10 bg-black/30 px-2 py-0 text-[10px] text-neutral-300">{stripProtocol(item.currentUrl) || 'standby'}</span>
+                        <span className="rounded-full border border-amber-400/20 bg-amber-500/10 px-2 py-0 text-[10px] font-semibold text-amber-200">${item.currentBid || '0.00'}</span>
                       </div>
                     ))}
                   </div>
                 </div>
               ) : (
-                <p className="px-2 py-1 text-center text-xs text-neutral-400">No history yet</p>
+                <p className="px-2 py-0 text-center text-xs text-neutral-400">No history yet</p>
               )}
             </div>
           </section>
