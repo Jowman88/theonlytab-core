@@ -4,11 +4,10 @@ export const LINE_ROTATION_MS = 7000;
 export const IDLE_LINES: readonly string[] = [
   'Nobody\'s here. Suspicious.',
   'Still empty. Someone could be famous for 90 minutes.',
-  'The stage is ${price} and your ego is free.',
+  'The stage is ${price} , your product deserves it.',
   'Next price: ${price}. Cheaper than most bad decisions.',
   'Somewhere, a website is waiting to be seen.',
   'Be the main character. ${price} only.',
-  'Zero viewers pay attention to empty stages. Fix that.',
   'The spotlight is on. Nobody is standing in it.',
   'Your landing page deserves an audience.',
   'Is anyone going to take this stage, or are we just vibing?',
