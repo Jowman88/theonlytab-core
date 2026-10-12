@@ -204,7 +204,7 @@ export default function HouseDefaultPage() {
                 display: 'inline-block',
               }}
             />
-            LIVE · STAGE OPEN
+            CLAIM YOUR MOMENT
           </div>
           <div style={{ fontSize: 'clamp(1.75rem, 6.5vmin, 4rem)', fontWeight: 900, letterSpacing: '0.2em', color: '#ffffff' }}>
             THE ONLY TAB
@@ -283,7 +283,7 @@ export default function HouseDefaultPage() {
             transition: `opacity ${FADE_MS}ms ease-in-out`,
           }}
         >
-          “{getIdleLine(lineIndex, price)}”
+          "{getIdleLine(lineIndex, price)}"
         </div>
 
         <div style={{ color: '#6ee7b7', fontSize: 'clamp(0.85rem, 2vmin, 1.2rem)', letterSpacing: '0.18em', fontWeight: 800 }}>
