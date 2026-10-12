@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   Smile,
   Sparkles,
+  Trophy,
   Wifi,
   WifiOff,
   Zap,
@@ -1480,7 +1481,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                   <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-500">Stage owner</p>
                   <p className="truncate text-sm font-semibold text-white sm:text-base">{stageOwner}</p>
                 </div>
-                <div className="order-3 col-span-2 grid grid-cols-3 gap-2 lg:order-3 lg:ml-auto lg:flex lg:items-center lg:gap-3">
+                <div className="order-3 col-span-2 grid grid-cols-4 gap-2 lg:order-3 lg:ml-auto lg:flex lg:items-center lg:gap-3">
                 <button
                   type="button"
                   onClick={handleLikeStage}
@@ -1528,6 +1529,16 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                   <Flag aria-hidden="true" className="h-4 w-4" />
                   {isReporting ? 'Reporting…' : reportedSlotIds.includes(slot?.id || '') ? 'Reported' : 'Report'}
                 </button>
+                <Link
+                  href="/hall-of-fame"
+                  title="See the longest reigns and top takeovers"
+                  aria-label="Hall of Fame"
+                  className="inline-flex min-h-11 w-full min-w-0 items-center justify-center gap-2 rounded-xl border border-amber-400/20 bg-amber-500/10 px-2 py-2 text-xs font-semibold text-amber-200 transition hover:border-amber-300/40 hover:bg-amber-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 lg:w-auto lg:min-h-0 lg:shrink-0 lg:px-3"
+                >
+                  <Trophy aria-hidden="true" className="h-4 w-4" />
+                  <span className="hidden sm:inline">Hall of Fame</span>
+                  <span className="sm:hidden">Fame</span>
+                </Link>
                 </div>
                 <div ref={reactionMenuRef} className="relative order-4 col-span-2 min-w-0 border-t border-white/10 pt-3 lg:order-2 lg:col-span-1 lg:shrink-0 lg:border-t-0 lg:pt-0">
                   <button
@@ -1634,26 +1645,13 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
               )}
             </div>
 
-            <div className="min-w-0 w-full shrink-0 overflow-hidden rounded-3xl border border-white/10 bg-[linear-gradient(180deg,_rgba(17,20,27,0.94),_rgba(8,10,14,0.98))] px-3 py-3 shadow-[0_16px_50px_rgba(0,0,0,0.25)] ring-1 ring-white/5 sm:px-5 sm:py-4">
-              <div className="mb-2 flex items-center justify-between gap-3 sm:mb-3">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-neutral-400">History ticker</p>
-                  <p className="mt-1 hidden text-sm text-neutral-300 sm:block">Recent takeovers and the bids that moved the board.</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Link
-                    href="/hall-of-fame"
-                    title="See the longest reigns and top takeovers"
-                    className="rounded-full border border-amber-400/20 bg-amber-500/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-amber-200 transition hover:border-amber-300/40 hover:bg-amber-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 sm:px-3 sm:py-1 sm:text-xs sm:tracking-[0.18em]"
-                  >
-                    🏆 Hall of Fame
-                  </Link>
-                  <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-neutral-300 sm:px-3 sm:py-1 sm:text-xs sm:tracking-[0.18em]">Live ledger</span>
-                </div>
-              </div>
-
+            <div
+              className="min-w-0 w-full shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(180deg,_rgba(17,20,27,0.94),_rgba(8,10,14,0.98))] px-2 py-1.5 ring-1 ring-white/5"
+              role="region"
+              aria-label="History ticker: recent takeovers and bids"
+            >
               {historyList.length > 0 ? (
-                <div className="min-h-[3.625rem] min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-black/20 px-2 py-2 sm:px-3 sm:py-3">
+                <div className="min-w-0 overflow-hidden">
                   <div className="dashboard-marquee-track flex min-w-max items-center gap-3 whitespace-nowrap px-2 sm:gap-6 sm:px-4">
                     {historyTickerItems.map((item, idx) => (
                       <div key={`${item.displayName || 'history'}-${idx}`} className="flex items-center gap-1.5 rounded-2xl border border-white/10 bg-white/[0.04] px-2 py-1 text-xs shadow-[0_8px_30px_rgba(0,0,0,0.2)] sm:gap-2 sm:px-4 sm:py-2 sm:text-sm">
@@ -1666,10 +1664,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                   </div>
                 </div>
               ) : (
-                <div className="flex min-h-[3.625rem] flex-col justify-center rounded-2xl border border-dashed border-white/10 bg-black/20 px-3 py-2 text-center sm:px-4 sm:py-[9px]">
-                  <p className="text-sm font-semibold text-white">No history yet</p>
-                  <p className="mt-1 hidden text-sm leading-6 text-neutral-400 sm:block sm:mt-2">The ticker will light up here as soon as the first takeover lands.</p>
-                </div>
+                <p className="px-2 py-1 text-center text-xs text-neutral-400">No history yet</p>
               )}
             </div>
           </section>
