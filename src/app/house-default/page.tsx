@@ -45,6 +45,19 @@ const cardValue = {
   marginTop: '0.4vmin',
 };
 
+// Subtle, cheap-to-encode liveness cue: only opacity changes on a tiny element.
+const PULSE_CSS = `
+@keyframes idle-live-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+.idle-live-dot { animation: idle-live-pulse 1.6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .idle-live-dot { animation: none; } }
+`;
+
+const pad2 = (n: number) => String(n).padStart(2, '0');
+const formatClock = (totalSeconds: number) => {
+  const s = Math.max(0, Math.floor(totalSeconds));
+  return `${pad2(Math.floor(s / 3600))}:${pad2(Math.floor((s % 3600) / 60))}:${pad2(s % 60)}`;
+};
+
 export default function HouseDefaultPage() {
   const [price, setPrice] = useState(DEFAULT_STEAL_PRICE);
   const [last, setLast] = useState<LastTakeover | null>(null);
@@ -94,6 +107,12 @@ export default function HouseDefaultPage() {
     };
   }, []);
 
+  // 1s tick drives the idle clock and keeps "time ago" fresh.
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, []);
+
   useEffect(() => {
     let swap: number | undefined;
     const id = window.setInterval(() => {
@@ -110,6 +129,16 @@ export default function HouseDefaultPage() {
   }, []);
 
   const ago = last ? formatTimeAgo(last.createdAt, now) : null;
+
+  // Real idle time: the last takeover's start plus the fixed takeover duration.
+  // Hidden when unknown (no history) or not yet elapsed, so it never shows a fake number.
+  // Approximate if a stage was ended early by reports or an admin revert.
+  const lastStart = last?.createdAt ? new Date(last.createdAt).getTime() : NaN;
+  const idleSeconds = Number.isFinite(lastStart)
+    ? (now - (lastStart + TAKEOVER_DURATION_MINUTES * 60 * 1000)) / 1000
+    : NaN;
+  const showIdleClock = Number.isFinite(idleSeconds) && idleSeconds > 0;
+
   const steps = [
     ['1', 'PICK A URL', 'Any website you like'],
     ['2', 'PAY', `Next price $${price}`],
@@ -130,6 +159,7 @@ export default function HouseDefaultPage() {
         textAlign: 'center',
       }}
     >
+      <style>{PULSE_CSS}</style>
       <section
         style={{
           width: '100%',
@@ -139,12 +169,55 @@ export default function HouseDefaultPage() {
         }}
       >
         <div>
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '1.4vmin',
+              marginBottom: '1.2vmin',
+              padding: '0.6vmin 1.8vmin',
+              border: '1px solid rgba(110,231,183,0.35)',
+              borderRadius: '999px',
+              background: 'rgba(16,185,129,0.08)',
+              color: '#6ee7b7',
+              fontSize: 'clamp(0.75rem, 1.9vmin, 1.15rem)',
+              fontWeight: 800,
+              letterSpacing: '0.22em',
+            }}
+          >
+            <span
+              className="idle-live-dot"
+              style={{
+                width: '1.3vmin',
+                height: '1.3vmin',
+                minWidth: '0.55rem',
+                minHeight: '0.55rem',
+                borderRadius: '999px',
+                background: '#f43f5e',
+                display: 'inline-block',
+              }}
+            />
+            LIVE · STAGE OPEN
+          </div>
           <div style={{ fontSize: 'clamp(2rem, 8vmin, 5.5rem)', fontWeight: 900, letterSpacing: '0.2em', color: '#ffffff' }}>
             THE ONLY TAB
           </div>
           <div style={{ marginTop: '1vmin', color: '#d1d5db', fontSize: 'clamp(1.05rem, 3.2vmin, 2.1rem)' }}>
             Pay to put any website on this screen for {TAKEOVER_DURATION_MINUTES} minutes.
           </div>
+          {showIdleClock && (
+            <div
+              style={{
+                marginTop: '1.2vmin',
+                color: '#9ca3af',
+                fontSize: 'clamp(0.9rem, 2.4vmin, 1.5rem)',
+                letterSpacing: '0.16em',
+                fontWeight: 700,
+              }}
+            >
+              STAGE EMPTY FOR <span style={{ color: '#fbbf24', fontVariantNumeric: 'tabular-nums' }}>{formatClock(idleSeconds)}</span>
+            </div>
+          )}
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(16rem, 1fr))', gap: 'clamp(0.6rem, 1.8vmin, 1.5rem)' }}>
