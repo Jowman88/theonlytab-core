@@ -1377,7 +1377,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                   type="button"
                   onClick={handleLikeStage}
                   disabled={!slot || slot.id === 'house-default-id' || slot.isReported || likedSlotIds.includes(slot.id) || isLiking}
-                  title="Like this stage to raise its steal price"
+                  title="Like this stage to raise its takeover price"
                   aria-label={`Like this stage. ${activeLikes} active likes`}
                   className="inline-flex min-h-11 w-full min-w-0 items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.03] px-2 py-2 text-xs lg:w-auto lg:min-h-0 lg:shrink-0 lg:px-3 font-semibold text-neutral-300 transition hover:border-pink-300/40 hover:bg-pink-500/10 hover:text-pink-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-300 disabled:cursor-not-allowed disabled:opacity-40"
                 >
@@ -1543,7 +1543,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                 className="h-28 w-full resize-none rounded-2xl border border-white/10 bg-black/35 p-4 font-mono text-base leading-6 text-emerald-200 outline-none sm:text-sm"
               />
               <div className="mt-4 rounded-2xl border border-amber-300/25 bg-amber-400/[0.08] px-4 py-3 text-sm leading-6 text-amber-100">
-                <p className="font-semibold">⏱ Your free protection expires in {formatClock(protectionTimer)} — after that, anyone can seize the stage for ${stealPrice}.</p>
+                <p className="font-semibold">⏱ Your free protection expires in {formatClock(protectionTimer)} — after that, anyone can seize the stage for ${Price}.</p>
                 <p className="mt-1 text-xs leading-5 text-amber-100/75">Share now while you&apos;re still the one on stage.</p>
               </div>
               <div role="group" aria-label="Share your takeover" className="mt-4 flex flex-wrap items-center gap-2">
