@@ -1374,16 +1374,16 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                 <div className="contents lg:flex lg:items-center lg:justify-end lg:gap-4">
                 <div className="order-3 col-span-2 grid grid-cols-4 gap-2 lg:order-3 lg:flex lg:items-center lg:gap-3">
                 <button
-                  type="button"
-                  onClick={handleLikeStage}
-                  disabled={!slot || slot.id === 'house-default-id' || slot.isReported || likedSlotIds.includes(slot.id) || isLiking}
-                  title="Like this stage to raise its takeover price"
-                  aria-label={`Like this stage. ${activeLikes} active likes`}
-                  className="inline-flex min-h-11 w-full min-w-0 items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.03] px-2 py-2 text-xs lg:w-auto lg:min-h-0 lg:shrink-0 lg:px-3 font-semibold text-neutral-300 transition hover:border-pink-300/40 hover:bg-pink-500/10 hover:text-pink-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-300 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  <Heart aria-hidden="true" className={`h-4 w-4 ${slot && likedSlotIds.includes(slot.id) ? 'fill-pink-300 text-pink-300' : ''}`} />
-                  {activeLikes} {likedSlotIds.includes(slot?.id || '') ? 'Liked' : 'Like'}
-                </button>
+  type="button"
+  onClick={handleLikeStage}
+  disabled={!slot || slot.id === 'house-default-id' || slot.isReported || likedSlotIds.includes(slot.id) || isLiking}
+  title="Like this stage to raise its takeover price"
+  aria-label={`Like this stage. ${activeLikes} active likes`}
+  className="inline-flex min-h-11 w-full min-w-0 items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.03] px-2 py-2 text-xs lg:w-auto lg:min-h-0 lg:shrink-0 lg:px-3 font-semibold text-neutral-300 transition hover:border-pink-300/40 hover:bg-pink-500/10 hover:text-pink-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-300 disabled:cursor-not-allowed disabled:opacity-40"
+>
+  <Heart aria-hidden="true" className={`h-4 w-4 ${slot && likedSlotIds.includes(slot.id) ? 'fill-pink-300 text-pink-300' : ''}`} />
+  {likedSlotIds.includes(slot?.id || '') ? 'Liked' : 'Like'}
+</button>
                 <div className="relative min-w-0 lg:shrink-0">
                   <button
                     type="button"
