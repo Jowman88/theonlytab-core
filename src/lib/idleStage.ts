@@ -20,7 +20,6 @@ export const IDLE_LINES: readonly string[] = [
   '${price} to own the screen.',
   'The ultimate internet funnel. Own it for ${price}.',
   'Unfused focus. Your brand on the global monitor.',
-  'Capture the highest concentration of eyeballs on the web.',
   'Don’t let your link get buried in chat. Own the screen.',
   'Maximum impression density, starting right now.',
   'The whole venue is staring at this slot. Capitalize.',
