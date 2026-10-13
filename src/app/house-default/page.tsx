@@ -206,13 +206,13 @@ export default function HouseDefaultPage() {
                 display: 'inline-block',
               }}
             />
-            CLAIM YOUR MOMENT
+            CLAIM YOUR STAGE
           </div>
           <div style={{ fontSize: 'clamp(2rem, 8vmin, 5.5rem)', fontWeight: 900, letterSpacing: '0.2em', color: '#ffffff' }}>
             THE ONLY TAB
           </div>
           <div style={{ marginTop: '0.8vmin', color: '#f3f4f6', fontWeight: 700, fontSize: 'clamp(1rem, 3.4vmin, 2.1rem)' }}>
-            Your URL. Live. Right now. Take the feed for {TAKEOVER_DURATION_MINUTES} minutes.
+            Buy the room. Put your interactive link on the main stage for {TAKEOVER_DURATION_MINUTES} minutes.
           </div>
           {showIdleClock && (
             <div
