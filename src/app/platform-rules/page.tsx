@@ -72,10 +72,10 @@ export default function PlatformRulesPage() {
               <span className="font-semibold text-white">Stage duration and availability:</span> a takeover grants time on the stage only while capacity, system health, and platform availability allow. The platform may delay, shorten, pause, or end a session if needed to keep the service running safely.
             </li>
             <li>
-              <span className="font-semibold text-white">Pricing and competition:</span> prices, bidding, and steal mechanics may change at any time. The price presented for your checkout applies to that transaction; later prices may differ. A takeover does not guarantee any minimum audience, view count, click, or traffic.
+              <span className="font-semibold text-white">Pricing and competition:</span> prices, bidding, and takeover mechanics may change at any time. The price presented for your checkout applies to that transaction; later prices may differ. A takeover does not guarantee any minimum audience, view count, click, or traffic.
             </li>
             <li>
-              <span className="font-semibold text-white">Viewer likes:</span> each active like raises the next steal price by 1%, up to 50%; likes expire after 10 minutes. Reported stages do not receive a crowd price increase. The price shown when checkout starts is locked for that payment.
+              <span className="font-semibold text-white">Viewer likes:</span> each active like raises the next takeover price by 1%, up to 50%; likes expire after 10 minutes. Reported stages do not receive a crowd price increase. The price shown when checkout starts is locked for that payment.
             </li>
             <li>
               <span className="font-semibold text-white">Free protection:</span> every takeover receives a 90-second protection window. After it expires, the stage can be stolen at the displayed price.
