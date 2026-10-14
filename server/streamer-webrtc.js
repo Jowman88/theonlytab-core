@@ -213,6 +213,7 @@ app.get('/', (req, res) => {
 let browser = null;
 let page = null;
 let currentUrlInStream = '';
+let stageIsIdle = true;
 
 async function initPuppeteer() {
   try {
@@ -328,6 +329,12 @@ async function syncSlotToBrowser() {
       targetUrl = row.current_url || idleUrl;
     }
 
+    stageIsIdle = slotId === 'house-default-id';
+    if (stageIsIdle) {
+      lastFrame = null;
+      lastFrameHash = null;
+    }
+
     if (!page || targetUrl === currentUrlInStream) return;
 
     logger.info('Stream target changed', {
@@ -401,7 +408,7 @@ async function captureAndEmitFrame() {
 async function frameLoop() {
   for (;;) {
     const startedAt = Date.now();
-    if (io.engine.clientsCount > 0) {
+    if (io.engine.clientsCount > 0 && !stageIsIdle) {
       await captureAndEmitFrame();
       const wait = Math.max(0, frameIntervalMs - (Date.now() - startedAt));
       await new Promise((resolve) => setTimeout(resolve, wait));
@@ -452,7 +459,7 @@ io.on('connection', (socket) => {
     clientIp: ip,
   });
 
-  if (lastFrame) {
+  if (lastFrame && !stageIsIdle) {
     socket.emit('v-frame', lastFrame);
     metrics.frames += 1;
     metrics.bytes += lastFrame.length;
