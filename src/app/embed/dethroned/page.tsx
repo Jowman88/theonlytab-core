@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Zap, ArrowUpRight } from 'lucide-react';
+import { DEFAULT_STEAL_PRICE } from '../../../lib/idleStage';
 
 interface DethronedData {
   stealPrice?: string;
@@ -51,7 +52,7 @@ export default function DethronedEmbed() {
           <span className="text-[10px] font-black tracking-widest text-neutral-400 uppercase">THE ONLY TAB · DETHRONED</span>
         </div>
         <div className="text-[10px] font-bold text-neutral-500 uppercase">
-          STAGE PRICE: <span className="text-amber-400">${data?.stealPrice || '19.00'}</span>
+          STAGE PRICE: <span className="text-amber-400">${data?.stealPrice || DEFAULT_STEAL_PRICE}</span>
         </div>
       </div>
 

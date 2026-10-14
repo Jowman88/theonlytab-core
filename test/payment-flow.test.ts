@@ -110,7 +110,7 @@ test('stale checkout context without a quoted active slot is deferred when a new
     activeSlot: null,
     now,
     pricingSettings: DEFAULT_PRICING_SETTINGS,
-    requiredStealPrice: 19,
+    requiredStealPrice: 9,
   });
 
   const decision = decideCheckoutFulfillment({
@@ -158,7 +158,7 @@ test('failed payment metadata is rejected for invalid currency, amount, or missi
 
   assert.equal(
     validateStripeCheckoutQuote({
-      sessionAmountSubtotal: 1900,
+      sessionAmountSubtotal: 900,
       sessionCurrency: 'usd',
       quote: null,
     }),
@@ -171,15 +171,15 @@ test('tax-inclusive Stripe checkout validates against the pre-tax subtotal', () 
     activeSlot: null,
     now,
     pricingSettings: DEFAULT_PRICING_SETTINGS,
-    requiredStealPrice: 19,
+    requiredStealPrice: 9,
   });
   const session = {
-    amount_subtotal: 1900,
+    amount_subtotal: 900,
     amount_total: 2299,
     currency: 'usd',
   };
 
-  assert.equal(quote.quotedStealPriceCents, 1900);
+  assert.equal(quote.quotedStealPriceCents, 900);
   assert.equal(
     validateStripeCheckoutQuote({
       sessionAmountSubtotal: session.amount_subtotal,
@@ -246,7 +246,7 @@ test('stale base-price checkout still fulfills when it covers a newer unlocked s
     activeSlot: null,
     now,
     pricingSettings: DEFAULT_PRICING_SETTINGS,
-    requiredStealPrice: 19,
+    requiredStealPrice: 9,
   });
 
   const decision = decideCheckoutFulfillment({
@@ -255,7 +255,7 @@ test('stale base-price checkout still fulfills when it covers a newer unlocked s
       currentBid: 7,
       createdAt: new Date(now.getTime() - 20 * 60 * 1000).toISOString(),
     }),
-    currentRequiredPriceCents: 1900,
+    currentRequiredPriceCents: 900,
     quote,
     now,
   });
@@ -263,18 +263,18 @@ test('stale base-price checkout still fulfills when it covers a newer unlocked s
   assert.equal(decision.action, 'fulfill');
 });
 
-test('base price is always $19 regardless of time of day (no prime-time variance)', () => {
+test('base price is always $9 regardless of time of day (no prime-time variance)', () => {
   const morning = new Date('2026-09-28T09:30:00.000Z');
   const evening = new Date('2026-09-28T19:30:00.000Z');
   const midnight = new Date('2026-09-28T00:05:00.000Z');
 
-  assert.equal(calculateStealPrice(0, morning), 19);
-  assert.equal(calculateStealPrice(0, evening), 19);
-  assert.equal(calculateStealPrice(0, midnight), 19);
+  assert.equal(calculateStealPrice(0, morning), 9);
+  assert.equal(calculateStealPrice(0, evening), 9);
+  assert.equal(calculateStealPrice(0, midnight), 9);
 });
 
 test('steal price doubles the current bid', () => {
-  assert.equal(calculateStealPrice(19), 38);
+  assert.equal(calculateStealPrice(9), 18);
   assert.equal(calculateStealPrice(75), 150);
 });
 

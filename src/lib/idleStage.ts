@@ -1,4 +1,6 @@
-export const DEFAULT_STEAL_PRICE = '19.00';
+import { DEFAULT_BASE_PRICE } from './pricing';
+
+export const DEFAULT_STEAL_PRICE = DEFAULT_BASE_PRICE.toFixed(2);
 export const LINE_ROTATION_MS = 7000;
 
 export const IDLE_LINES: readonly string[] = [

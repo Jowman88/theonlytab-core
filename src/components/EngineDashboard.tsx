@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { logger } from '../lib/logger';
+import { DEFAULT_STEAL_PRICE } from '../lib/idleStage';
 
 const REACTION_EMOJIS = ['🔥', '👏', '😂', '❤️', '🎉'];
 const RECENT_REACTIONS_KEY = 'theonlytab:recent-reactions';
@@ -157,7 +158,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   };
   const historyTickerItems = useMemo(() => (historyList.length > 0 ? [...historyList, ...historyList] : []), [historyList]);
   const isProtected = protectionTimer > 0;
-  const stealPrice = slot?.stealPrice || '19.00';
+  const stealPrice = slot?.stealPrice || DEFAULT_STEAL_PRICE;
   const activeLikes = slot?.active_likes || 0;
   const crowdPercent = slot?.crowdPercent || 0;
   const isStealPriceCapped = Number.parseFloat(stealPrice) >= 299;
@@ -1543,7 +1544,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                 className="h-28 w-full resize-none rounded-2xl border border-white/10 bg-black/35 p-4 font-mono text-base leading-6 text-emerald-200 outline-none sm:text-sm"
               />
               <div className="mt-4 rounded-2xl border border-amber-300/25 bg-amber-400/[0.08] px-4 py-3 text-sm leading-6 text-amber-100">
-                <p className="font-semibold">⏱ Your free protection expires in {formatClock(protectionTimer)} — after that, anyone can seize the stage for ${Price}.</p>
+                <p className="font-semibold">⏱ Your free protection expires in {formatClock(protectionTimer)} — after that, anyone can seize the stage for ${stealPrice}.</p>
                 <p className="mt-1 text-xs leading-5 text-amber-100/75">Share now while you&apos;re still the one on stage.</p>
               </div>
               <div role="group" aria-label="Share your takeover" className="mt-4 flex flex-wrap items-center gap-2">

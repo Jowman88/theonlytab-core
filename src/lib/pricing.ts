@@ -2,7 +2,7 @@ export interface PricingSettings {
   basePrice: number;
 }
 
-const DEFAULT_BASE_PRICE = 19;
+export const DEFAULT_BASE_PRICE = 9;
 const STEAL_PRICE_CAP = 299;
 const LIKE_STEP_PERCENT = 1;
 const MAX_CROWD_PERCENT = 50;
@@ -29,7 +29,7 @@ export function resolvePricingSettings(partialSettings?: Partial<PricingSettings
 
 /**
  * Pricing model: "Doubles per steal, capped at $299, daily reset"
- * - Base price (idle/house-default): $19
+ * - Base price (idle/house-default): $9 launch price
  * - Steal price: min(currentBid * 2, $299) -- always exactly double, never more than $299
  * - Once price reaches $299, stealing costs exactly $299 (flat, no further doubling)
  * - No idle decay: price stays locked at its current value until a reset triggers
