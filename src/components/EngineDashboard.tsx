@@ -59,6 +59,7 @@ interface HistoryItem {
   currentBid?: string;
   currentUrl?: string;
   displayName?: string;
+  createdAt?: string;
 }
 
 type SocketStatus = 'connecting' | 'connected' | 'reconnecting' | 'disconnected';
@@ -112,6 +113,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const [hasFrames, setHasFrames] = useState<boolean>(false);
   const [historyList, setHistoryList] = useState<HistoryItem[]>([]);
   const [viewerCount, setViewerCount] = useState<number | null>(null);
+  const [reactionPulse, setReactionPulse] = useState(0);
   const [takeoverAlert, setTakeoverAlert] = useState<string | null>(null);
   const lastTakeoverRef = useRef<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -345,6 +347,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
         drift: Math.round((Math.random() - 0.5) * 60),
       };
       setFloatingReactions((current) => [...current.slice(-(MAX_FLOATING_REACTIONS - 1)), reaction]);
+      setReactionPulse((current) => current + 1);
       window.setTimeout(() => {
         setFloatingReactions((current) => current.filter((item) => item.id !== id));
       }, REACTION_LIFETIME_MS);
@@ -1240,7 +1243,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
 
                   {showAttract && (
                     <div className={`absolute inset-0 transition-opacity duration-500 ${isIdleStage ? 'opacity-100' : 'pointer-events-none opacity-0'}`}>
-                      <AttractMode history={historyList} stealPrice={stealPrice} onSeize={() => setIsFormOpen(true)} />
+                      <AttractMode history={historyList} stealPrice={stealPrice} reactionPulse={reactionPulse} viewerCount={socketStatus === 'connected' ? viewerCount : null} onSeize={() => setIsFormOpen(true)} />
                     </div>
                   )}
 
