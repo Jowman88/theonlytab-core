@@ -39,11 +39,11 @@ export function getIdleLine(index: number, price: string = DEFAULT_STEAL_PRICE):
   return line.replace(/\$\{price\}/g, `$${price}`);
 }
 
-export const HEADLINE_ROTATION_MS = 6000;
+export const HEADLINE_ROTATION_MS = 5500;
 
-export const HEADLINES: readonly string[] = [
+export const ATTRACT_HEADLINES = [
   'Put your site on the big screen',
-  'Your link. Everyone\'s screen.',
+  "Your link. Everyone's screen.",
   'The stage is open. Take it.',
   'Own the screen for ${price}',
   'Turn this window into your billboard',
@@ -54,11 +54,20 @@ export const HEADLINES: readonly string[] = [
   'Take the stage before someone else does',
   'Free real estate, ${price} down',
   'Your brand, live, right now',
-];
+] as const;
+
+export const ATTRACT_SUBLINES = [
+  'Live visibility for your next launch.',
+  'A premium slot for your next project.',
+  'The simplest way to put your link in front of the room.',
+  'Real viewers. Real traffic. Real momentum.',
+] as const;
+
+export const HEADLINES = ATTRACT_HEADLINES;
 
 export function getHeadline(index: number, price: string = DEFAULT_STEAL_PRICE): string {
-  const total = HEADLINES.length;
-  const line = HEADLINES[((index % total) + total) % total];
+  const total = ATTRACT_HEADLINES.length;
+  const line = ATTRACT_HEADLINES[((index % total) + total) % total];
   return line.replace(/\$\{price\}/g, `$${price}`);
 }
 
