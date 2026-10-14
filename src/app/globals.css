@@ -48,6 +48,41 @@
     background: radial-gradient(ellipse at center, transparent 45%, rgba(0, 0, 0, 0.65) 100%);
   }
 
+  .attract-ambient {
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .attract-blob {
+    position: absolute;
+    width: min(34rem, 78vw);
+    aspect-ratio: 1;
+    border-radius: 9999px;
+    animation: attract-blob-drift 30s ease-in-out infinite alternate;
+    will-change: transform;
+  }
+
+  .attract-blob-emerald {
+    top: -28%;
+    left: -16%;
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.16), transparent 68%);
+  }
+
+  .attract-blob-cyan {
+    right: -18%;
+    bottom: -36%;
+    background: radial-gradient(circle, rgba(34, 211, 238, 0.12), transparent 68%);
+    animation-delay: -10s;
+  }
+
+  .attract-blob-amber {
+    top: 32%;
+    right: 18%;
+    width: min(24rem, 56vw);
+    background: radial-gradient(circle, rgba(245, 158, 11, 0.08), transparent 70%);
+    animation-delay: -20s;
+  }
+
   .attract-headline {
     transition: opacity 450ms ease-out, transform 450ms ease-out;
   }
@@ -68,6 +103,15 @@
   }
   to {
     opacity: 1;
+  }
+}
+
+@keyframes attract-blob-drift {
+  from {
+    transform: translate3d(-2%, -1%, 0) scale(1);
+  }
+  to {
+    transform: translate3d(2%, 2%, 0) scale(1.06);
   }
 }
 
@@ -129,6 +173,7 @@
   .dashboard-pulse-alert,
   .dashboard-reaction-float,
   .dashboard-marquee-track,
+  .attract-blob,
   .attract-headline,
   .attract-fade {
     animation: none !important;
