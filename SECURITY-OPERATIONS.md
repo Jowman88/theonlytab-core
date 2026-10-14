@@ -12,7 +12,7 @@ This migration is additive and creates:
 
 Pricing defaults preserve current behavior:
 
-- Base: `$19`
+- Base: `$9` (launch price; see `DEFAULT_BASE_PRICE` in `src/lib/pricing.ts`)
 - Prime windows: `09:00-11:00` and `18:00-20:00`
 - Prime base price: `$149`
 - Steal price: `max(currentBid * 1.25, currentBid + 10, basePrice)`
