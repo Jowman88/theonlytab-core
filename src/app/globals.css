@@ -48,6 +48,26 @@
     background: radial-gradient(ellipse at center, transparent 45%, rgba(0, 0, 0, 0.65) 100%);
   }
 
+  .attract-blob {
+    border-radius: 9999px;
+    will-change: transform;
+  }
+
+  .attract-blob-a {
+    background: radial-gradient(circle at center, rgba(16, 185, 129, 0.28), transparent 70%);
+    animation: attract-drift-a 28s ease-in-out infinite alternate;
+  }
+
+  .attract-blob-b {
+    background: radial-gradient(circle at center, rgba(34, 211, 238, 0.22), transparent 70%);
+    animation: attract-drift-b 34s ease-in-out infinite alternate;
+  }
+
+  .attract-blob-c {
+    background: radial-gradient(circle at center, rgba(245, 158, 11, 0.16), transparent 70%);
+    animation: attract-drift-c 40s ease-in-out infinite alternate;
+  }
+
   .attract-headline {
     transition: opacity 450ms ease-out, transform 450ms ease-out;
   }
@@ -60,6 +80,21 @@
   .attract-fade {
     animation: attract-fade-in 0.7s ease-out both;
   }
+}
+
+@keyframes attract-drift-a {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(6%, 8%, 0) scale(1.08); }
+}
+
+@keyframes attract-drift-b {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(-8%, -6%, 0) scale(1.06); }
+}
+
+@keyframes attract-drift-c {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(5%, -7%, 0) scale(1.1); }
 }
 
 @keyframes attract-fade-in {
@@ -129,6 +164,7 @@
   .dashboard-pulse-alert,
   .dashboard-reaction-float,
   .dashboard-marquee-track,
+  .attract-blob,
   .attract-headline,
   .attract-fade {
     animation: none !important;
