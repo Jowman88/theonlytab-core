@@ -87,6 +87,11 @@ export default function AttractMode({ history, stealPrice, onSeize }: AttractMod
       aria-label="Stage is open. Be the next to take it."
       className="absolute inset-0 overflow-hidden bg-[#040507]"
     >
+      <div aria-hidden="true" className="attract-ambient absolute inset-0">
+        <div className="attract-blob attract-blob-emerald" />
+        <div className="attract-blob attract-blob-cyan" />
+        <div className="attract-blob attract-blob-amber" />
+      </div>
       <div aria-hidden="true" className="dashboard-grid absolute inset-0 opacity-25" />
       <div aria-hidden="true" className="attract-vignette absolute inset-0" />
 
