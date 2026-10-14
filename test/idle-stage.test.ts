@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { formatDuration, formatTimeAgo, getHeadline, getIdleLine, HEADLINES, IDLE_LINES, stripProtocol } from '../src/lib/idleStage';
+import { buildProofItems, formatDuration, getPresenceDots, MAX_PRESENCE_DOTS, formatTimeAgo, getHeadline, getIdleLine, HEADLINES, IDLE_LINES, stripProtocol } from '../src/lib/idleStage';
 
 test('getIdleLine wraps and interpolates price', () => {
   assert.equal(getIdleLine(0), getIdleLine(IDLE_LINES.length));
@@ -37,4 +37,36 @@ test('getHeadline substitutes price, wraps and handles negatives', () => {
   assert.equal(getHeadline(-1), getHeadline(HEADLINES.length - 1));
   assert.equal(getHeadline(3, '9.00'), 'Own the screen for $9.00');
   assert.ok(HEADLINES.every((_, i) => !getHeadline(i, '9.00').includes('${price}')));
+});
+
+test('getPresenceDots clamps and handles invalid counts', () => {
+  assert.equal(getPresenceDots(null), 0);
+  assert.equal(getPresenceDots(0), 0);
+  assert.equal(getPresenceDots(Number.NaN), 0);
+  assert.equal(getPresenceDots(3.8), 3);
+  assert.equal(getPresenceDots(500), MAX_PRESENCE_DOTS);
+});
+
+test('buildProofItems mixes takeovers with Hall of Fame records', () => {
+  const now = Date.parse('2026-01-01T12:00:00Z');
+  const history = [
+    { displayName: 'Ada', currentUrl: 'https://ada.dev/', currentBid: '9.00', createdAt: '2026-01-01T11:30:00Z' },
+    { currentUrl: 'https://b.io', currentBid: '18.00' },
+    { displayName: 'Cy', currentUrl: 'https://c.io', currentBid: '36.00' },
+  ];
+  const hof = {
+    longestReign: { displayName: 'Zed', durationMinutes: 134 },
+    highestTakeover: { displayName: 'Yo', bidCents: 29900 },
+    mostTakeovers: null,
+  };
+  const items = buildProofItems(history, hof, now);
+  assert.equal(items.length, 5);
+  assert.equal(items[0].headline, 'Ada · ada.dev');
+  assert.equal(items[0].detail, '$9.00 · 30m ago');
+  assert.equal(items[1].detail, '2h 14m');
+  assert.equal(items.find((i) => i.headline === 'Anonymous · b.io')?.detail, '$18.00');
+  assert.equal(items.find((i) => i.label === 'Highest takeover')?.detail, '$299.00');
+  assert.equal(new Set(items.map((i) => i.key)).size, items.length);
+  assert.deepEqual(buildProofItems([], null, now), []);
+  assert.equal(buildProofItems([], hof, now).length, 2);
 });

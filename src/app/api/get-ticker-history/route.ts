@@ -9,7 +9,7 @@ export async function GET() {
 
   try {
     const historyRes = await client.query(
-      `SELECT display_name as "displayName", current_url as "currentUrl", current_bid as "currentBid"
+      `SELECT display_name as "displayName", current_url as "currentUrl", current_bid as "currentBid", created_at as "createdAt"
        FROM slots 
        WHERE is_frozen = TRUE
        ORDER BY created_at DESC 

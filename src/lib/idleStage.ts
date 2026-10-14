@@ -86,3 +86,75 @@ export function formatDuration(minutes: number): string {
   const m = total % 60;
   return m ? `${h}h ${m}m` : `${h}h`;
 }
+
+export const MAX_PRESENCE_DOTS = 12;
+
+export function getPresenceDots(viewerCount: number | null | undefined, max: number = MAX_PRESENCE_DOTS): number {
+  if (typeof viewerCount !== 'number' || !Number.isFinite(viewerCount) || viewerCount <= 0) return 0;
+  return Math.min(max, Math.floor(viewerCount));
+}
+
+export interface ProofHistoryItem {
+  currentBid?: string;
+  currentUrl?: string;
+  displayName?: string;
+  createdAt?: string;
+}
+
+export interface ProofHallOfFame {
+  longestReign?: { displayName: string; durationMinutes: number } | null;
+  highestTakeover?: { displayName: string; bidCents: number } | null;
+  mostTakeovers?: { displayName: string; count: number } | null;
+}
+
+export interface ProofItem {
+  key: string;
+  kind: 'takeover' | 'record';
+  label: string;
+  headline: string;
+  detail: string;
+}
+
+export function buildProofItems(
+  history: readonly ProofHistoryItem[],
+  hallOfFame: ProofHallOfFame | null | undefined,
+  now: number = Date.now(),
+  maxTakeovers = 6,
+): ProofItem[] {
+  const takeovers: ProofItem[] = history.slice(0, maxTakeovers).map((item, i) => {
+    const ago = formatTimeAgo(item.createdAt, now);
+    const url = stripProtocol(item.currentUrl || '');
+    const name = item.displayName || 'Anonymous';
+    return {
+      key: `t-${i}-${name}-${url}`,
+      kind: 'takeover',
+      label: 'Recent takeover',
+      headline: url ? `${name} · ${url}` : name,
+      detail: `$${item.currentBid ?? ''}${ago ? ` · ${ago}` : ''}`,
+    };
+  });
+
+  const records: ProofItem[] = [];
+  const reign = hallOfFame?.longestReign;
+  if (reign) {
+    records.push({ key: 'r-reign', kind: 'record', label: 'Longest reign', headline: reign.displayName, detail: formatDuration(reign.durationMinutes) });
+  }
+  const top = hallOfFame?.highestTakeover;
+  if (top) {
+    records.push({ key: 'r-top', kind: 'record', label: 'Highest takeover', headline: top.displayName, detail: `$${(top.bidCents / 100).toFixed(2)}` });
+  }
+  const most = hallOfFame?.mostTakeovers;
+  if (most) {
+    records.push({ key: 'r-most', kind: 'record', label: 'Most takeovers', headline: most.displayName, detail: `${most.count} takeovers` });
+  }
+
+  const result: ProofItem[] = [];
+  const total = takeovers.length + records.length;
+  let t = 0;
+  let r = 0;
+  while (result.length < total) {
+    if (t < takeovers.length) result.push(takeovers[t++]);
+    if (r < records.length) result.push(records[r++]);
+  }
+  return result;
+}
