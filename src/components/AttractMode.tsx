@@ -87,6 +87,9 @@ export default function AttractMode({ history, stealPrice, onSeize }: AttractMod
       aria-label="Stage is open. Be the next to take it."
       className="absolute inset-0 overflow-hidden bg-[#040507]"
     >
+      <div aria-hidden="true" className="attract-blob attract-blob-a pointer-events-none absolute -left-1/4 -top-1/4 h-[70vmax] w-[70vmax] max-w-[900px] max-h-[900px]" />
+      <div aria-hidden="true" className="attract-blob attract-blob-b pointer-events-none absolute -bottom-1/4 -right-1/4 h-[60vmax] w-[60vmax] max-w-[800px] max-h-[800px]" />
+      <div aria-hidden="true" className="attract-blob attract-blob-c pointer-events-none absolute left-1/3 top-1/2 h-[45vmax] w-[45vmax] max-w-[600px] max-h-[600px]" />
       <div aria-hidden="true" className="dashboard-grid absolute inset-0 opacity-25" />
       <div aria-hidden="true" className="attract-vignette absolute inset-0" />
 
