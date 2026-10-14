@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buildProofItems, formatDuration, getPresenceDots, MAX_PRESENCE_DOTS, formatTimeAgo, getHeadline, getIdleLine, HEADLINES, IDLE_LINES, stripProtocol } from '../src/lib/idleStage';
+import { ATTRACT_HEADLINES, ATTRACT_SUBLINES, buildProofItems, formatDuration, getPresenceDots, MAX_PRESENCE_DOTS, formatTimeAgo, getHeadline, getIdleLine, HEADLINES, HEADLINE_ROTATION_MS, IDLE_LINES, stripProtocol } from '../src/lib/idleStage';
 
 test('getIdleLine wraps and interpolates price', () => {
   assert.equal(getIdleLine(0), getIdleLine(IDLE_LINES.length));
@@ -33,6 +33,10 @@ test('stripProtocol and formatDuration', () => {
 
 test('getHeadline substitutes price, wraps and handles negatives', () => {
   assert.equal(getHeadline(0), 'Put your site on the big screen');
+  assert.deepEqual(HEADLINES, ATTRACT_HEADLINES);
+  assert.equal(HEADLINE_ROTATION_MS, 5500);
+  assert.equal(ATTRACT_HEADLINES.length, 12);
+  assert.equal(ATTRACT_SUBLINES.length, 4);
   assert.equal(getHeadline(HEADLINES.length), getHeadline(0));
   assert.equal(getHeadline(-1), getHeadline(HEADLINES.length - 1));
   assert.equal(getHeadline(3, '9.00'), 'Own the screen for $9.00');

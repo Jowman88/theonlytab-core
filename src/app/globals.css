@@ -44,52 +44,8 @@
     animation-play-state: paused;
   }
 
-  .attract-blob {
-    position: absolute;
-    border-radius: 9999px;
-    mix-blend-mode: screen;
-    will-change: transform;
-    animation-timing-function: ease-in-out;
-    animation-iteration-count: infinite;
-    animation-direction: alternate;
-  }
-
-  .attract-blob-a {
-    left: -15%;
-    top: -25%;
-    width: 70%;
-    height: 90%;
-    background: radial-gradient(circle at center, rgba(16, 185, 129, 0.42), transparent 70%);
-    animation-name: attract-drift-a;
-    animation-duration: 30s;
-  }
-
-  .attract-blob-b {
-    right: -20%;
-    top: 10%;
-    width: 75%;
-    height: 90%;
-    background: radial-gradient(circle at center, rgba(6, 182, 212, 0.34), transparent 70%);
-    animation-name: attract-drift-b;
-    animation-duration: 36s;
-  }
-
-  .attract-blob-c {
-    left: 20%;
-    bottom: -35%;
-    width: 65%;
-    height: 85%;
-    background: radial-gradient(circle at center, rgba(251, 191, 36, 0.26), transparent 70%);
-    animation-name: attract-drift-c;
-    animation-duration: 28s;
-  }
-
   .attract-vignette {
     background: radial-gradient(ellipse at center, transparent 45%, rgba(0, 0, 0, 0.65) 100%);
-  }
-
-  .attract-ring {
-    animation: attract-pulse 3.2s ease-in-out infinite;
   }
 
   .attract-headline {
@@ -98,86 +54,11 @@
 
   .attract-headline-out {
     opacity: 0;
-    transform: translateY(6px);
-  }
-
-  .attract-spotlight {
-    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.1), transparent 65%);
-    transition: opacity 400ms ease-out;
-    will-change: transform, opacity;
-  }
-
-  .attract-presence-dot {
-    opacity: 0.15;
-    box-shadow: 0 0 10px 2px rgba(52, 211, 153, 0.55);
-    animation: attract-twinkle 4s ease-in-out infinite;
-  }
-
-  .attract-ripple {
-    animation: attract-ripple 1.4s ease-out forwards;
-  }
-
-  .attract-flare {
-    background: radial-gradient(circle at center, rgba(52, 211, 153, 0.28), transparent 65%);
-    animation: attract-flare 1.2s ease-out forwards;
+    transform: translateY(4px);
   }
 
   .attract-fade {
     animation: attract-fade-in 0.7s ease-out both;
-  }
-}
-
-@keyframes attract-twinkle {
-  0%, 100% { opacity: 0.12; transform: scale(0.8); }
-  50% { opacity: 0.75; transform: scale(1.2); }
-}
-
-@keyframes attract-ripple {
-  from { opacity: 0.7; transform: scale(0.5); }
-  to { opacity: 0; transform: scale(4); }
-}
-
-@keyframes attract-flare {
-  from { opacity: 1; }
-  to { opacity: 0; }
-}
-
-@keyframes attract-drift-a {
-  from {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  to {
-    transform: translate3d(22%, 18%, 0) scale(1.2);
-  }
-}
-
-@keyframes attract-drift-b {
-  from {
-    transform: translate3d(0, 0, 0) scale(1.1);
-  }
-  to {
-    transform: translate3d(-24%, 14%, 0) scale(0.9);
-  }
-}
-
-@keyframes attract-drift-c {
-  from {
-    transform: translate3d(0, 0, 0) scale(0.95);
-  }
-  to {
-    transform: translate3d(-18%, -22%, 0) scale(1.25);
-  }
-}
-
-@keyframes attract-pulse {
-  0%,
-  100% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.28);
-  }
-  50% {
-    transform: scale(1.08);
-    box-shadow: 0 0 0 26px rgba(52, 211, 153, 0);
   }
 }
 
@@ -248,24 +129,9 @@
   .dashboard-pulse-alert,
   .dashboard-reaction-float,
   .dashboard-marquee-track,
-  .attract-blob,
-  .attract-ring,
   .attract-headline,
-  .attract-presence-dot,
-  .attract-ripple,
-  .attract-flare,
   .attract-fade {
     animation: none !important;
     transition: none !important;
-  }
-
-  .attract-spotlight,
-  .attract-ripple,
-  .attract-flare {
-    display: none !important;
-  }
-
-  .attract-presence-dot {
-    opacity: 0.4;
   }
 }

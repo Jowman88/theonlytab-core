@@ -1,13 +1,11 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { buildProofItems, getHeadline, getPresenceDots, HEADLINE_ROTATION_MS, type ProofHallOfFame, type ProofHistoryItem } from '../lib/idleStage';
+import { useEffect, useMemo, useState } from 'react';
+import { ATTRACT_SUBLINES, buildProofItems, getHeadline, HEADLINE_ROTATION_MS, type ProofHallOfFame, type ProofHistoryItem } from '../lib/idleStage';
 
 interface AttractModeProps {
   history: ProofHistoryItem[];
   stealPrice: string;
-  reactionPulse?: number;
-  viewerCount?: number | null;
   onSeize: () => void;
 }
 
@@ -17,10 +15,9 @@ const HOF_CACHE_MS = 5 * 60 * 1000;
 
 let hofCache: { data: ProofHallOfFame; fetchedAt: number } | null = null;
 
-export default function AttractMode({ history, stealPrice, reactionPulse = 0, viewerCount = null, onSeize }: AttractModeProps) {
+export default function AttractMode({ history, stealPrice, onSeize }: AttractModeProps) {
   const [index, setIndex] = useState(0);
   const [hallOfFame, setHallOfFame] = useState<ProofHallOfFame | null>(hofCache?.data ?? null);
-  const spotlightRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (hofCache && Date.now() - hofCache.fetchedAt < HOF_CACHE_MS) return undefined;
@@ -45,19 +42,6 @@ export default function AttractMode({ history, stealPrice, reactionPulse = 0, vi
     const timer = setInterval(() => setIndex((current) => (current + 1) % count), PROOF_INTERVAL_MS);
     return () => clearInterval(timer);
   }, [count]);
-
-  const dots = getPresenceDots(viewerCount);
-
-  const moveSpotlight = (event: React.PointerEvent<HTMLDivElement>) => {
-    const el = spotlightRef.current;
-    if (!el) return;
-    const rect = event.currentTarget.getBoundingClientRect();
-    el.style.transform = `translate3d(${event.clientX - rect.left - 128}px, ${event.clientY - rect.top - 128}px, 0)`;
-    el.style.opacity = '1';
-  };
-  const hideSpotlight = () => {
-    if (spotlightRef.current) spotlightRef.current.style.opacity = '0';
-  };
 
   const [headlineIndex, setHeadlineIndex] = useState(0);
   const [headlineVisible, setHeadlineVisible] = useState(true);
@@ -102,43 +86,21 @@ export default function AttractMode({ history, stealPrice, reactionPulse = 0, vi
       role="group"
       aria-label="Stage is open. Be the next to take it."
       className="absolute inset-0 overflow-hidden bg-[#040507]"
-      onPointerMove={moveSpotlight}
-      onPointerLeave={hideSpotlight}
     >
-      <div aria-hidden="true" className="attract-blob attract-blob-a" />
-      <div aria-hidden="true" className="attract-blob attract-blob-b" />
-      <div aria-hidden="true" className="attract-blob attract-blob-c" />
       <div aria-hidden="true" className="dashboard-grid absolute inset-0 opacity-25" />
-      <div aria-hidden="true" ref={spotlightRef} className="attract-spotlight pointer-events-none absolute left-0 top-0 h-64 w-64 opacity-0" />
-      {dots > 0 && (
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-          {Array.from({ length: dots }, (_, i) => (
-            <span
-              key={i}
-              className="attract-presence-dot absolute h-1.5 w-1.5 rounded-full bg-emerald-300"
-              style={{ left: `${(i * 37 + 11) % 88 + 5}%`, top: `${(i * 53 + 7) % 78 + 10}%`, animationDelay: `${(i * 0.7) % 4}s` }}
-            />
-          ))}
-        </div>
-      )}
-      {reactionPulse > 0 && (
-        <div aria-hidden="true" key={reactionPulse} className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="attract-flare absolute inset-0" />
-          <div className="attract-ripple absolute h-24 w-24 rounded-full border border-emerald-300/60" />
-        </div>
-      )}
       <div aria-hidden="true" className="attract-vignette absolute inset-0" />
 
       <div className="relative z-[1] flex h-full w-full flex-col items-center justify-center gap-2 px-4 text-center sm:gap-4 sm:px-6">
-        <div className="attract-ring hidden h-14 w-14 items-center justify-center rounded-full border border-emerald-300/40 sm:flex sm:h-16 sm:w-16">
-          <span className="h-3 w-3 rounded-full bg-emerald-300 shadow-[0_0_18px_6px_rgba(52,211,153,0.6)]" />
+        <div className="flex h-11 w-11 items-center justify-center rounded-full border border-emerald-300/40 sm:h-14 sm:w-14">
+          <span className="h-2.5 w-2.5 rounded-full bg-emerald-300 shadow-[0_0_14px_4px_rgba(52,211,153,0.45)]" />
         </div>
-        <p className="hidden text-[10px] font-semibold uppercase tracking-[0.4em] text-emerald-200/80 sm:block sm:text-xs">Stage open</p>
-        <div className="flex min-h-[3.5rem] max-w-xl items-center justify-center sm:min-h-[6.5rem]">
-          <h2 className={`attract-headline text-lg font-black leading-tight text-white min-[400px]:text-xl sm:text-4xl${headlineVisible ? '' : ' attract-headline-out'}`}>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.4em] text-emerald-200/80 sm:text-xs">STAGE OPEN</p>
+        <div className="flex h-[3.75rem] w-full max-w-5xl items-center justify-center sm:h-[7.25rem]">
+          <h2 aria-live="polite" className={`attract-headline max-w-full text-[clamp(1.5rem,6vw,2rem)] font-black leading-[1.08] tracking-[-0.035em] text-white [text-wrap:balance] sm:text-5xl lg:text-6xl${headlineVisible ? '' : ' attract-headline-out'}`}>
             {getHeadline(headlineIndex, stealPrice)}
           </h2>
         </div>
+        <p className="flex h-6 items-center justify-center text-xs text-neutral-300 sm:h-7 sm:text-sm">{ATTRACT_SUBLINES[0]}</p>
         <button
           type="button"
           onClick={onSeize}

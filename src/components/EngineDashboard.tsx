@@ -1243,7 +1243,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
 
                   {showAttract && (
                     <div className={`absolute inset-0 transition-opacity duration-500 ${isIdleStage ? 'opacity-100' : 'pointer-events-none opacity-0'}`}>
-                      <AttractMode history={historyList} stealPrice={stealPrice} reactionPulse={reactionPulse} viewerCount={socketStatus === 'connected' ? viewerCount : null} onSeize={() => setIsFormOpen(true)} />
+                      <AttractMode history={historyList} stealPrice={stealPrice} onSeize={() => setIsFormOpen(true)} />
                     </div>
                   )}
 
