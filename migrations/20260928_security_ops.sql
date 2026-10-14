@@ -3,7 +3,7 @@
 
 CREATE TABLE IF NOT EXISTS pricing_config (
   id SMALLINT PRIMARY KEY DEFAULT 1,
-  base_price NUMERIC(10, 2) NOT NULL DEFAULT 19.00,
+  base_price NUMERIC(10, 2) NOT NULL DEFAULT 9.00,
   prime_base_price NUMERIC(10, 2) NOT NULL DEFAULT 149.00,
   steal_multiplier NUMERIC(10, 4) NOT NULL DEFAULT 1.25,
   steal_flat_increase NUMERIC(10, 2) NOT NULL DEFAULT 10.00,
@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS pricing_config (
 
 ALTER TABLE pricing_config
   ALTER COLUMN id SET DEFAULT 1,
-  ALTER COLUMN base_price SET DEFAULT 19.00,
+  ALTER COLUMN base_price SET DEFAULT 9.00,
   ALTER COLUMN prime_base_price SET DEFAULT 149.00,
   ALTER COLUMN steal_multiplier SET DEFAULT 1.25,
   ALTER COLUMN steal_flat_increase SET DEFAULT 10.00,
