@@ -39,6 +39,29 @@ export function getIdleLine(index: number, price: string = DEFAULT_STEAL_PRICE):
   return line.replace(/\$\{price\}/g, `$${price}`);
 }
 
+export const HEADLINE_ROTATION_MS = 6000;
+
+export const HEADLINES: readonly string[] = [
+  'Put your site on the big screen',
+  'Your link. Everyone\'s screen.',
+  'The stage is open. Take it.',
+  'Own the screen for ${price}',
+  'Turn this window into your billboard',
+  'One click from your project. Claim the slot.',
+  'Every eye is on this stage. Use it.',
+  'Your landing page deserves an audience',
+  'Be the next name on the ledger',
+  'Take the stage before someone else does',
+  'Free real estate, ${price} down',
+  'Your brand, live, right now',
+];
+
+export function getHeadline(index: number, price: string = DEFAULT_STEAL_PRICE): string {
+  const total = HEADLINES.length;
+  const line = HEADLINES[((index % total) + total) % total];
+  return line.replace(/\$\{price\}/g, `$${price}`);
+}
+
 export function stripProtocol(url: string): string {
   return url.replace(/^[a-z][a-z0-9+.-]*:\/\//i, '').replace(/\/$/, '');
 }

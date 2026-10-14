@@ -92,6 +92,15 @@
     animation: attract-pulse 3.2s ease-in-out infinite;
   }
 
+  .attract-headline {
+    transition: opacity 450ms ease-out, transform 450ms ease-out;
+  }
+
+  .attract-headline-out {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
   .attract-fade {
     animation: attract-fade-in 0.7s ease-out both;
   }
@@ -204,7 +213,9 @@
   .dashboard-reaction-float,
   .dashboard-marquee-track,
   .attract-blob,
-  .attract-ring {
+  .attract-ring,
+  .attract-headline {
     animation: none !important;
+    transition: none !important;
   }
 }
