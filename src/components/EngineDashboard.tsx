@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { logger } from '../lib/logger';
+import AttractMode from './AttractMode';
 import { DEFAULT_STEAL_PRICE } from '../lib/idleStage';
 
 const REACTION_EMOJIS = ['🔥', '👏', '😂', '❤️', '🎉'];
@@ -161,6 +162,16 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
   const stealPrice = slot?.stealPrice || DEFAULT_STEAL_PRICE;
   const activeLikes = slot?.active_likes || 0;
   const crowdPercent = slot?.crowdPercent || 0;
+  const isIdleStage = !slot || slot.id === 'house-default-id' || Number.parseFloat(slot.current_bid || '0') <= 0;
+  const [showAttract, setShowAttract] = useState(isIdleStage);
+  useEffect(() => {
+    if (isIdleStage) {
+      setShowAttract(true);
+      return undefined;
+    }
+    const timer = setTimeout(() => setShowAttract(false), 500);
+    return () => clearTimeout(timer);
+  }, [isIdleStage]);
   const isStealPriceCapped = Number.parseFloat(stealPrice) >= 299;
   const checkoutValidationError = !validatedFields.targetUrl
     ? 'Enter a valid website URL to launch checkout.'
@@ -1225,7 +1236,13 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                   </div>
                 )}
                 <div className={`relative flex h-full w-full items-center justify-center overflow-hidden border border-white/10 bg-[#040507] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.03),0_20px_70px_rgba(0,0,0,0.55)] ${isFullscreen ? 'rounded-none' : 'rounded-[1.35rem]'}`}>
-                  <canvas ref={canvasRef} className={`h-full w-full object-contain transition duration-500 ${!hasFrames ? 'opacity-0' : 'opacity-100'}`} />
+                  <canvas ref={canvasRef} className={`h-full w-full object-contain transition duration-500 ${!hasFrames || isIdleStage ? 'opacity-0' : 'opacity-100'}`} />
+
+                  {showAttract && (
+                    <div className={`absolute inset-0 transition-opacity duration-500 ${isIdleStage ? 'opacity-100' : 'pointer-events-none opacity-0'}`}>
+                      <AttractMode history={historyList} stealPrice={stealPrice} onSeize={() => setIsFormOpen(true)} />
+                    </div>
+                  )}
 
                   <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-[2] overflow-hidden">
                     {floatingReactions.map((reaction) => (
@@ -1253,7 +1270,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                     </a>
                   )}
 
-                  {!hasFrames && socketStatus !== 'disconnected' && (
+                  {!isIdleStage && !hasFrames && socketStatus !== 'disconnected' && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 px-6 text-center">
                       <div className="w-full max-w-md space-y-3">
                         <div className="h-5 w-32 rounded-full bg-white/10" />
@@ -1275,7 +1292,7 @@ export default function EngineDashboard({ streamServerUrl }: { streamServerUrl: 
                     </div>
                   )}
 
-                  {!hasFrames && socketStatus === 'disconnected' && (
+                  {!isIdleStage && !hasFrames && socketStatus === 'disconnected' && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-6 text-center">
                       <div className="flex h-16 w-16 items-center justify-center rounded-full border border-rose-400/25 bg-rose-500/10 text-rose-200">
                         <WifiOff className="h-7 w-7" />
